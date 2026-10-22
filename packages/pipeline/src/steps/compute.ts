@@ -12,6 +12,7 @@ import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
 import { computeComissoes } from "./metrics/comissoes";
 import { computePlenario } from "./metrics/plenario";
+import { computeFiscalizacao } from "./metrics/fiscalizacao";
 import { computeProjetos } from "./metrics/projetos";
 import type { NormalizedData } from "./normalize";
 
@@ -139,6 +140,38 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     methodologyAnchor: "pareceres",
     pick: (d) => okValue(d.projetos.pareceres.total),
   },
+  {
+    key: "ric",
+    caderno: "fiscalizacao",
+    label: "Requerimentos de informação como autor principal",
+    unit: "contagem",
+    methodologyAnchor: "ric",
+    pick: (d) => okValue(d.fiscalizacao.ric.autorPrincipal),
+  },
+  {
+    key: "pfc",
+    caderno: "fiscalizacao",
+    label: "Propostas de fiscalização e controle como autor principal",
+    unit: "contagem",
+    methodologyAnchor: "pfc",
+    pick: (d) => okValue(d.fiscalizacao.pfc.autorPrincipal),
+  },
+  {
+    key: "convocacoes",
+    caderno: "fiscalizacao",
+    label: "Requerimentos de convocação de ministros e autoridades como autor principal",
+    unit: "contagem",
+    methodologyAnchor: "convocacoes",
+    pick: (d) => okValue(d.fiscalizacao.convocacoes.autorPrincipal),
+  },
+  {
+    key: "indicacoes",
+    caderno: "fiscalizacao",
+    label: "Indicações (sugestões ao governo) como autor principal",
+    unit: "contagem",
+    methodologyAnchor: "indicacoes",
+    pick: (d) => okValue(d.fiscalizacao.indicacoes.autorPrincipal),
+  },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
@@ -148,6 +181,8 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
   const comissoes = computeComissoes(context, data);
   log.step("Calculando o Caderno 3 — Projetos e leis");
   const projetos = computeProjetos(context, data);
+  log.step("Calculando o Caderno 4 — Fiscalização");
+  const fiscalizacao = computeFiscalizacao(context, data);
 
   const details: DeputyDetail[] = data.deputies.map((deputy) => {
     const of = <T>(map: Map<number, T>, caderno: string): T => {
@@ -163,6 +198,7 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
       plenario: of(plenario, "plenario"),
       comissoes: of(comissoes, "comissoes"),
       projetos: of(projetos, "projetos"),
+      fiscalizacao: of(fiscalizacao, "fiscalizacao"),
     };
   });
 

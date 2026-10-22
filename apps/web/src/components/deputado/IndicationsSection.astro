@@ -1,0 +1,35 @@
+---
+// Métrica: indicações (sugestões ao Executivo) — Caderno 4, mostradas à parte da fiscalização.
+import type { Fiscalizacao } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger } from "../../lib/format";
+
+interface Props {
+  fiscalizacao: Fiscalizacao;
+  updatedAt: string;
+}
+const { fiscalizacao: f, updatedAt } = Astro.props;
+---
+
+<Metric
+  id="indicacoes"
+  title="Sugestões ao governo"
+  whatIs="Com uma indicação, o deputado sugere formalmente ao governo (ou a outro órgão) que tome uma providência — por exemplo, construir uma obra ou criar um programa. O governo não é obrigado a seguir."
+  updatedAt={updatedAt}
+  methodologyAnchor="indicacoes"
+>
+  <BigNumber
+    value={formatInteger(f.indicacoes.autorPrincipal)}
+    label="Indicações apresentadas"
+    caption={`Como autor principal na legislatura. Como coautor, mais ${formatInteger(f.indicacoes.coautor)}.`}
+  />
+  <Fragment slot="limites">
+    <li>
+      <Term slug="inc">Indicação</Term> não é fiscalização: é uma sugestão, sem obrigação de
+      resposta.
+    </li>
+    <li>Não mostra se a sugestão foi atendida.</li>
+  </Fragment>
+</Metric>

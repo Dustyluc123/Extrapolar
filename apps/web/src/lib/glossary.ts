@@ -201,6 +201,35 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition:
       "O primeiro deputado a assinar uma proposta. Os demais que assinam como autores são coautores; há ainda as assinaturas de apoio, que não são autoria.",
   },
+  {
+    slug: "ric",
+    term: "Requerimento de Informação",
+    short: "RIC",
+    definition:
+      "Pedido formal de um deputado a um ministro ou órgão do governo federal para que explique algo por escrito. Pela Constituição, a autoridade tem prazo para responder.",
+    plain: "É o deputado perguntando oficialmente ao governo: “me explica isso aqui?”.",
+  },
+  {
+    slug: "pfc",
+    term: "Proposta de Fiscalização e Controle",
+    short: "PFC",
+    definition:
+      "Proposta para que uma comissão da Câmara fiscalize um ato ou gasto do Poder Executivo, podendo pedir auditorias ao Tribunal de Contas da União.",
+  },
+  {
+    slug: "convocacao",
+    term: "Convocação de ministro",
+    definition:
+      "Pedido aprovado pela Câmara ou por uma comissão para que um ministro ou autoridade compareça e preste explicações. Diferente do convite, o comparecimento é obrigatório.",
+  },
+  {
+    slug: "inc",
+    term: "Indicação",
+    short: "INC",
+    definition:
+      "Sugestão formal de um deputado ao Poder Executivo (ou a outro órgão) para que tome alguma providência. Não obriga o governo a agir nem a responder.",
+    plain: "É uma “sugestão por escrito” para o governo.",
+  },
 ];
 
 export function glossaryEntry(slug: string): GlossaryEntry {

@@ -1,0 +1,62 @@
+---
+// Métricas: requerimentos de informação (RIC) e propostas de fiscalização e controle (PFC),
+// com a série por trimestre (Caderno 4).
+import type { Fiscalizacao } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import Columns from "../charts/Columns.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger } from "../../lib/format";
+
+interface Props {
+  fiscalizacao: Fiscalizacao;
+  updatedAt: string;
+}
+const { fiscalizacao: f, updatedAt } = Astro.props;
+const max = Math.max(0, ...f.porTrimestre.map((q) => q.quantidade));
+const quarterLabel = (key: string) => `${key.slice(6)}º trimestre de ${key.slice(0, 4)}`;
+---
+
+<Metric
+  id="ric"
+  title="Pedidos de explicação ao governo"
+  whatIs="Deputados podem pedir formalmente a um ministério que explique algo (Requerimento de Informação, RIC) ou propor que a Câmara fiscalize um ato do governo (Proposta de Fiscalização e Controle, PFC). São as ferramentas oficiais de fiscalização do Poder Executivo."
+  updatedAt={updatedAt}
+  methodologyAnchor="ric"
+>
+  <div class="grid gap-8 sm:grid-cols-2">
+    <BigNumber
+      value={formatInteger(f.ric.autorPrincipal)}
+      label="Requerimentos de informação"
+      caption={`Como autor principal na legislatura. Como coautor, mais ${formatInteger(f.ric.coautor)}.`}
+    />
+    <BigNumber
+      value={formatInteger(f.pfc.autorPrincipal)}
+      label="Propostas de fiscalização"
+      caption={`Como autor principal na legislatura. Como coautor, mais ${formatInteger(f.pfc.coautor)}.`}
+    />
+  </div>
+  <div class="mt-6">
+    <Columns
+      title="RIC + PFC por trimestre (autor principal)"
+      description="Soma de requerimentos de informação e propostas de fiscalização apresentados como autor principal em cada trimestre da legislatura."
+      labelHeader="Trimestre"
+      valueHeader="Apresentados"
+      maxLabel={`máximo: ${formatInteger(max)}`}
+      items={f.porTrimestre.map((q, index) => ({
+        label: quarterLabel(q.trimestre),
+        tick: q.trimestre.endsWith("T1") || index === 0 ? q.trimestre.slice(0, 4) : "",
+        value: q.quantidade,
+        display: formatInteger(q.quantidade),
+      }))}
+    />
+  </div>
+  <Fragment slot="limites">
+    <li>Não mostra se o ministério respondeu nem o conteúdo da resposta.</li>
+    <li>
+      Um <Term slug="ric">RIC</Term> pode ser uma pergunta simples ou uma investigação longa; a
+      contagem trata todos igual.
+    </li>
+    <li>O primeiro trimestre de 2023 começa em 1º de fevereiro (início da legislatura).</li>
+  </Fragment>
+</Metric>

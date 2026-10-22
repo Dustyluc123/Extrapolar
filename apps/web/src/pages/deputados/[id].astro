@@ -17,6 +17,9 @@ import PropositionsSection from "../../components/deputado/PropositionsSection.a
 import SituationSection from "../../components/deputado/SituationSection.astro";
 import ThemesSection from "../../components/deputado/ThemesSection.astro";
 import OpinionsSection from "../../components/deputado/OpinionsSection.astro";
+import OversightSection from "../../components/deputado/OversightSection.astro";
+import ConvocationsSection from "../../components/deputado/ConvocationsSection.astro";
+import IndicationsSection from "../../components/deputado/IndicationsSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -39,6 +42,7 @@ const cadernos = [
   { id: "plenario", label: "Plenário" },
   { id: "caderno-comissoes", label: "Comissões" },
   { id: "caderno-projetos", label: "Projetos e leis" },
+  { id: "caderno-fiscalizacao", label: "Fiscalização" },
 ];
 const conditionSlug =
   deputy.electoralCondition === "Titular"
@@ -151,6 +155,17 @@ const conditionSlug =
       <SituationSection projetos={detail.projetos} updatedAt={updatedAt} />
       <ThemesSection projetos={detail.projetos} updatedAt={updatedAt} />
       <OpinionsSection projetos={detail.projetos} updatedAt={updatedAt} />
+    </Caderno>
+
+    <Caderno
+      id="caderno-fiscalizacao"
+      number={4}
+      title="Fiscalização do Executivo"
+      intro="Como o deputado usa as ferramentas oficiais para pedir explicações ao governo — e as sugestões que faz a ele."
+    >
+      <OversightSection fiscalizacao={detail.fiscalizacao} updatedAt={updatedAt} />
+      <ConvocationsSection fiscalizacao={detail.fiscalizacao} updatedAt={updatedAt} />
+      <IndicationsSection fiscalizacao={detail.fiscalizacao} updatedAt={updatedAt} />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

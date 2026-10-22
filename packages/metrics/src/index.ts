@@ -6,3 +6,4 @@ export * from "./attendance";
 export * from "./alignment";
 export * from "./committees";
 export * from "./propositions";
+export * from "./oversight";

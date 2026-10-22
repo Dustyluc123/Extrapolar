@@ -37,6 +37,12 @@
 - Download com nova tentativa quando a conexão cai no meio do corpo (aconteceu com o arquivo de 160 MB).
 - Heap do pipeline aumentada para 6 GB (arquivos de proposições).
 
+### Etapa 5 — Fiscalização
+
+- RIC (mediana 2, máximo 4.966), PFC (166 no total), convocações pelos tipos oficiais 523/356/150 (1.208 como autor principal) e indicações (mediana 2) mostradas à parte como "sugestões ao governo".
+- Série trimestral de RIC + PFC (16 trimestres).
+- Convocações: viável por tipo oficial (codTipo), sem busca por palavras na ementa — não foi preciso medir precisão.
+
 ## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
@@ -50,6 +56,8 @@
 - ⚠ Taxa de conversão = viraram norma (código 1140) ÷ apresentados como autor principal na legislatura; tabela de códigos de situação na metodologia.
 - ⚠ Temas: projeto conta em cada tema; homenagens pelo tema oficial 72, sem classificação própria.
 - ⚠ Pareceres: PRL + PRLP + PRLE de autoria do deputado, por órgão numerador (inclui a Mesa).
+- ⚠ Fiscalização conta autor principal como número principal (coautoria à parte), igual aos projetos.
+- ⚠ Convocação = só os 3 tipos oficiais de requerimento; convites (audiência pública) ficam fora.
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
 
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.

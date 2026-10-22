@@ -331,3 +331,64 @@ Quantos pareceres o deputado apresentou como **relator** na legislatura, por ano
 - Quem escolhe os relatores é o presidente de cada comissão.
 - Pareceres têm tamanhos muito diferentes. Na Mesa Diretora há muitos pareceres curtos sobre requerimentos de informação; por isso, membros da Mesa aparecem com milhares de pareceres.
 - O número não diz se o parecer recomendou aprovar ou rejeitar.
+
+<a id="ric"></a>
+
+## Requerimentos de informação e propostas de fiscalização
+
+<a id="pfc"></a>
+
+### O que é
+
+- **Requerimento de Informação (RIC):** pedido formal de explicação, por escrito, a um ministro ou órgão do governo federal (art. 50, § 2º, da Constituição).
+- **Proposta de Fiscalização e Controle (PFC):** proposta para que uma comissão fiscalize um ato ou gasto do Poder Executivo.
+
+São as ferramentas oficiais de fiscalização do Executivo que os dados abertos registram por autor.
+
+### Como é calculado
+
+- Proposições dos tipos `RIC` e `PFC` apresentadas na legislatura, a partir dos mesmos arquivos de proposições e de autores dos projetos.
+- O número principal é **como autor principal** (primeiro signatário); a ficha mostra à parte as coautorias. Assinaturas de apoio não contam.
+- **Por trimestre:** RIC + PFC como autor principal, pelo trimestre da data de apresentação. O primeiro trimestre de 2023 começa em 1º de fevereiro.
+
+### O que este número **não** mede
+
+- Se a autoridade respondeu, nem o conteúdo da resposta.
+- A complexidade de cada pedido: todos contam igual.
+
+<a id="convocacoes"></a>
+
+## Requerimentos de convocação de ministros e autoridades
+
+### O que é
+
+Pedidos para que um ministro ou autoridade compareça (obrigatoriamente) à Câmara ou a uma comissão para prestar explicações.
+
+### Como é calculado
+
+- **Só pelo tipo oficial** do requerimento (`codTipo` no arquivo de proposições), sem busca de palavras na ementa:
+  - 523 — Requerimento de Convocação de Ministro de Estado na Comissão (art. 50, CF);
+  - 356 — Requerimento de Convocação de Ministro de Estado no Plenário (art. 50, CF);
+  - 150 — Requerimento de Convocação de Autoridade.
+- Autor principal e coautor como nos projetos.
+
+### Limitações
+
+- Conta pedidos **apresentados**, não convocações aprovadas nem realizadas.
+- Pedidos de **convite** (presença não obrigatória) são registrados como requerimentos de audiência pública e não entram aqui.
+
+<a id="indicacoes"></a>
+
+## Indicações (sugestões ao governo)
+
+### O que é
+
+Com uma **indicação** (`INC`), o deputado sugere formalmente ao Poder Executivo (ou a outro órgão) que tome uma providência. O governo não é obrigado a seguir nem a responder. Por isso a ficha mostra as indicações **à parte**, como "sugestões ao governo", e não como fiscalização.
+
+### Como é calculado
+
+Proposições do tipo `INC` apresentadas na legislatura, como autor principal (e coautor à parte).
+
+### Limitações
+
+- Não mostra se a sugestão foi atendida.

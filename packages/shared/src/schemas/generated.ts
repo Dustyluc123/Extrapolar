@@ -262,6 +262,28 @@ export const projetosSchema = z.object({
 });
 export type Projetos = z.infer<typeof projetosSchema>;
 
+// ---- Caderno 4 — Fiscalização do Executivo ----
+
+const authorCountSchema = z.object({ autorPrincipal: count, coautor: count });
+
+export const fiscalizacaoSchema = z.object({
+  /** Requerimentos de Informação (RIC). */
+  ric: authorCountSchema,
+  /** Propostas de Fiscalização e Controle (PFC). */
+  pfc: authorCountSchema,
+  /** Requerimentos de convocação de ministros e autoridades (tipos oficiais). */
+  convocacoes: authorCountSchema.extend({
+    porTipo: z.array(z.object({ tipo: z.string(), autorPrincipal: count, coautor: count })),
+  }),
+  /** Indicações (INC): sugestões ao Executivo — não são fiscalização. */
+  indicacoes: authorCountSchema,
+  /** RIC + PFC como autor principal, por trimestre ("2023-T1"). */
+  porTrimestre: z.array(
+    z.object({ trimestre: z.string().regex(/^\d{4}-T[1-4]$/), quantidade: count }),
+  ),
+});
+export type Fiscalizacao = z.infer<typeof fiscalizacaoSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -276,6 +298,7 @@ export const deputyDetailSchema = z.object({
   }),
   comissoes: comissoesSchema,
   projetos: projetosSchema,
+  fiscalizacao: fiscalizacaoSchema,
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
 

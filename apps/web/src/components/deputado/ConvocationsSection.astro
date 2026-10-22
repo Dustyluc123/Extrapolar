@@ -1,0 +1,51 @@
+---
+// Métrica: requerimentos de convocação de ministros e autoridades (Caderno 4).
+import type { Fiscalizacao } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import BarList from "../charts/BarList.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger } from "../../lib/format";
+
+interface Props {
+  fiscalizacao: Fiscalizacao;
+  updatedAt: string;
+}
+const { fiscalizacao: f, updatedAt } = Astro.props;
+const c = f.convocacoes;
+---
+
+<Metric
+  id="convocacoes"
+  title="Pedidos para convocar ministros e autoridades"
+  whatIs="A Câmara pode convocar um ministro ou outra autoridade para dar explicações, e a presença é obrigatória. Para isso, um deputado apresenta um requerimento de convocação, que precisa ser aprovado."
+  updatedAt={updatedAt}
+  methodologyAnchor="convocacoes"
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <BigNumber
+      value={formatInteger(c.autorPrincipal)}
+      label="Requerimentos de convocação"
+      caption={`Apresentados como autor principal na legislatura. Como coautor, mais ${formatInteger(c.coautor)}.`}
+    />
+    {c.autorPrincipal + c.coautor > 0 ? (
+      <BarList
+        title="Por tipo oficial"
+        description="Requerimentos de convocação como autor principal, por tipo oficial."
+        labelHeader="Tipo"
+        valueHeader="Requerimentos"
+        items={c.porTipo.map((t) => ({
+          label: t.tipo,
+          value: t.autorPrincipal,
+          display: `${formatInteger(t.autorPrincipal)}${t.coautor > 0 ? ` · coautor em ${formatInteger(t.coautor)}` : ""}`,
+        }))}
+      />
+    ) : null}
+  </div>
+  <Fragment slot="limites">
+    <li>Conta pedidos apresentados, não convocações aprovadas nem realizadas.</li>
+    <li>
+      Só entram os tipos oficiais de convocação; pedidos de "convite" a autoridades (sem presença
+      obrigatória) aparecem como requerimentos de audiência pública.
+    </li>
+  </Fragment>
+</Metric>
