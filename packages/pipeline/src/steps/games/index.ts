@@ -14,6 +14,7 @@ import type { ComputedData } from "../compute";
 import type { OutputFile } from "../publish";
 import { buildCatalog, buildGameDeputies } from "./catalog";
 import { buildDle } from "./dle";
+import { buildPlacar } from "./placar";
 import { DrawState, drawSecret, loadDrawState } from "./draw";
 import { readPlainSummaries } from "./summaries";
 
@@ -72,10 +73,14 @@ export async function buildGames(
   });
   log.info(`Dle: ${dle.length} estados`);
 
+  const placar = buildPlacar({ catalog, deputies, today, draw, secret });
+  log.info(`Placar: ${(placar.data as { poolSize: number }).poolSize} votações no sorteio`);
+
   return [
     { name: "jogos/votacoes.json", schema: gameVotesFileSchema, data: catalog.file },
     { name: "jogos/deputados.json", schema: gameDeputiesFileSchema, data: deputies },
     ...dle,
+    placar,
     // O estado do sorteio vai por último: só depois de todos os jogos sortearem.
     { name: "jogos/sorteio.json", schema: drawStateFileSchema, data: draw.toFile() },
   ];

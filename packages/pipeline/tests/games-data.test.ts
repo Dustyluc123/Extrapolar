@@ -167,3 +167,39 @@ describe("estado do sorteio", () => {
     expect(a).not.toBe(b);
   });
 });
+
+describe("Placar", () => {
+  it("sorteia só votações dos últimos 12 meses, com os votos compactos", async () => {
+    const { buildPlacar } = await import("../src/steps/games/placar");
+    const catalog = buildCatalog({
+      sources,
+      ballots,
+      summaries: new Map(),
+      onUnusedSummary: () => {},
+    });
+    const deputies = buildGameDeputies([
+      { id: 1, name: "A", party: "PL", state: "RJ" },
+      { id: 3, name: "C", party: "PT", state: "SP" },
+    ] as never);
+    const recent = buildPlacar({
+      catalog,
+      deputies,
+      today: "2026-10-22",
+      draw: new DrawState(null, "2026-10-22"),
+      secret: "segredo-de-teste-123",
+    });
+    const file = recent.data as { poolSize: number; days: { date: string; data: string }[] };
+    expect(file.poolSize).toBe(1);
+    const day = JSON.parse(unscramble(file.days[0]!.data, "2026-10-22"));
+    expect(day.vote.id).toBe("10-1");
+    expect(day.ballots).toBe("NS");
+    const old = buildPlacar({
+      catalog,
+      deputies,
+      today: "2027-04-01",
+      draw: new DrawState(null, "2027-04-01"),
+      secret: "segredo-de-teste-123",
+    });
+    expect((old.data as { poolSize: number }).poolSize).toBe(0);
+  });
+});

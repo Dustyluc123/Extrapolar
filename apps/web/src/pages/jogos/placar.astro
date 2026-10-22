@@ -1,0 +1,34 @@
+---
+// Jogo 2 — Placar.
+import "../../styles/games.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import GameHeader from "../../components/games/GameHeader.astro";
+import PlacarGame from "../../components/games/PlacarGame";
+import { placar } from "../../lib/games/placar";
+import { gameDeputies } from "../../lib/games/data";
+import { STATE_NAMES } from "../../lib/states";
+
+const deputyStates = gameDeputies.deputies.map((d) => d.state);
+const states = [...new Set(deputyStates)]
+  .sort()
+  .map((code) => ({ code, name: STATE_NAMES[code] ?? code }));
+---
+
+<BaseLayout
+  title="Placar"
+  description="Leia o que foi votado no plenário da Câmara e chute como votaram os deputados do seu estado e o placar. Um jogo diário com votações reais."
+  current="jogos"
+>
+  <GameHeader slug="placar" />
+  <section class="mt-6" aria-label="Jogo">
+    <PlacarGame client:load days={placar.days} deputyStates={deputyStates} states={states} />
+  </section>
+  <section class="mt-10 max-w-prose">
+    <p class="caption">
+      Votação do dia sorteada entre as {placar.poolSize} votações de mérito do plenário dos últimos
+      12 meses. Pontos: 50 por acertar a maioria do estado e até 100 pelo placar (100 menos 2 por
+      ponto percentual de diferença). Detalhes na <a href="/metodologia#jogo-placar">metodologia</a>
+      .
+    </p>
+  </section>
+</BaseLayout>

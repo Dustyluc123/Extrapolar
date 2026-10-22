@@ -41,7 +41,7 @@ export const GAMES: GameInfo[] = [
       "Arraste o controle até a porcentagem de votos Sim que você acha que deu.",
       "Quanto mais perto do placar real, mais pontos.",
     ],
-    ready: false,
+    ready: true,
   },
   {
     slug: "vote-voce-tambem",

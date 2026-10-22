@@ -588,3 +588,16 @@ Adivinhar o deputado do dia entre os deputados em exercício do estado escolhido
 **Chutes:** 6 em estados com até 10 deputados, 8 até 30 e 10 acima de 30 (o tamanho da bancada vai de 8 a 70). O autocompletar mostra só os deputados do estado e ignora acentos. A foto borrada é uma dica opcional; a nítida aparece na revelação, com o link para a ficha.
 
 **Limitação:** "na Câmara desde" conta a primeira legislatura, mesmo que a pessoa tenha ficado fora da Câmara depois.
+
+<a id="jogo-placar"></a>
+
+## Jogo 2 — Placar
+
+Uma votação elegível por dia, sorteada entre as dos **últimos 12 meses** (ADR 0020). O jogador lê a ementa (ou o resumo revisado) e responde:
+
+1. **Como votou a maioria dos deputados do seu estado?** Sim, Não ou Empate, contando só os votos Sim e Não dos deputados do estado **em exercício hoje** (os que têm ficha no site). Acerto vale **50 pontos**. Se nenhum deles votou Sim ou Não, a pergunta não vale pontos.
+2. **Que porcentagem dos votos Sim + Não foi Sim?** Controle deslizante de 0% a 100%. Pontos = **100 − 2 × a diferença** em pontos percentuais, sem ficar negativo (acertar em cheio: 100; errar por 10: 80; errar por 50 ou mais: 0). A porcentagem usa o placar oficial do plenário inteiro.
+
+A pergunta "foi aprovada ou rejeitada?" ficou de fora porque quase sempre a resposta é "aprovada" (2 rejeitadas em 216). O resultado oficial aparece na revelação, com o carimbo e, para PEC e projeto de lei complementar, o número de votos Sim exigido (308 e 257).
+
+**Limitações:** o voto de quem deixou o exercício não entra na maioria do estado; uma votação é um momento da tramitação, não a história inteira da proposta.
