@@ -1,0 +1,26 @@
+# dependências
+node_modules/
+
+# builds
+dist/
+.astro/
+.turbo/
+.vercel/
+*.tsbuildinfo
+
+# dados: o cache de downloads da Câmara não vai para o Git
+# (data/generated/ vai, ver docs/decisoes/0004-dados-gerados-no-git.md)
+data/raw/
+
+# ambiente
+.env
+.env.local
+.env.*.local
+
+# testes
+coverage/
+
+# sistema
+.DS_Store
+Thumbs.db
+*.log

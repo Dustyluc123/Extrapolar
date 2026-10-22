@@ -1,0 +1,8 @@
+node_modules
+dist
+.turbo
+.astro
+pnpm-lock.yaml
+data/raw
+data/generated
+docs/briefing-fase0.md

@@ -1,0 +1,26 @@
+{
+  "name": "@extrapolar/pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Baixa, valida, normaliza e calcula os dados da Câmara e gera os JSON em data/generated. Roda no GitHub Actions.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@extrapolar/metrics": "workspace:*",
+    "@extrapolar/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
+  }
+}
