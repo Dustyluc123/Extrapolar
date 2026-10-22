@@ -30,6 +30,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
+      # Só avisa (anotações no PR), nunca quebra o CI. Ver scripts/check-neutrality.mjs.
+      - run: pnpm check:neutralidade
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build

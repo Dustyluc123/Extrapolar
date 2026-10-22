@@ -52,7 +52,7 @@ participação = votações em que o deputado registrou voto
 - **Abstenção:** o deputado registrou presença na votação, mas não votou nem a favor nem contra.
 - **Obstrução:** o deputado registrou que está em obstrução, um instrumento usado para tentar impedir que a votação alcance o número mínimo de presentes. É uma escolha política registrada, por isso conta como participação.
 - **Voto secreto:** em votações secretas (por exemplo, eleição de membros de conselhos ou aprovação de indicações a tribunais), a Câmara registra que o deputado votou, mas não o conteúdo do voto. Conta como participação.
-- **Artigo 17:** registrado para quem estava presidindo a sessão naquele momento. Nos dados da Câmara, aparece na maior parte das vezes para o Presidente da Câmara e, nas demais, para deputados que o substituíam na presidência. Quem preside normalmente não vota, então conta como participação. <!-- TODO: conferir na fonte oficial o dispositivo do Regimento Interno: https://www2.camara.leg.br/atividade-legislativa/legislacao/regimento-interno-da-camara-dos-deputados -->
+- **Artigo 17:** registrado para quem estava presidindo a sessão naquele momento. Nos dados da Câmara, aparece na maior parte das vezes para o Presidente da Câmara e, nas demais, para deputados que o substituíam na presidência. Quem preside normalmente não vota, então conta como participação.
 
 ### O que este número **não** mede
 

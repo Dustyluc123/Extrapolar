@@ -31,21 +31,19 @@ const links = [
 
   <Rule class="mt-3" />
 
-  <a
-    href="/"
-    class="block py-3 text-center no-underline sm:py-5"
-    aria-label={`${PROJECT_NAME}, página inicial`}
-  >
-    <span
-      class="block font-display text-[3.25rem] leading-[0.9] font-[860] tracking-[-0.035em] text-ink sm:text-8xl lg:text-[8.5rem]"
-      style="font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 1;"
-    >
-      {PROJECT_NAME}
-    </span>
-    <span class="caption mt-3 block text-base not-italic sm:mt-6 sm:text-lg lg:mt-8">
-      <em>O que os deputados federais estão fazendo, em números e fatos.</em>
-    </span>
-  </a>
+  <div class="py-3 text-center sm:py-5">
+    <a href="/" class="inline-block no-underline">
+      <span
+        class="block font-display text-[3.25rem] leading-[0.9] font-[860] tracking-[-0.035em] text-ink sm:text-8xl lg:text-[8.5rem]"
+        style="font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 1;"
+      >
+        {PROJECT_NAME}
+      </span>
+    </a>
+    <p class="caption m-0 mt-3 text-base sm:mt-6 sm:text-lg lg:mt-8">
+      O que os deputados federais estão fazendo, em números e fatos.
+    </p>
+  </div>
 
   <Rule variant="double" />
 

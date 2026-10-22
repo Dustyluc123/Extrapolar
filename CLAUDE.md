@@ -14,7 +14,7 @@ O briefing original está em `docs/briefing-fase0.md`. Este arquivo e a pasta `d
 4. **Custo perto de zero.** Sem servidor rodando 24 horas. Site estático; dados atualizados por tarefa agendada (GitHub Actions).
 5. **Contexto das métricas.** Toda métrica tem limitações documentadas em `docs/METODOLOGIA.md` (o que mede e o que **não** mede).
 
-Uma varredura de palavras de julgamento roda no CI só sobre `apps/web/src` e gera **aviso**, não erro. Exceções ficam em `scripts/neutrality-allowlist.json` (ver `scripts/check-neutrality.ts`).
+Uma varredura de palavras de julgamento (`pnpm check:neutralidade`, `scripts/check-neutrality.mjs`) roda no CI só sobre `apps/web/src` e gera **aviso**, não erro. A lista de palavras fica no próprio script; exceções aprovadas (arquivo + trecho + motivo) ficam em `scripts/neutrality-allowlist.json`. Atenção: `docs/METODOLOGIA.md` também aparece no site (`/metodologia`), mas não é varrido; revise à mão.
 
 ## Idioma e nomes
 
@@ -37,7 +37,11 @@ pnpm lint           # ESLint (flat config na raiz)
 pnpm format         # Prettier; format:check no CI
 pnpm build          # build estático do site em apps/web/dist
 pnpm check:neutralidade   # varredura de palavras de julgamento (só avisa)
+pnpm check:a11y           # axe-core + busca pelo teclado (precisa do preview rodando e do Chrome)
+pnpm screenshots          # capturas celular/desktop, claro/escuro + alerta de rolagem lateral
 ```
+
+Os dois últimos precisam de `pnpm build && pnpm --filter @extrapolar/web preview` (porta 4321) e do Google Chrome; o controle do Chrome fica em `scripts/lib/chrome.mjs`. Capturas vão para `docs/screenshots/` (fora do Git); as imagens do README ficam em `docs/imagens/`.
 
 Um pacote ou um teste:
 
@@ -57,7 +61,7 @@ Detalhes em `docs/ARQUITETURA.md`. Resumo:
 - `packages/metrics` — funções **puras** que calculam indicadores. Sem rede, sem disco, sem `Date.now()` (a data de referência entra como argumento). Tudo aqui tem teste.
 - `packages/pipeline` — rede, disco e orquestração: `sources/` (uma fonte por arquivo) → `steps/` (`fetch → normalize → compute → publish`). Valida tudo com Zod; se algo vier diferente do esperado, **falha com mensagem clara e não publica**. A publicação é atômica (escreve em temporário e renomeia).
 - `apps/web` — Astro, HTML estático. Lê `data/generated/*.json` no build por meio de `JsonDeputyRepository` (`src/lib/data.ts`), que valida com os esquemas de saída. **Nunca** chama a API da Câmara. Interatividade mínima com `<script>` do Astro; ilhas React só quando houver interação de verdade (jogos, "monte seu ranking" — fases futuras).
-- `data/raw/` — cache de downloads (fora do Git). `data/generated/` — JSON final (no Git; ver ADR 0004).
+- `data/raw/` — cache de downloads (fora do Git). `data/generated/` — JSON final (no Git; ver ADR 0004): `deputados.json`, `participacao.json` e `meta.json` (fontes, data de referência e avisos de qualidade dos dados).
 
 Pacotes internos não têm build: exportam `src/*.ts` direto (padrão do Chutaí).
 

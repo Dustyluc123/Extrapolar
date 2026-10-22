@@ -18,10 +18,14 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pipeline": "pnpm --filter @extrapolar/pipeline start"
+    "pipeline": "pnpm --filter @extrapolar/pipeline start",
+    "check:neutralidade": "node scripts/check-neutrality.mjs",
+    "check:a11y": "node scripts/a11y.mjs",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "axe-core": "^4.14.0",
     "eslint": "^10.13.0",
     "eslint-plugin-astro": "^3.2.1",
     "globals": "^17.13.0",

@@ -1,0 +1,12 @@
+[
+  {
+    "file": "apps/web/src/components/deputado/DeputyFilters.astro",
+    "text": "melhoria progressiva",
+    "reason": "Comentário de código: termo técnico (progressive enhancement), não julga ninguém."
+  },
+  {
+    "file": "apps/web/src/components/deputado/ParticipationSection.astro",
+    "text": "sem cor de \"bom\" ou \"ruim\"",
+    "reason": "Comentário de código que justamente proíbe cores de julgamento."
+  }
+]

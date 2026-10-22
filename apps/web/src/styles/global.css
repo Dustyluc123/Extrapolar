@@ -216,7 +216,9 @@
     border: 1px solid var(--color-rule);
     border-radius: var(--radius-card);
     padding: 1rem;
-    overflow-x: auto;
+    /* Quebra a linha em vez de rolar: região rolável exigiria foco pelo teclado. */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-size: 0.95rem;
   }
   .article pre code {
