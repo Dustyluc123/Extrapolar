@@ -3,6 +3,7 @@
 import {
   GENERATED_SCHEMA_VERSION,
   type DeputyDetail,
+  type FrontsIndex,
   type MetricIndexEntry,
   type MetricsIndex,
   type MetricValue,
@@ -10,6 +11,7 @@ import {
 import { noData, okValue, participationValue, ratioValue } from "@extrapolar/metrics";
 import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
+import { computeArticulacao } from "./metrics/articulacao";
 import { computeComissoes } from "./metrics/comissoes";
 import { computeDinheiro } from "./metrics/dinheiro";
 import { computePlenario } from "./metrics/plenario";
@@ -20,6 +22,7 @@ import type { NormalizedData } from "./normalize";
 
 export interface ComputedData {
   details: DeputyDetail[];
+  fronts: FrontsIndex;
   metricsIndex: MetricsIndex;
   totals: { nominalPlenaryVotes: number; lastNominalVoteDate: string | null };
 }
@@ -239,6 +242,14 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
       );
     },
   },
+  {
+    key: "frentes",
+    caderno: "articulacao",
+    label: "Frentes parlamentares de que é membro",
+    unit: "contagem",
+    methodologyAnchor: "frentes",
+    pick: (d) => okValue(d.articulacao.frentes.total),
+  },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
@@ -254,6 +265,8 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
   const voz = computeVoz(context, data);
   log.step("Calculando o Caderno 6 — Dinheiro público");
   const dinheiro = computeDinheiro(context, data);
+  log.step("Calculando o Caderno 7 — Articulação e perfil");
+  const articulacao = computeArticulacao(context, data);
 
   const details: DeputyDetail[] = data.deputies.map((deputy) => {
     const of = <T>(map: Map<number, T>, caderno: string): T => {
@@ -272,12 +285,18 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
       fiscalizacao: of(fiscalizacao, "fiscalizacao"),
       voz: of(voz, "voz"),
       dinheiro: of(dinheiro, "dinheiro"),
+      articulacao: of(articulacao, "articulacao"),
     };
   });
 
   const lastVote = data.plenary.votes.at(-1);
   return {
     details,
+    fronts: {
+      schemaVersion: GENERATED_SCHEMA_VERSION,
+      legislatureId: context.legislature.id,
+      frentes: data.articulation.fronts,
+    },
     metricsIndex: buildMetricsIndex(context.legislature.id, details),
     totals: {
       nominalPlenaryVotes: data.plenary.votes.length,

@@ -365,6 +365,52 @@ export const dinheiroSchema = z.object({
 });
 export type Dinheiro = z.infer<typeof dinheiroSchema>;
 
+// ---- Caderno 7 — Articulação e perfil ----
+
+const datedRole = { inicio: localDate, fim: localDate.nullable() };
+
+export const articulacaoSchema = z.object({
+  frentes: z.object({
+    total: count,
+    /** Ids das frentes que coordena (títulos em frentes.json). */
+    coordena: z.array(z.number().int()),
+    /** Ids de todas as frentes de que é membro. */
+    todas: z.array(z.number().int()),
+  }),
+  cargos: z.object({
+    mesa: z.array(z.object({ cargo: z.string(), ...datedRole })),
+    /** Presidências, vice-presidências, relatorias e coordenações em órgãos (exceto a Mesa). */
+    orgaos: z.array(
+      z.object({ sigla: z.string(), nome: z.string(), cargo: z.string(), ...datedRole }),
+    ),
+    liderancas: z.array(
+      z.object({ titulo: z.string(), bancada: z.string(), tipo: z.string(), ...datedRole }),
+    ),
+  }),
+  perfil: z.object({
+    profissoes: z.array(z.string()),
+    ocupacoes: z.array(
+      z.object({
+        titulo: z.string(),
+        entidade: z.string().nullable(),
+        uf: z.string().nullable(),
+        inicio: z.string().nullable(),
+        fim: z.string().nullable(),
+      }),
+    ),
+  }),
+});
+export type Articulacao = z.infer<typeof articulacaoSchema>;
+
+// ---- frentes.json (títulos das frentes parlamentares da legislatura) ----
+
+export const frontsIndexSchema = z.object({
+  schemaVersion: z.literal(GENERATED_SCHEMA_VERSION),
+  legislatureId: z.number().int(),
+  frentes: z.array(z.object({ id: z.number().int(), titulo: z.string() })),
+});
+export type FrontsIndex = z.infer<typeof frontsIndexSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -382,6 +428,7 @@ export const deputyDetailSchema = z.object({
   fiscalizacao: fiscalizacaoSchema,
   voz: vozSchema,
   dinheiro: dinheiroSchema,
+  articulacao: articulacaoSchema,
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
 

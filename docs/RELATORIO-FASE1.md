@@ -58,6 +58,13 @@
 - Leitor de CSV completo (o CSV da cota tem `;` dentro de campos), cache de bytes para os zips, `fflate` para descompactar.
 - Corrigido "R$ 1.000 mil" na formatação compacta.
 
+### Etapa 8 — Articulação e perfil
+
+- Frentes: mediana de 109 por deputado; 198 coordenam alguma; títulos num índice `frentes.json` (29 KB) para não repetir nos 513 arquivos.
+- Cargos: Mesa (22 deputados), presidências/relatorias em órgãos, lideranças pela API `/legislaturas/57/lideres` (paginada até o fim).
+- Perfil: profissões (506 deputados) e ocupações (298), como declaradas.
+- 5 linhas de coordenador de frente sem id do deputado: ignoradas (sem ligação por nome).
+
 ## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
@@ -79,6 +86,7 @@
 - ⚠ Teto: só mar/2026 em diante (página oficial, a conferir no Diário); fev/2023–fev/2026 null; mês corrente fora da comparação (ADR 0017).
 - ⚠ Equipe: zero secretários no arquivo = "sem dado" (abaixo do mínimo legal de 5).
 - ⚠ Emendas: só individuais; orçamentos 2024+; ligação estrita por nome único (todos os anos); execução inclui restos a pagar pagos (ADR 0018).
+- ⚠ Frentes: linhas sem id do deputado ignoradas; "Coordernador" = coordenador.
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
 
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.

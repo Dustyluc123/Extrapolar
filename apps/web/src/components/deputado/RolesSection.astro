@@ -1,0 +1,77 @@
+---
+// Cargos: Mesa Diretora, presidências e relatorias em órgãos e lideranças (Caderno 7).
+import type { Articulacao } from "@extrapolar/shared";
+import Term from "../ui/Term.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatShortDate } from "../../lib/format";
+
+interface Props {
+  articulacao: Articulacao;
+  updatedAt: string;
+}
+const { articulacao: a, updatedAt } = Astro.props;
+const period = (inicio: string, fim: string | null) =>
+  `${formatShortDate(inicio)} ${fim ? `a ${formatShortDate(fim)}` : "até hoje"}`;
+const c = a.cargos;
+const empty = c.mesa.length + c.orgaos.length + c.liderancas.length === 0;
+---
+
+<Metric
+  id="cargos"
+  title="Cargos na Câmara"
+  whatIs="Além do mandato, alguns deputados ocupam cargos: na Mesa Diretora (que dirige a Câmara), na presidência ou relatoria de comissões e grupos, ou como líderes e vice-líderes de partidos, blocos, do Governo ou da oposição."
+  updatedAt={updatedAt}
+  methodologyAnchor="cargos"
+>
+  {empty ? (
+    <p class="caption m-0">
+      Nenhum cargo de direção, relatoria ou liderança registrado na legislatura.
+    </p>
+  ) : (
+    <div class="grid gap-6 lg:grid-cols-3">
+      {[
+        {
+          title: "Mesa Diretora",
+          items: c.mesa.map((m) => ({ main: m.cargo, sub: period(m.inicio, m.fim) })),
+        },
+        {
+          title: "Comissões e outros órgãos",
+          items: c.orgaos.map((o) => ({
+            main: `${o.cargo} — ${o.sigla}`,
+            sub: `${o.nome} · ${period(o.inicio, o.fim)}`,
+          })),
+        },
+        {
+          title: "Lideranças",
+          items: c.liderancas.map((l) => ({
+            main: `${l.titulo} — ${l.bancada}`,
+            sub: period(l.inicio, l.fim),
+          })),
+        },
+      ].map((group) => (
+        <div>
+          <p class="kicker m-0">{group.title}</p>
+          {group.items.length > 0 ? (
+            <ul class="mt-2 mb-0 list-none space-y-2 p-0">
+              {group.items.map((item) => (
+                <li class="border-l-2 border-rule pl-3">
+                  <span class="block font-sans text-sm font-semibold">{item.main}</span>
+                  <span class="block font-sans text-xs text-ink-soft">{item.sub}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="caption mt-1">Nenhum na legislatura.</p>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+  <Fragment slot="limites">
+    <li>
+      Cargos dependem de acordos entre partidos e da eleição interna da Câmara (
+      <Term slug="mesa-diretora">Mesa</Term>).
+    </li>
+    <li>Vice-lideranças costumam ser distribuídas em grande número e mudam com frequência.</li>
+  </Fragment>
+</Metric>

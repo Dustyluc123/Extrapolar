@@ -10,3 +10,4 @@ export * from "./oversight";
 export * from "./discourses";
 export * from "./ceap";
 export * from "./amendments";
+export * from "./articulation";

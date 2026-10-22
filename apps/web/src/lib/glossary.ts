@@ -275,6 +275,18 @@ export const GLOSSARY: GlossaryEntry[] = [
       "As etapas do gasto público: o empenho reserva o dinheiro no Orçamento; a liquidação confirma que o serviço ou a obra foi entregue; o pagamento é a saída do dinheiro. O que fica empenhado e não é pago no ano vira “restos a pagar”.",
     plain: "Empenhar é “separar o dinheiro”; pagar é “o dinheiro sair de fato”.",
   },
+  {
+    slug: "frente-parlamentar",
+    term: "Frente parlamentar",
+    definition:
+      "Associação de deputados (e, nas frentes mistas, também senadores) para promover um tema. É registrada na Câmara com a assinatura de um mínimo de parlamentares.",
+  },
+  {
+    slug: "lider",
+    term: "Líder e vice-líder",
+    definition:
+      "O líder fala em nome de um partido, bloco, do Governo, da Maioria, da Minoria ou da Oposição e orienta o voto da bancada. Os vice-líderes o substituem e ajudam nessa tarefa.",
+  },
 ];
 
 export function glossaryEntry(slug: string): GlossaryEntry {

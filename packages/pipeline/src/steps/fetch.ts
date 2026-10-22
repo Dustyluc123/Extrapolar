@@ -9,6 +9,7 @@ import {
   type CamaraOrgan,
   type CamaraOrganMember,
   type CamaraOrientation,
+  type CamaraLeader,
   type CguAmendmentRow,
   type SourceInfo,
 } from "@extrapolar/shared";
@@ -41,6 +42,15 @@ import {
 import type { DeputyWithHistory } from "../normalize/deputies";
 import { reduceCeap, type DeputyCeap } from "../normalize/money";
 import { fetchAmendments, fetchCeapYear, fetchStaff } from "../sources/dinheiro";
+import {
+  fetchBoard,
+  fetchFrontMembers,
+  fetchFronts,
+  fetchLeaders,
+  fetchOccupations,
+  fetchProfessions,
+} from "../sources/articulacao";
+import type { FrontMembership } from "@extrapolar/metrics";
 import {
   addThemes,
   reducePropositions,
@@ -95,6 +105,24 @@ export interface FetchedSources {
   amendmentRows: CguAmendmentRow[];
   /** Secretários parlamentares por gabinete (retrato do dia anterior). */
   staff: { counts: Map<number, number>; lastModified: string | null };
+  /** Caderno 7: frentes, Mesa, lideranças, profissões e ocupações (só deputados atuais). */
+  articulation: {
+    fronts: { id: number; titulo: string }[];
+    frontMemberships: Map<number, FrontMembership[]>;
+    board: Map<number, { cargo: string; start: string; end: string | null }[]>;
+    leaders: Map<number, CamaraLeader[]>;
+    professions: Map<number, string[]>;
+    occupations: Map<
+      number,
+      {
+        titulo: string;
+        entidade: string | null;
+        uf: string | null;
+        inicio: string | null;
+        fim: string | null;
+      }[]
+    >;
+  };
   /** Discursos por deputado (API, atualização semanal — ADR 0015). */
   discourses: Map<number, DeputyDiscourses & { consultedAt: string }>;
   sources: SourceInfo[];
@@ -229,11 +257,102 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
     staffCounts.set(id, (staffCounts.get(id) ?? 0) + 1);
   }
 
+  log.step("Frentes, Mesa, lideranças e perfil (arquivos e API da Câmara)");
+  const legislatureId = context.legislature.id;
+  const push = <T>(map: Map<number, T[]>, id: number, value: T) => {
+    const list = map.get(id) ?? [];
+    list.push(value);
+    map.set(id, list);
+  };
+  const frontsFile = await fetchFronts(context.fetch);
+  const frontMembersFile = await fetchFrontMembers(context.fetch);
+  const boardFile = await fetchBoard(context.fetch);
+  const professionsFile = await fetchProfessions(context.fetch);
+  const occupationsFile = await fetchOccupations(context.fetch);
+  sources.push(
+    frontsFile.source,
+    frontMembersFile.source,
+    boardFile.source,
+    professionsFile.source,
+    occupationsFile.source,
+  );
+  const leadersList = await fetchLeaders(context.fetch, legislatureId);
+  sources.push({
+    id: "api-lideres",
+    name: "API da Câmara — líderes e vice-líderes da legislatura",
+    url: `${CAMARA_API_BASE}/legislaturas/${legislatureId}/lideres`,
+    lastModified: null,
+  });
+  const frontMemberships = new Map<number, FrontMembership[]>();
+  let frontRowsWithoutId = 0;
+  for (const m of frontMembersFile.items) {
+    if (m.idLegislatura !== legislatureId) continue;
+    if (m.idDeputado === undefined) {
+      frontRowsWithoutId++;
+      continue;
+    }
+    if (deputyIds.has(m.idDeputado)) {
+      push(frontMemberships, m.idDeputado, { frontId: m.id, role: m.tituloDeputado });
+    }
+  }
+  if (frontRowsWithoutId > 0) {
+    context.quality.add(
+      "frente-sem-id-deputado",
+      "Linhas de membros de frentes sem id do deputado (só com o nome); ignoradas.",
+      frontRowsWithoutId,
+    );
+  }
+  const board = new Map<number, { cargo: string; start: string; end: string | null }[]>();
+  for (const b of boardFile.items) {
+    const id = Number(b.idDeputado);
+    if (b.idLegislatura === String(legislatureId) && deputyIds.has(id)) {
+      push(board, id, {
+        cargo: b.cargo,
+        start: b.dataInicio.slice(0, 10),
+        end: b.dataFim ? b.dataFim.slice(0, 10) : null,
+      });
+    }
+  }
+  const leaders = new Map<number, CamaraLeader[]>();
+  for (const l of leadersList)
+    if (deputyIds.has(l.parlamentar.id)) push(leaders, l.parlamentar.id, l);
+  const professions = new Map<number, string[]>();
+  for (const p of professionsFile.items) {
+    const title = p.titulo.trim();
+    if (title && deputyIds.has(p.id) && !(professions.get(p.id) ?? []).includes(title))
+      push(professions, p.id, title);
+  }
+  const occupations: FetchedSources["articulation"]["occupations"] = new Map();
+  for (const o of occupationsFile.items) {
+    const title = o.titulo?.trim();
+    if (!title || !deputyIds.has(o.id)) continue;
+    const clean = (v: string | null) => (v && v.trim() ? v.trim() : null);
+    push(occupations, o.id, {
+      titulo: title,
+      entidade: clean(o.entidade),
+      uf: clean(o.entidadeUF),
+      inicio: clean(o.anoInicio),
+      fim: clean(o.anoFim),
+    });
+  }
+  const articulation: FetchedSources["articulation"] = {
+    fronts: frontsFile.items
+      .filter((f) => f.idLegislatura === legislatureId)
+      .map((f) => ({ id: f.id, titulo: f.titulo.trim() }))
+      .sort((a, b) => a.id - b.id),
+    frontMemberships,
+    board,
+    leaders,
+    professions,
+    occupations,
+  };
+
   log.step("Emendas parlamentares (Portal da Transparência, CGU)");
   const amendments = await fetchAmendments(context.fetch);
   sources.push(amendments.source);
   log.info(`${amendments.rows.length} linhas de emendas`);
   return {
+    articulation,
     ceap,
     amendmentRows: amendments.rows,
     staff: { counts: staffCounts, lastModified: staffFile.source.lastModified },

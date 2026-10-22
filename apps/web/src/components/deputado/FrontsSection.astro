@@ -1,0 +1,62 @@
+---
+// Métrica: frentes parlamentares (Caderno 7).
+import type { Articulacao } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger } from "../../lib/format";
+
+interface Props {
+  articulacao: Articulacao;
+  frontTitles: Map<number, string>;
+  updatedAt: string;
+}
+const { articulacao: a, frontTitles, updatedAt } = Astro.props;
+const title = (id: number) => frontTitles.get(id) ?? `Frente ${id}`;
+const collator = new Intl.Collator("pt-BR");
+const coordinated = a.frentes.coordena.map(title).sort(collator.compare);
+const all = a.frentes.todas.map(title).sort(collator.compare);
+---
+
+<Metric
+  id="frentes"
+  title="Frentes parlamentares"
+  whatIs="Frentes parlamentares são grupos de deputados (e às vezes senadores) que se juntam para defender um tema — da agricultura à proteção de animais. Entrar numa frente é simples: basta assinar a adesão."
+  updatedAt={updatedAt}
+  methodologyAnchor="frentes"
+>
+  <BigNumber
+    value={formatInteger(a.frentes.total)}
+    label="Frentes de que é membro"
+    caption={`Frentes registradas na legislatura que têm o deputado entre os membros${coordinated.length > 0 ? `; é coordenador de ${formatInteger(coordinated.length)}` : ""}.`}
+  />
+  {coordinated.length > 0 ? (
+    <div class="mt-5">
+      <p class="kicker m-0">Coordena</p>
+      <ul class="mt-2 mb-0 list-disc space-y-1 pl-5">
+        {coordinated.map((t) => (
+          <li>{t}</li>
+        ))}
+      </ul>
+    </div>
+  ) : null}
+  {all.length > 0 ? (
+    <details class="mt-5">
+      <summary class="cursor-pointer font-sans text-sm font-semibold">
+        Todas as {formatInteger(all.length)} frentes
+      </summary>
+      <ul class="mt-2 mb-0 columns-1 gap-8 pl-5 text-sm sm:columns-2">
+        {all.map((t) => (
+          <li class="mb-1 break-inside-avoid">{t}</li>
+        ))}
+      </ul>
+    </details>
+  ) : null}
+  <Fragment slot="limites">
+    <li>
+      Ser membro de uma <Term slug="frente-parlamentar">frente</Term> não diz o que o deputado fez
+      por ela.
+    </li>
+    <li>Muitos deputados assinam dezenas de frentes; a quantidade não mede envolvimento.</li>
+  </Fragment>
+</Metric>

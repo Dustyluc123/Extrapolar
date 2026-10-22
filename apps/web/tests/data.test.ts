@@ -40,6 +40,7 @@ describe("JsonDeputyRepository com dado quebrado", () => {
           details: {},
           meta: {},
           metrics: {},
+          fronts: {},
         }),
     ).toThrow(/Dados inválidos em data\/generated\/deputados\.json/);
   });

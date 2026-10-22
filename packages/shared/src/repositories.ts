@@ -1,7 +1,13 @@
 // Interface de acesso aos dados usada pelo site.
 // Hoje: JsonDeputyRepository (apps/web/src/lib/data.ts) lê data/generated.
 // Futuro: uma implementação com PostgreSQL, sem mudar as páginas (ADR 0002).
-import type { DatasetMeta, Deputy, DeputyDetail, MetricsIndex } from "./schemas/generated";
+import type {
+  DatasetMeta,
+  Deputy,
+  DeputyDetail,
+  FrontsIndex,
+  MetricsIndex,
+} from "./schemas/generated";
 
 export interface DeputyProfile {
   deputy: Deputy;
@@ -16,4 +22,6 @@ export interface DeputyRepository {
   getMeta(): Promise<DatasetMeta>;
   /** Valores brutos de todas as métricas (para a Fase 2). */
   getMetricsIndex(): Promise<MetricsIndex>;
+  /** Títulos das frentes parlamentares da legislatura. */
+  getFronts(): Promise<FrontsIndex>;
 }

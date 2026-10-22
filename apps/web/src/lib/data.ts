@@ -5,6 +5,7 @@ import {
   datasetMetaSchema,
   deputiesFileSchema,
   deputyDetailSchema,
+  frontsIndexSchema,
   metricsIndexSchema,
   parseOrThrow,
   type DatasetMeta,
@@ -12,11 +13,13 @@ import {
   type DeputyDetail,
   type DeputyProfile,
   type DeputyRepository,
+  type FrontsIndex,
   type MetricsIndex,
 } from "@extrapolar/shared";
 import rawDeputies from "../../../../data/generated/deputados.json";
 import rawMeta from "../../../../data/generated/meta.json";
 import rawMetrics from "../../../../data/generated/metricas.json";
+import rawFronts from "../../../../data/generated/frentes.json";
 
 // Um arquivo por deputado (ADR 0012), carregados no build.
 const rawDetails = import.meta.glob("../../../../data/generated/deputados/*.json", {
@@ -29,6 +32,7 @@ export interface RawData {
   details: Record<string, unknown>;
   meta: unknown;
   metrics: unknown;
+  fronts: unknown;
 }
 
 export class JsonDeputyRepository implements DeputyRepository {
@@ -38,6 +42,7 @@ export class JsonDeputyRepository implements DeputyRepository {
   private readonly rawDetails: Map<number, { path: string; data: unknown }>;
   private readonly meta: DatasetMeta;
   private readonly metrics: MetricsIndex;
+  private readonly fronts: FrontsIndex;
 
   constructor(raw: RawData) {
     const deputiesFile = parseOrThrow(
@@ -47,6 +52,7 @@ export class JsonDeputyRepository implements DeputyRepository {
     );
     this.meta = parseOrThrow(datasetMetaSchema, raw.meta, "data/generated/meta.json");
     this.metrics = parseOrThrow(metricsIndexSchema, raw.metrics, "data/generated/metricas.json");
+    this.fronts = parseOrThrow(frontsIndexSchema, raw.fronts, "data/generated/frentes.json");
 
     const collator = new Intl.Collator("pt-BR", { sensitivity: "base" });
     this.deputies = [...deputiesFile.deputies].sort(
@@ -89,6 +95,10 @@ export class JsonDeputyRepository implements DeputyRepository {
   async getMetricsIndex(): Promise<MetricsIndex> {
     return this.metrics;
   }
+
+  async getFronts(): Promise<FrontsIndex> {
+    return this.fronts;
+  }
 }
 
 /** Repositório usado pelas páginas. Trocar por outra implementação não muda as páginas (ADR 0002). */
@@ -97,4 +107,5 @@ export const repository: DeputyRepository = new JsonDeputyRepository({
   details: rawDetails,
   meta: rawMeta,
   metrics: rawMetrics,
+  fronts: rawFronts,
 });

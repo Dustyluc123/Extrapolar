@@ -1,0 +1,61 @@
+---
+// Perfil: profissões e ocupações declaradas (Caderno 7). Contexto, não métrica.
+import type { Articulacao } from "@extrapolar/shared";
+import Metric from "../ficha/Metric.astro";
+
+interface Props {
+  articulacao: Articulacao;
+  updatedAt: string;
+}
+const { articulacao: a, updatedAt } = Astro.props;
+const p = a.perfil;
+---
+
+<Metric
+  id="perfil"
+  title="Perfil declarado"
+  whatIs="Profissões e ocupações que o próprio deputado declarou à Câmara. Não é uma métrica: é contexto para conhecer quem é a pessoa."
+  updatedAt={updatedAt}
+  methodologyAnchor="perfil"
+>
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div>
+      <p class="kicker m-0">Profissões</p>
+      {p.profissoes.length > 0 ? (
+        <p class="mt-2 mb-0 flex flex-wrap gap-2">
+          {p.profissoes.map((x) => (
+            <span class="rounded-full border border-ink/60 px-3 py-0.5 font-sans text-sm">{x}</span>
+          ))}
+        </p>
+      ) : (
+        <p class="caption mt-1">Nenhuma profissão declarada.</p>
+      )}
+    </div>
+    <div>
+      <p class="kicker m-0">Ocupações</p>
+      {p.ocupacoes.length > 0 ? (
+        <ul class="mt-2 mb-0 list-none space-y-2 p-0">
+          {p.ocupacoes.map((o) => (
+            <li class="border-l-2 border-rule pl-3">
+              <span class="block font-sans text-sm font-semibold">{o.titulo}</span>
+              <span class="block font-sans text-xs text-ink-soft">
+                {[o.entidade, o.uf, [o.inicio, o.fim].filter(Boolean).join("–")]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="caption mt-1">Nenhuma ocupação declarada.</p>
+      )}
+    </div>
+  </div>
+  <Fragment slot="limites">
+    <li>
+      São informações declaradas pelo próprio deputado, como a Câmara publica (inclusive datas em
+      texto livre).
+    </li>
+    <li>Não indicam formação nem experiência completas.</li>
+  </Fragment>
+</Metric>

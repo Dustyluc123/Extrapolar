@@ -38,6 +38,7 @@ export interface NormalizedData {
   organs: FetchedSources["organs"];
   discourses: FetchedSources["discourses"];
   ceap: FetchedSources["ceap"];
+  articulation: FetchedSources["articulation"];
   staff: FetchedSources["staff"];
   amendmentLinks: AuthorLinking;
   amendmentsByAuthor: Map<string, AmendmentRow[]>;
@@ -105,6 +106,7 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
     organs: fetched.organs,
     discourses: fetched.discourses,
     ceap: fetched.ceap,
+    articulation: fetched.articulation,
     staff: fetched.staff,
     amendmentLinks,
     amendmentsByAuthor: amendmentRowsByAuthor(fetched.amendmentRows, amendmentYears),

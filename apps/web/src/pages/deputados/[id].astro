@@ -24,6 +24,9 @@ import VoiceSection from "../../components/deputado/VoiceSection.astro";
 import CeapSection from "../../components/deputado/CeapSection.astro";
 import StaffSection from "../../components/deputado/StaffSection.astro";
 import AmendmentsSection from "../../components/deputado/AmendmentsSection.astro";
+import FrontsSection from "../../components/deputado/FrontsSection.astro";
+import RolesSection from "../../components/deputado/RolesSection.astro";
+import ProfileSection from "../../components/deputado/ProfileSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -40,6 +43,7 @@ const profile = await repository.getDeputy(id);
 if (!profile) throw new Error(`Deputado ${id} não encontrado nos dados gerados.`);
 const { deputy, detail } = profile;
 const meta = await repository.getMeta();
+const frontTitles = new Map((await repository.getFronts()).frentes.map((f) => [f.id, f.titulo]));
 const updatedAt = meta.referenceDateTime;
 
 const cadernos = [
@@ -49,6 +53,7 @@ const cadernos = [
   { id: "caderno-fiscalizacao", label: "Fiscalização" },
   { id: "caderno-voz", label: "Voz" },
   { id: "caderno-dinheiro", label: "Dinheiro público" },
+  { id: "caderno-articulacao", label: "Articulação e perfil" },
 ];
 const conditionSlug =
   deputy.electoralCondition === "Titular"
@@ -192,6 +197,21 @@ const conditionSlug =
       <CeapSection cota={detail.dinheiro.cota} state={deputy.state} updatedAt={updatedAt} />
       <StaffSection equipe={detail.dinheiro.equipe} updatedAt={updatedAt} />
       <AmendmentsSection emendas={detail.dinheiro.emendas} updatedAt={updatedAt} />
+    </Caderno>
+
+    <Caderno
+      id="caderno-articulacao"
+      number={7}
+      title="Articulação e perfil"
+      intro="Com quem o deputado se junta, os cargos que ocupa e o que ele declara sobre si."
+    >
+      <FrontsSection
+        articulacao={detail.articulacao}
+        frontTitles={frontTitles}
+        updatedAt={updatedAt}
+      />
+      <RolesSection articulacao={detail.articulacao} updatedAt={updatedAt} />
+      <ProfileSection articulacao={detail.articulacao} updatedAt={updatedAt} />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

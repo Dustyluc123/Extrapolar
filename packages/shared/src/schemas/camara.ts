@@ -322,3 +322,57 @@ export const cguAmendmentRowSchema = z.object({
   "Valor Restos A Pagar Pagos": decimalComma,
 });
 export type CguAmendmentRow = z.infer<typeof cguAmendmentRowSchema>;
+
+// ---- Caderno 7: frentes, Mesa, lideranças, profissões e ocupações ----
+
+export const camaraFrontSchema = z.object({
+  id: z.number().int().positive(),
+  titulo: z.string().min(1),
+  idLegislatura: z.number().int(),
+});
+export const camaraFrontsFileSchema = z.object({ dados: z.array(camaraFrontSchema) });
+
+export const camaraFrontMemberSchema = z.object({
+  id: z.number().int().positive(),
+  /** Ausente em algumas linhas de coordenador (só com o nome); essas linhas são ignoradas. */
+  idDeputado: z.number().int().positive().optional(),
+  idLegislatura: z.number().int(),
+  /** "Membro", "Coordenador" (às vezes grafado "Coordernador"). */
+  tituloDeputado: z.string(),
+});
+export const camaraFrontMembersFileSchema = z.object({ dados: z.array(camaraFrontMemberSchema) });
+
+export const camaraBoardMemberSchema = z.object({
+  idDeputado: z.string().regex(/^\d+$/),
+  idLegislatura: z.string().regex(/^\d+$/),
+  cargo: z.string().min(1),
+  dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/),
+  dataFim: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)]),
+});
+export const camaraBoardFileSchema = z.object({ dados: z.array(camaraBoardMemberSchema) });
+
+export const camaraLeaderSchema = z.object({
+  parlamentar: z.object({ id: z.number().int().positive() }),
+  titulo: z.string().min(1),
+  bancada: z.object({ tipo: z.string(), nome: z.string() }),
+  dataInicio: z.string().regex(LOCAL_DATE),
+  dataFim: z.string().regex(LOCAL_DATE).nullable(),
+});
+export type CamaraLeader = z.infer<typeof camaraLeaderSchema>;
+export const camaraLeadersPageSchema = apiPageSchema(camaraLeaderSchema);
+
+export const camaraProfessionSchema = z.object({
+  id: z.number().int().positive(),
+  titulo: z.string(),
+});
+export const camaraProfessionsFileSchema = z.object({ dados: z.array(camaraProfessionSchema) });
+
+export const camaraOccupationSchema = z.object({
+  id: z.number().int().positive(),
+  titulo: z.string().nullable(),
+  entidade: z.string().nullable(),
+  entidadeUF: z.string().nullable(),
+  anoInicio: z.string().nullable(),
+  anoFim: z.string().nullable(),
+});
+export const camaraOccupationsFileSchema = z.object({ dados: z.array(camaraOccupationSchema) });

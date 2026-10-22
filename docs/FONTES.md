@@ -113,6 +113,17 @@ Formato conferido em 22/10/2026: `{ "dados": [ { "dataHoraInicio": "2026-09-02T1
 - Campos usados: `Ano da Emenda`, `Tipo de Emenda` (Individual — Transferências com Finalidade Definida, Individual — Transferências Especiais, de Relator, de Bancada, de Comissão), `Código do Autor da Emenda`, `Nome do Autor da Emenda`, `Localidade de aplicação do recurso`, `Valor Empenhado`, `Valor Liquidado`, `Valor Pago`, `Valor Restos A Pagar Pagos` (vírgula decimal).
 - Condições de uso: TODO (Lucas): conferir a licença dos dados do Portal da Transparência.
 
+## Fase 1, Caderno 7 — Articulação e perfil
+
+Formatos conferidos em 22/10/2026:
+
+- `frentes/json/frentes.json`: `{ "id": 53249, "titulo": "Frente Parlamentar Mista da Habitação", "dataCriacao": "…", "idLegislatura": 53, "coordenador": {…}, … }` (320 frentes na 57ª legislatura).
+- `frentesDeputados/json/frentesDeputados.json` (**~150 MB**, todas as legislaturas): `{ "id": 55703, "titulo": "…", "idDeputado": 220686 (às vezes ausente), "idLegislatura": 57, "tituloDeputado": "Membro" | "Coordenador" | "Coordernador", … }`. Linhas sem `idDeputado` (256 no arquivo, 5 na 57ª) vêm só com o nome e são ignoradas.
+- `legislaturasMesas/json/legislaturasMesas.json`: `{ "idDeputado": "73552" (texto), "cargo": "Presidente", "dataInicio": "1999-02-02T00:00:00", "dataFim": "…" | "", "idLegislatura": "51" (texto), … }`.
+- API `GET /legislaturas/{id}/lideres?itens=100&pagina=N`: `{ "parlamentar": { "id": …, … }, "titulo": "Vice-Líder", "bancada": { "tipo": "Bloco Parlamentar", "nome": "…" }, "dataInicio": "AAAA-MM-DD", "dataFim": "AAAA-MM-DD" | null }`. Mais de 2.000 registros na 57ª legislatura (paginado até o fim).
+- `deputadosProfissoes/json/deputadosProfissoes.json`: `{ "id": 236518, "dataHora": "", "codTipoProfissao": 0, "titulo": "" }` (1.084 registros com título vazio, ignorados).
+- `deputadosOcupacoes/json/deputadosOcupacoes.json`: `{ "id": 236375, "titulo": "Executivo de Futebol", "entidade": "Clube do Remo", "entidadeUF": "PA", "anoInicio": "2025", "anoFim": "2025" }` (anos em texto livre).
+
 ## Fotos dos deputados
 
 - Origem: URL oficial de cada deputado (`urlFoto`), servida por `https://www.camara.leg.br/internet/deputado/bandep/{id}.jpg`.

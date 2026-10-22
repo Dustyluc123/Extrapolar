@@ -484,3 +484,30 @@ As **emendas individuais** são a parte do Orçamento federal que cada deputado 
 - **Quem decide o ritmo de pagamento é o Poder Executivo, não o deputado.** A execução não é "eficiência do gabinete".
 - Emendas de bancada, de comissão e de relator não entram (não pertencem a um único deputado).
 - Em 22/10/2026, 19 deputados ficaram sem ligação: 12 têm o mesmo nome com dois códigos na base (de mandatos diferentes, aguardando conferência manual) e 7 não têm autor com o mesmo nome (posse recente ou licença, por exemplo).
+
+<a id="frentes"></a>
+
+## Frentes parlamentares
+
+Quantas frentes parlamentares registradas na legislatura têm o deputado entre os membros, e quais ele coordena.
+
+- Fontes: `frentes/json/frentes.json` (títulos) e `frentesDeputados/json/frentesDeputados.json` (membros; ~150 MB), filtrados pela 57ª legislatura.
+- Coordenador: título "Coordenador" (o arquivo também traz a grafia "Coordernador", tratada como a mesma coisa).
+- Algumas linhas de coordenador vêm só com o nome, sem o id do deputado (5 na legislatura, em 22/10/2026); elas são ignoradas, sem ligação por nome.
+- **Limitação:** entrar numa frente é só assinar a adesão; a quantidade não mede envolvimento.
+
+<a id="cargos"></a>
+
+## Cargos na Câmara
+
+- **Mesa Diretora:** `legislaturasMesas/json/legislaturasMesas.json`, cargos da 57ª legislatura.
+- **Comissões e outros órgãos:** cargos diferentes de "Titular" e "Suplente" (presidente, vice-presidente, relator, coordenador...) no arquivo `orgaosDeputados-L57`, exceto a Mesa.
+- **Lideranças:** API `GET /legislaturas/57/lideres` (líder, vice-líder, 1º vice-líder, representante...), com a bancada (partido, bloco, Governo, Maioria, Minoria, Oposição) e o período.
+- Só cargos que tocam o período da legislatura até a data da atualização.
+- **Limitação:** cargos dependem de acordos entre partidos e de eleições internas; vice-lideranças são numerosas e mudam com frequência.
+
+<a id="perfil"></a>
+
+## Perfil declarado
+
+Profissões (`deputadosProfissoes`) e ocupações (`deputadosOcupacoes`) declaradas pelo próprio deputado à Câmara, como publicadas (inclusive datas de ocupação em texto livre). **Não é métrica**: é contexto.
