@@ -63,6 +63,8 @@ export const camaraVoteSchema = z.object({
   descricao: z.string(),
   /** Usado para reconhecer votação secreta ("Votação secreta em turno único."). */
   ultimaAberturaVotacao: z.object({ descricao: z.string() }).optional(),
+  /** Resultado oficial: 1 = aprovada, 0 = rejeitada. Ausente em algumas votações (Fase 2, jogos). */
+  aprovacao: z.union([z.literal(0), z.literal(1)]).optional(),
 });
 export type CamaraVote = z.infer<typeof camaraVoteSchema>;
 export const camaraVotesFileSchema = z.object({ dados: z.array(camaraVoteSchema) });
@@ -234,6 +236,10 @@ export const camaraPropositionSchema = z.object({
   siglaTipo: z.string(),
   codTipo: z.number().int(),
   descricaoTipo: z.string(),
+  /** Número e ano da proposição (ex.: PL 6139/2023). Usados nos jogos (Fase 2). */
+  numero: z.number().int(),
+  ano: z.number().int(),
+  ementa: z.string(),
   dataApresentacao: z.string().regex(LOCAL_DATE_TIME),
   /** Proposição à qual esta está apensada (tramitando em conjunto), ou "". */
   uriPropPrincipal: z.union([z.literal(""), apiUri("proposicoes")]),
@@ -376,3 +382,50 @@ export const camaraOccupationSchema = z.object({
   anoFim: z.string().nullable(),
 });
 export const camaraOccupationsFileSchema = z.object({ dados: z.array(camaraOccupationSchema) });
+
+// ---- Fase 2 (jogos) ----
+
+/** Arquivo votacoesProposicoes-{ano}.json: proposições afetadas por cada votação. */
+export const camaraVotePropositionSchema = z.object({
+  idVotacao: z.string().min(1),
+  proposicao_: z.object({
+    id: z.number().int().positive(),
+    siglaTipo: z.string(),
+    numero: z.number().int(),
+    /** Ausente em itens acessórios (relatórios, emendas): esses são ignorados. */
+    ano: z.number().int().optional(),
+    ementa: z.string(),
+  }),
+});
+export type CamaraVoteProposition = z.infer<typeof camaraVotePropositionSchema>;
+export const camaraVotePropositionsFileSchema = z.object({
+  dados: z.array(camaraVotePropositionSchema),
+});
+
+/** API /proposicoes?siglaTipo=&numero=&ano= (proposição citada que não está nos arquivos). */
+export const camaraPropositionSearchItemSchema = z.object({
+  id: z.number().int().positive(),
+  siglaTipo: z.string(),
+  numero: z.number().int(),
+  ano: z.number().int(),
+  ementa: z.string(),
+  dataApresentacao: z.string(),
+});
+export const camaraPropositionSearchPageSchema = apiPageSchema(camaraPropositionSearchItemSchema);
+
+/** API /proposicoes/{id}: só os campos usados para conferir proposições renumeradas. */
+export const camaraPropositionDetailSchema = z.object({
+  dados: camaraPropositionSearchItemSchema,
+});
+
+/** Arquivo deputados/json/deputados.json: todos os deputados da história (nascimento, 1ª legislatura). */
+export const camaraDeputyRecordSchema = z.object({
+  uri: apiUri("deputados"),
+  nome: z.string(),
+  idLegislaturaInicial: z.number().int(),
+  idLegislaturaFinal: z.number().int(),
+  dataNascimento: z.union([z.literal(""), z.string().regex(LOCAL_DATE)]).nullable(),
+  ufNascimento: z.string().nullable(),
+});
+export type CamaraDeputyRecord = z.infer<typeof camaraDeputyRecordSchema>;
+export const camaraDeputyRecordsFileSchema = z.object({ dados: z.array(camaraDeputyRecordSchema) });

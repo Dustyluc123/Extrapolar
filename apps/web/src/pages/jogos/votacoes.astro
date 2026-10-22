@@ -1,0 +1,68 @@
+---
+// Lista das votações usadas nos jogos, da mais recente para a mais antiga (ordem por data).
+// Transparência: cada uma com a proposição, o resultado oficial e os links para conferir.
+import "../../styles/games.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Headline from "../../components/ui/Headline.astro";
+import { gameVotes, propositionUrl, voteDataUrl, voteText } from "../../lib/games/data";
+import { formatInteger, formatShortDate } from "../../lib/format";
+
+const votes = [...gameVotes.votes].reverse();
+const reasons: Record<string, string> = {
+  procedimento: "procedimento, destaque ou emenda isolada",
+  secreta: "votação secreta (sem voto individual)",
+  "sem-proposicao": "proposição não identificada",
+  "tipo-fora": "tipo de proposição fora da lista",
+  "sem-resultado": "sem resultado oficial no arquivo",
+  "resultado-divergente": "descrição e resultado oficial não batem",
+};
+const excluded = Object.entries(gameVotes.excluded).filter(([, n]) => n > 0);
+---
+
+<BaseLayout
+  title="Votações dos jogos"
+  description="As votações nominais de mérito do plenário usadas nos jogos do Extrapolar, com resultado oficial e links para a Câmara."
+  current="jogos"
+>
+  <p class="kicker m-0">
+    <a href="/jogos">Jogos</a> · Bastidores
+  </p>
+  <Headline as="h1" size="xl" class="mt-2">
+    Votações dos jogos
+  </Headline>
+  <p class="mt-3 max-w-prose text-lg">
+    {formatInteger(votes.length)} votações nominais de mérito do plenário nesta legislatura, da mais
+    recente para a mais antiga. Regras na <a href="/metodologia#votacoes-dos-jogos">metodologia</a>.
+  </p>
+  <p class="caption max-w-prose">
+    De {formatInteger(gameVotes.nominalVotes)} votações nominais, ficaram fora:
+    {excluded.map(
+      ([reason, n], i) =>
+        `${i > 0 ? "; " : ""}${formatInteger(n)} por ${reasons[reason] ?? reason}`,
+    )}
+    .
+  </p>
+
+  <ol class="mt-6 list-none p-0">
+    {votes.map((vote) => {
+      const { text, isPlain } = voteText(vote);
+      return (
+        <li class="border-t border-rule py-4">
+          <p class="kicker m-0">
+            {formatShortDate(vote.date)} · {vote.proposition.label}
+            {vote.turn ? ` · ${vote.turn} turno` : ""}
+          </p>
+          <p class="m-0 mt-1">{text}</p>
+          {isPlain ? <p class="caption m-0">Resumo em linguagem simples, revisado.</p> : null}
+          <p class="m-0 mt-1 font-sans text-sm">
+            <strong>{vote.approved ? "Aprovada" : "Rejeitada"}</strong> · Sim{" "}
+            {formatInteger(vote.official.yes)} · Não {formatInteger(vote.official.no)} · outros{" "}
+            {formatInteger(vote.official.others)} ·{" "}
+            <a href={propositionUrl(vote.proposition.id)}>proposição na Câmara</a> ·{" "}
+            <a href={voteDataUrl(vote.id)}>dado bruto</a>
+          </p>
+        </li>
+      );
+    })}
+  </ol>
+</BaseLayout>

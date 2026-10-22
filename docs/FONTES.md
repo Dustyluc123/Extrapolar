@@ -124,6 +124,20 @@ Formatos conferidos em 22/10/2026:
 - `deputadosProfissoes/json/deputadosProfissoes.json`: `{ "id": 236518, "dataHora": "", "codTipoProfissao": 0, "titulo": "" }` (1.084 registros com título vazio, ignorados).
 - `deputadosOcupacoes/json/deputadosOcupacoes.json`: `{ "id": 236375, "titulo": "Executivo de Futebol", "entidade": "Clube do Remo", "entidadeUF": "PA", "anoInicio": "2025", "anoFim": "2025" }` (anos em texto livre).
 
+## Fase 2 — Jogos
+
+Conferidos em 22/10/2026 com amostras reais.
+
+- `arquivos/votacoesProposicoes/json/votacoesProposicoes-{ano}.json` (4 a 8 MB por ano): proposições afetadas por cada votação. `{ "dados": [ { "idVotacao": "2543171-49", "data": "…", "descricao": "…", "proposicao_": { "id": 2543171, "siglaTipo": "PL", "numero": 6139, "ano": 2023, "ementa": "…", "titulo": "PL 6139/2023", "codTipo": 139, "uri": "…" } } ] }`.
+  - Itens acessórios (relatórios de comissão mista, emendas, recursos) vêm **sem `ano`** (6 na legislatura): são ignorados.
+  - A proposição ligada nem sempre é a votada: às vezes é a principal (à qual o projeto votado está apensado) ou uma mensagem (MSC). Por isso a proposição usada é a **citada na descrição do resultado** (ADR 0019).
+- `arquivos/votacoesObjetos/json/votacoesObjetos-{ano}.json` (21 MB em 2026): objetos de cada votação (pareceres, emendas…). **Não é usado**: a descrição do resultado e o arquivo de proposições bastam.
+- Campo `aprovacao` do arquivo de votações (já baixado): `1` = aprovada, `0` = rejeitada; ausente em 282 votações dos 4 anos (nenhuma delas de mérito no plenário). É o resultado oficial usado nos jogos.
+- `arquivos/proposicoes/json/proposicoes-{ano}.json` (já baixado): agora também `numero`, `ano` e `ementa`, para achar a proposição citada.
+- API `GET /proposicoes?siglaTipo=&numero=&ano=&dataApresentacaoInicio=&dataApresentacaoFim=`: para proposições citadas de anos fora da legislatura. **Sem período, devolve só proposições com tramitação nos últimos 30 dias**; com período, aceita no máximo **3 meses** (erro 400 "A diferença entre as datas não pode ser maior que 3 meses"). A busca vai trimestre a trimestre do ano citado, com cache de 30 dias.
+- API `GET /proposicoes/{id}`: ano de apresentação, para conferir projetos antigos **renumerados** pela Câmara (ex.: o PL 6.385/2016, apresentado em 25/10/2016, aparece hoje como PL 2.721/2023, com o mesmo id 2115253; a tramitação cita o número antigo).
+- `arquivos/deputados/json/deputados.json` (3,6 MB, todos os deputados da história, 7.889 em 22/10/2026): `{ "uri": ".../deputados/204379", "nome": "…", "idLegislaturaInicial": 56, "idLegislaturaFinal": 57, "dataNascimento": "1983-09-28", "ufNascimento": "AP", "municipioNascimento": "Macapá", "siglaSexo": "M", … }`. Usados no Dle: ano de nascimento, estado natal e a primeira legislatura (ano de início = 1951 + 4 × (legislatura − 39)). Os 648 deputados da 57ª legislatura têm data de nascimento preenchida. Não há contagem oficial de mandatos (só a primeira e a última legislatura), por isso o Dle usa "na Câmara desde". `siglaSexo` não é usado.
+
 ## Fotos dos deputados
 
 - Origem: URL oficial de cada deputado (`urlFoto`), servida por `https://www.camara.leg.br/internet/deputado/bandep/{id}.jpg`.

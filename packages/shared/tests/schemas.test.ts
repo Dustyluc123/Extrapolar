@@ -162,3 +162,30 @@ describe("esquemas de saída", () => {
     expect(() => parseOrThrow(metricsIndexSchema, index, "metricas.json")).toThrow(/values/);
   });
 });
+
+describe("esquemas de entrada da Fase 2 (jogos)", () => {
+  it("votacoesProposicoes: aceita item acessório sem ano", async () => {
+    const { camaraVotePropositionsFileSchema } = await import("../src/index");
+    const sample = (await import("./fixtures/votacoesProposicoes-amostra.json")).default;
+    const parsed = parseOrThrow(camaraVotePropositionsFileSchema, sample, "votacoesProposicoes");
+    expect(parsed.dados[0]?.proposicao_.ano).toBeTypeOf("number");
+    expect(parsed.dados[1]?.proposicao_.ano).toBeUndefined();
+  });
+
+  it("deputados.json (todas as legislaturas): nascimento e primeira legislatura", async () => {
+    const { camaraDeputyRecordsFileSchema } = await import("../src/index");
+    const sample = (await import("./fixtures/deputados-historico-amostra.json")).default;
+    const parsed = parseOrThrow(camaraDeputyRecordsFileSchema, sample, "deputados.json");
+    expect(parsed.dados[0]).toMatchObject({
+      idLegislaturaInicial: 56,
+      dataNascimento: "1983-09-28",
+      ufNascimento: "AP",
+    });
+  });
+
+  it("votação com resultado fora de 0/1 é recusada", () => {
+    const bad = clone(votes) as { dados: Record<string, unknown>[] };
+    bad.dados[0]!.aprovacao = 2;
+    expect(() => parseOrThrow(camaraVotesFileSchema, bad, "votacoes")).toThrow(DataValidationError);
+  });
+});

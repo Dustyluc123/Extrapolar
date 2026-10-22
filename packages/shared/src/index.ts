@@ -12,4 +12,5 @@ export * from "./sources";
 export * from "./validation";
 export * from "./schemas/camara";
 export * from "./schemas/generated";
+export * from "./schemas/games";
 export * from "./repositories";

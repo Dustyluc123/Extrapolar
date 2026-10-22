@@ -1,0 +1,35 @@
+{
+  "dados": [
+    {
+      "idVotacao": "1028972-57",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/1028972-57",
+      "data": "2023-08-30",
+      "descricao": "Aprovado o Parecer.",
+      "proposicao_": {
+        "id": 1028972,
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/proposicoes/1028972",
+        "titulo": "PL 754/2015",
+        "ementa": "Altera a Lei nº 9.605, de 12 de fevereiro de 1998 (Lei dos Crimes Ambientais), para criminalizar a extração de corais.",
+        "codTipo": 139,
+        "siglaTipo": "PL",
+        "numero": 754,
+        "ano": 2015
+      }
+    },
+    {
+      "idVotacao": "2375160-8",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/2375160-8",
+      "data": "2023-11-07",
+      "descricao": "Aprovado o Relatório Preliminar com Emendas e a Errata nº 2, ressalvados os Destaques.\r\nOs Destaques nº 1 e 2 foram prejudicados em razão da ausência do autor, Senador Laércio Oliveira, conforme o §1º do art. 138 da Resolução nº  1/2006-CN.",
+      "proposicao_": {
+        "id": 2375160,
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/proposicoes/2375160",
+        "titulo": "RPLE 1 CMO => PLN 4/2023 CN",
+        "ementa": "VOTO: pela aprovação na forma ora apresentada. Quanto às 44 (quarenta e quatro) emendas apresentadas, ofereceu voto pela APROVAÇÃO às de nºs 3, 5, 14, 34 e 35; APROVAÇÃO PARCIAL às de nºs 6, 10, 11, 13, 18, 26, 30, 31 e 40; e REJEITADAS às demais.",
+        "codTipo": 679,
+        "siglaTipo": "RPLE",
+        "numero": 1
+      }
+    }
+  ]
+}

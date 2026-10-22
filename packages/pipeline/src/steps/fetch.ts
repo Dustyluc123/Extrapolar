@@ -25,6 +25,8 @@ import {
   type DeputyDiscourses,
   fetchThemeNames,
   historySourceUrl,
+  fetchPropositionDetail,
+  searchProposition,
   type Federation,
 } from "../sources/camara-api";
 import {
@@ -62,6 +64,14 @@ import {
   selectNominalPlenaryVotes,
   type PlenaryVotesSelection,
 } from "../normalize/votes";
+import { isSecretVote } from "../normalize/votes";
+import {
+  MERIT_PROPOSITION_TYPES,
+  canonicalType,
+  parseMeritDescription,
+  propositionKey,
+  type PropositionInfo,
+} from "../normalize/eligible-votes";
 import type { PipelineContext } from "./context";
 
 export interface EventInfo {
@@ -70,6 +80,32 @@ export interface EventInfo {
   organs: string[];
   description: string;
   finished: boolean;
+}
+
+export interface PlenaryVoteInfo {
+  id: string;
+  date: string;
+  /** Data e hora do registro (para ordenar votações do mesmo dia). */
+  dateTime: string;
+  description: string;
+  approval: 0 | 1 | undefined;
+  secret: boolean;
+  /** Contagem oficial do arquivo de votações. */
+  official: { yes: number; no: number; others: number };
+}
+
+export interface GameVotesSources {
+  info: Map<string, PlenaryVoteInfo>;
+  /** Proposições ligadas a cada votação (arquivo votacoesProposicoes). */
+  linked: Map<string, PropositionInfo[]>;
+  /** Proposições de mérito por "SIGLA número/ano" (arquivos anuais + busca na API). */
+  lookup: Map<string, PropositionInfo>;
+}
+
+export interface DeputyRecord {
+  birthDate: string | null;
+  birthState: string | null;
+  firstLegislature: number;
 }
 
 export interface FetchedSources {
@@ -123,6 +159,10 @@ export interface FetchedSources {
       }[]
     >;
   };
+  /** Dados das votações nominais de plenário para os jogos (Fase 2, ADR 0019). */
+  gameVotes: GameVotesSources;
+  /** Nascimento e primeira legislatura de cada deputado atual (arquivo estático). */
+  deputyRecords: Map<number, DeputyRecord>;
   /** Discursos por deputado (API, atualização semanal — ADR 0015). */
   discourses: Map<number, DeputyDiscourses & { consultedAt: string }>;
   sources: SourceInfo[];
@@ -236,6 +276,32 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
 
   const deputyIds = new Set(list.map((item) => item.id));
   const years = await fetchYears(context, sources, committeeOrganIds, deputyIds);
+
+  log.step("Jogos: proposições citadas que não estão nos arquivos (API da Câmara)");
+  const missing = await resolveCitedPropositions(context, years.gameVotes);
+  log.info(`${missing.found} achada(s) na API; ${missing.notFound} não encontrada(s)`);
+  if (missing.found + missing.notFound > 0) {
+    sources.push({
+      id: "api-proposicoes-busca",
+      name: "API da Câmara — busca de proposições por sigla, número e ano",
+      url: `${CAMARA_API_BASE}/proposicoes`,
+      lastModified: null,
+    });
+  }
+
+  log.step("Deputados de todas as legislaturas (arquivo estático): nascimento e estreia");
+  const recordsFile = await fetchStaticFile(context.fetch, STATIC_FILES.deputyRecords);
+  sources.push(recordsFile.source);
+  const deputyRecords = new Map<number, DeputyRecord>();
+  for (const record of recordsFile.items) {
+    const id = idFromUri(record.uri);
+    if (!deputyIds.has(id)) continue;
+    deputyRecords.set(id, {
+      birthDate: record.dataNascimento ? record.dataNascimento : null,
+      birthState: record.ufNascimento?.trim() ? record.ufNascimento.trim() : null,
+      firstLegislature: record.idLegislaturaInicial,
+    });
+  }
 
   log.step("Cota parlamentar (arquivos da Câmara)");
   const ceap = new Map<number, DeputyCeap>();
@@ -352,6 +418,7 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
   sources.push(amendments.source);
   log.info(`${amendments.rows.length} linhas de emendas`);
   return {
+    deputyRecords,
     articulation,
     ceap,
     amendmentRows: amendments.rows,
@@ -389,6 +456,7 @@ async function fetchYears(
     | "authorship"
     | "propositions"
     | "propositionThemes"
+    | "gameVotes"
   >
 > {
   log.step("Baixando arquivos anuais (arquivos estáticos da Câmara)");
@@ -406,6 +474,8 @@ async function fetchYears(
   const propositionThemes = new Map<number, number[]>();
   const limit = end < referenceDateTime ? end : referenceDateTime;
   const seenVotes = new Set<string>();
+  const gameVotes: GameVotesSources = { info: new Map(), linked: new Map(), lookup: new Map() };
+  const meritTypes = new Set<string>(MERIT_PROPOSITION_TYPES);
 
   const addPresences = (byDeputy: Map<number, Set<number>>) => {
     for (const [deputyId, ids] of byDeputy) {
@@ -445,6 +515,30 @@ async function fetchYears(
     for (const vote of newVotes) selection.votes.push(vote);
     for (const ballot of yearSelection.ballots) {
       if (newIds.has(ballot.voteId)) selection.ballots.push(ballot);
+    }
+
+    // Jogos: descrição, resultado oficial e proposições ligadas a cada votação nominal
+    for (const vote of votesFile.items) {
+      if (!newIds.has(vote.id)) continue;
+      gameVotes.info.set(vote.id, {
+        id: vote.id,
+        date: vote.data,
+        dateTime: vote.dataHoraRegistro || `${vote.data}T00:00:00`,
+        description: vote.descricao,
+        approval: vote.aprovacao,
+        secret: isSecretVote(vote),
+        official: { yes: vote.votosSim, no: vote.votosNao, others: vote.votosOutros },
+      });
+    }
+    const votePropsFile = await fetchYearFile(context.fetch, YEAR_FILES.voteProps, year);
+    sources.push(votePropsFile.source);
+    for (const row of votePropsFile.items) {
+      if (!newIds.has(row.idVotacao)) continue;
+      const p = row.proposicao_;
+      if (p.ano === undefined) continue; // relatório, emenda ou outro item acessório
+      const list = gameVotes.linked.get(row.idVotacao) ?? [];
+      list.push({ id: p.id, type: p.siglaTipo, number: p.numero, year: p.ano, summary: p.ementa });
+      gameVotes.linked.set(row.idVotacao, list);
     }
 
     // Requerimentos que originaram eventos
@@ -515,6 +609,16 @@ async function fetchYears(
     addAuthors(authorship, authorsFile.items);
     const propositionsFile = await fetchYearFile(context.fetch, YEAR_FILES.propositions, year);
     sources.push(propositionsFile.source);
+    for (const p of propositionsFile.items) {
+      if (!meritTypes.has(canonicalType(p.siglaTipo))) continue;
+      gameVotes.lookup.set(propositionKey(p.siglaTipo, p.numero, p.ano), {
+        id: p.id,
+        type: p.siglaTipo,
+        number: p.numero,
+        year: p.ano,
+        summary: p.ementa,
+      });
+    }
     reducePropositions({
       target: propositions,
       items: propositionsFile.items,
@@ -544,5 +648,88 @@ async function fetchYears(
     authorship,
     propositions,
     propositionThemes,
+    gameVotes,
+  };
+}
+
+/**
+ * Proposições citadas na descrição de votações de mérito que não estão ligadas à votação nem nos
+ * arquivos anuais da legislatura (projetos antigos, como a PEC 45/2019): busca na API.
+ */
+async function resolveCitedPropositions(
+  context: PipelineContext,
+  gameVotes: GameVotesSources,
+): Promise<{ found: number; notFound: number }> {
+  const wanted = new Map<
+    string,
+    { type: string; number: number; year: number; voteIds: string[] }
+  >();
+  for (const info of gameVotes.info.values()) {
+    if (info.secret) continue;
+    const merit = parseMeritDescription(info.description);
+    if (!merit?.ref) continue;
+    const key = propositionKey(merit.ref.type, merit.ref.number, merit.ref.year);
+    const linked = gameVotes.linked.get(info.id) ?? [];
+    if (linked.some((p) => propositionKey(p.type, p.number, p.year) === key)) continue;
+    if (gameVotes.lookup.has(key)) continue;
+    const entry = wanted.get(key) ?? { ...merit.ref, voteIds: [] };
+    entry.voteIds.push(info.id);
+    wanted.set(key, entry);
+  }
+  let found = 0;
+  let notFound = 0;
+  for (const [key, ref] of wanted) {
+    // O antigo PDC (até 2019) é o PDL de hoje.
+    const types = ref.type === "PDL" ? ["PDL", "PDC"] : [ref.type];
+    let result = null;
+    for (const type of types) {
+      result = await searchProposition(context.fetch, type, ref.number, ref.year);
+      if (result) break;
+    }
+    if (!result) result = await renumbered(context, gameVotes, ref);
+    if (result) {
+      gameVotes.lookup.set(key, result);
+      found++;
+    } else {
+      notFound++;
+      log.warn(`Proposição citada não encontrada na API: ${key}`);
+    }
+  }
+  return { found, notFound };
+}
+
+/**
+ * Proposição renumerada: a Câmara deu número novo a projetos antigos (ex.: o PL 6.385/2016 é hoje
+ * o PL 2.721/2023), e a descrição da votação cita o número antigo. Vale só se todas as votações
+ * que citam o número antigo têm uma única proposição ligada, do mesmo tipo, apresentada no ano
+ * citado. Na dúvida, não vale.
+ */
+async function renumbered(
+  context: PipelineContext,
+  gameVotes: GameVotesSources,
+  ref: { type: string; number: number; year: number; voteIds: string[] },
+): Promise<PropositionInfo | null> {
+  const ids = new Set<number>();
+  for (const voteId of ref.voteIds) {
+    const candidates = (gameVotes.linked.get(voteId) ?? []).filter(
+      (p) => canonicalType(p.type) === canonicalType(ref.type),
+    );
+    if (candidates.length !== 1) return null;
+    ids.add(candidates[0]!.id);
+  }
+  if (ids.size !== 1) return null;
+  const detail = await fetchPropositionDetail(context.fetch, [...ids][0]!);
+  if (canonicalType(detail.type) !== canonicalType(ref.type) || detail.presentedYear !== ref.year) {
+    return null;
+  }
+  log.info(
+    `${ref.type} ${ref.number}/${ref.year} renumerado: hoje ${detail.type} ${detail.number}/${detail.year}`,
+  );
+  return {
+    id: detail.id,
+    type: detail.type,
+    number: detail.number,
+    year: detail.year,
+    summary: detail.summary,
   };
 }

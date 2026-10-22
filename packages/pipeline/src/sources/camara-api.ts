@@ -5,6 +5,8 @@ import {
   camaraBlocsPageSchema,
   camaraDiscoursesPageSchema,
   camaraThemeRefsSchema,
+  camaraPropositionSearchPageSchema,
+  camaraPropositionDetailSchema,
   DataValidationError,
   camaraDeputyListPageSchema,
   camaraHistoryResponseSchema,
@@ -208,4 +210,90 @@ export async function fetchDeputyDiscourses(
   );
   const data = result.data as DeputyDiscourses;
   return { ...data, consultedAt: result.meta.savedAt };
+}
+
+/** Proposição achada pela sigla, número e ano na API (Fase 2, jogos). */
+export interface PropositionSearchResult {
+  id: number;
+  type: string;
+  number: number;
+  year: number;
+  summary: string;
+}
+
+/** Validade do cache da busca de proposições: a ementa quase nunca muda. */
+const PROPOSITION_SEARCH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Trimestres de um ano: a API aceita no máximo 3 meses entre as datas de apresentação. */
+const QUARTERS = [
+  ["01-01", "03-31"],
+  ["04-01", "06-30"],
+  ["07-01", "09-30"],
+  ["10-01", "12-31"],
+] as const;
+
+/**
+ * Busca uma proposição pela sigla, número e ano. Sem período, a API só devolve proposições com
+ * tramitação nos últimos 30 dias; com período, aceita no máximo 3 meses. Por isso a busca vai
+ * trimestre a trimestre do ano da proposição (cada consulta fica em cache). Quando há mais de
+ * uma (a mesma PEC volta do Senado com outro id), vale a apresentada primeiro: é ela que tem esse
+ * número e ano. Null se não houver nenhuma.
+ */
+export async function searchProposition(
+  context: CachedFetchContext,
+  type: string,
+  number: number,
+  year: number,
+): Promise<PropositionSearchResult | null> {
+  const found: {
+    id: number;
+    siglaTipo: string;
+    numero: number;
+    ano: number;
+    ementa: string;
+    dataApresentacao: string;
+  }[] = [];
+  for (const [from, to] of QUARTERS) {
+    const url = `${CAMARA_API_BASE}/proposicoes?siglaTipo=${type}&numero=${number}&ano=${year}&dataApresentacaoInicio=${year}-${from}&dataApresentacaoFim=${year}-${to}&itens=15`;
+    const { data } = await fetchJsonCached(
+      { ...context, ttlMs: PROPOSITION_SEARCH_TTL_MS },
+      `api/proposicoes/${type}-${number}-${year}-${from.slice(0, 2)}.json`,
+      url,
+    );
+    for (const p of parseOrThrow(camaraPropositionSearchPageSchema, data, url).dados) {
+      if (p.siglaTipo === type && p.numero === number && p.ano === year) found.push(p);
+    }
+    if (found.length > 0) break;
+  }
+  if (found.length === 0) return null;
+  const first = [...found].sort((a, b) => a.dataApresentacao.localeCompare(b.dataApresentacao))[0]!;
+  return {
+    id: first.id,
+    type: first.siglaTipo,
+    number: first.numero,
+    year: first.ano,
+    summary: first.ementa,
+  };
+}
+
+/** Uma proposição pelo id, com o ano de apresentação (cache longo). */
+export async function fetchPropositionDetail(
+  context: CachedFetchContext,
+  id: number,
+): Promise<PropositionSearchResult & { presentedYear: number }> {
+  const url = `${CAMARA_API_BASE}/proposicoes/${id}`;
+  const { data } = await fetchJsonCached(
+    { ...context, ttlMs: PROPOSITION_SEARCH_TTL_MS },
+    `api/proposicoes/detalhe-${id}.json`,
+    url,
+  );
+  const p = parseOrThrow(camaraPropositionDetailSchema, data, url).dados;
+  return {
+    id: p.id,
+    type: p.siglaTipo,
+    number: p.numero,
+    year: p.ano,
+    summary: p.ementa,
+    presentedYear: Number(p.dataApresentacao.slice(0, 4)),
+  };
 }

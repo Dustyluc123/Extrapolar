@@ -15,6 +15,8 @@ import {
   camaraPropositionsFileSchema,
   camaraOrientationsFileSchema,
   camaraVotesFileSchema,
+  camaraVotePropositionsFileSchema,
+  camaraDeputyRecordsFileSchema,
   parseOrThrow,
   type SourceInfo,
 } from "@extrapolar/shared";
@@ -68,6 +70,11 @@ export const YEAR_FILES = {
     name: "Temas das proposições",
     schema: camaraPropositionThemesFileSchema,
   },
+  voteProps: {
+    folder: "votacoesProposicoes",
+    name: "Proposições afetadas por cada votação",
+    schema: camaraVotePropositionsFileSchema,
+  },
 } as const;
 
 /** Arquivos sem ano. `file` é o caminho depois de /arquivos/. */
@@ -76,6 +83,11 @@ export const STATIC_FILES = {
     file: "orgaos/json/orgaos.json",
     name: "Órgãos da Câmara",
     schema: camaraOrgansFileSchema,
+  },
+  deputyRecords: {
+    file: "deputados/json/deputados.json",
+    name: "Deputados (todas as legislaturas): nascimento e primeira legislatura",
+    schema: camaraDeputyRecordsFileSchema,
   },
   organMembers: (legislatureId: number) => ({
     file: `orgaosDeputados/json/orgaosDeputados-L${legislatureId}.json`,

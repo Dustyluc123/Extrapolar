@@ -43,6 +43,8 @@ export interface NormalizedData {
   amendmentLinks: AuthorLinking;
   amendmentsByAuthor: Map<string, AmendmentRow[]>;
   amendmentYears: number[];
+  gameVotes: FetchedSources["gameVotes"];
+  deputyRecords: FetchedSources["deputyRecords"];
 }
 
 export function normalize(context: PipelineContext, fetched: FetchedSources): NormalizedData {
@@ -111,6 +113,8 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
     amendmentLinks,
     amendmentsByAuthor: amendmentRowsByAuthor(fetched.amendmentRows, amendmentYears),
     amendmentYears,
+    gameVotes: fetched.gameVotes,
+    deputyRecords: fetched.deputyRecords,
     deputies,
     servicePeriods,
     plenary: fetched.plenary,

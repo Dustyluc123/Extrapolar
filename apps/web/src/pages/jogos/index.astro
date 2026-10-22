@@ -1,0 +1,81 @@
+---
+// Página dos jogos (Fase 2): os quatro jogos com "Como jogar" curto.
+import "../../styles/games.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Headline from "../../components/ui/Headline.astro";
+import { GAMES, NEUTRALITY_NOTE, PRIVACY_NOTE } from "../../lib/games/list";
+import { gameVotes } from "../../lib/games/data";
+import { formatInteger } from "../../lib/format";
+---
+
+<BaseLayout
+  title="Jogos"
+  description="Quatro jogos rápidos com dados oficiais da Câmara: adivinhe o deputado do seu estado, chute o placar, vote você também e seja deputado por um dia."
+  current="jogos"
+>
+  <div class="flex flex-wrap items-center gap-3">
+    <p class="kicker m-0">Passatempos</p>
+    <span class="stamp" aria-hidden="true">
+      Dado oficial
+    </span>
+  </div>
+  <Headline as="h1" size="xl" class="mt-2">
+    Jogos
+  </Headline>
+  <p class="mt-3 max-w-prose text-lg">
+    Quatro jogos rápidos para conhecer a Câmara usando só o que aconteceu de verdade: votações
+    registradas e dados oficiais dos deputados.
+  </p>
+  <p class="caption mt-2 max-w-prose">
+    {NEUTRALITY_NOTE}
+    {PRIVACY_NOTE}
+  </p>
+
+  <div class="mt-8 grid gap-6 sm:grid-cols-2">
+    {GAMES.map((game, index) => (
+      <article
+        class:list={["clipping", index % 2 === 0 ? "tilt-l" : "tilt-r"]}
+        aria-labelledby={`jogo-${game.slug}`}
+      >
+        <p class="kicker m-0">{game.kicker}</p>
+        <h2 id={`jogo-${game.slug}`} class="m-0 mt-1 font-display text-2xl font-[750]">
+          {game.ready ? <a href={`/jogos/${game.slug}`}>{game.title}</a> : game.title}
+        </h2>
+        <p class="m-0 mt-2">{game.pitch}</p>
+        <p class="caption m-0 mt-1">{game.rhythm}</p>
+        <details class="mt-3">
+          <summary class="cursor-pointer font-sans text-sm font-semibold">Como jogar</summary>
+          <ol class="mt-2 mb-0 pl-5 text-[0.98rem]">
+            {game.howTo.map((step) => (
+              <li>{step}</li>
+            ))}
+          </ol>
+        </details>
+        <p class="m-0 mt-4">
+          {game.ready ? (
+            <a class="game-button game-button-small" href={`/jogos/${game.slug}`}>
+              Jogar
+            </a>
+          ) : (
+            <span class="caption">Na próxima edição.</span>
+          )}
+        </p>
+      </article>
+    ))}
+  </div>
+
+  <section class="mt-12 max-w-prose" aria-labelledby="de-onde-vem">
+    <Headline as="h2" size="md" id="de-onde-vem">
+      De onde vêm as votações
+    </Headline>
+    <p>
+      Os jogos usam só votações <strong>nominais de plenário</strong> (as únicas com o voto de cada
+      deputado registrado) <strong>de mérito</strong>: a decisão sobre o texto de um projeto, de uma
+      PEC ou de uma medida provisória. Requerimentos, destaques e emendas isoladas ficam de fora.
+      Nesta legislatura, {formatInteger(gameVotes.votes.length)} das{" "}
+      {formatInteger(gameVotes.nominalVotes)}
+      votações nominais entram. <a href="/jogos/votacoes">Veja a lista</a> e as regras na
+      <a href="/metodologia#votacoes-dos-jogos">metodologia</a>.
+    </p>
+  </section>
+</BaseLayout>

@@ -17,6 +17,14 @@
   --color-marker: #ffb8a6;
   --color-on-marker: #1b1a17;
 
+  /* Jogos (Fase 2): peças de resposta. Igual / perto / diferente — nunca sobre deputados. */
+  --color-hit: #2f6b3a;
+  --color-on-hit: #f4efe3;
+  --color-near: #e2b43c;
+  --color-on-near: #1b1a17;
+  --color-miss: #c4361e;
+  --color-on-miss: #f4efe3;
+
   --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
   --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
   --font-sans:
@@ -40,6 +48,12 @@
     --color-on-accent: #161512;
     --color-marker: #9a3a28;
     --color-on-marker: #eee7d7;
+    --color-hit: #5fae6c;
+    --color-on-hit: #161512;
+    --color-near: #e2b43c;
+    --color-on-near: #161512;
+    --color-miss: #ff6b4f;
+    --color-on-miss: #161512;
     color-scheme: dark;
   }
 
@@ -57,6 +71,12 @@
       --color-on-accent: #161512;
       --color-marker: #9a3a28;
       --color-on-marker: #eee7d7;
+      --color-hit: #5fae6c;
+      --color-on-hit: #161512;
+      --color-near: #e2b43c;
+      --color-on-near: #161512;
+      --color-miss: #ff6b4f;
+      --color-on-miss: #161512;
       color-scheme: dark;
     }
   }

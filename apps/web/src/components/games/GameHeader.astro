@@ -1,0 +1,31 @@
+---
+// Cabeçalho de uma página de jogo: chapéu, título, chamada e "Como jogar".
+import Headline from "../ui/Headline.astro";
+import { GAMES } from "../../lib/games/list";
+
+interface Props {
+  slug: string;
+}
+const game = GAMES.find((g) => g.slug === Astro.props.slug);
+if (!game) throw new Error(`Jogo desconhecido: ${Astro.props.slug}`);
+---
+
+<p class="kicker m-0">
+  <a href="/jogos">Jogos</a> · {game.kicker}
+</p>
+<Headline as="h1" size="xl" class="mt-2">
+  {game.title}
+</Headline>
+<p class="mt-3 max-w-prose text-lg">{game.pitch}</p>
+<details class="clipping tilt-l mt-4 max-w-prose">
+  <summary class="cursor-pointer font-sans text-sm font-semibold">Como jogar</summary>
+  <ol class="mt-2 mb-0 pl-5">
+    {game.howTo.map((step) => (
+      <li>{step}</li>
+    ))}
+  </ol>
+  <p class="caption m-0 mt-2">{game.rhythm}.</p>
+</details>
+<noscript>
+  <p class="clipping mt-4">Este jogo precisa de JavaScript ligado no navegador.</p>
+</noscript>

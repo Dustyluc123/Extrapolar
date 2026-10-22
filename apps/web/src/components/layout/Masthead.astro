@@ -9,12 +9,13 @@ import EditionToggle from "./EditionToggle.astro";
 interface Props {
   editionDateTime: string;
   legislatureId: number;
-  current?: "deputados" | "metodologia" | "glossario" | "sobre";
+  current?: "deputados" | "jogos" | "ranking" | "metodologia" | "glossario" | "sobre";
 }
 const { editionDateTime, legislatureId, current } = Astro.props;
 
 const links = [
   { href: "/", label: "Deputados", id: "deputados" },
+  { href: "/jogos", label: "Jogos", id: "jogos" },
   { href: "/metodologia", label: "Metodologia", id: "metodologia" },
   { href: "/glossario", label: "Glossário", id: "glossario" },
   { href: "/sobre", label: "Sobre", id: "sobre" },

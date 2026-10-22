@@ -1,0 +1,240 @@
+/*
+ * Jogos e "Monte seu ranking" (Fase 2). Importado só nessas páginas.
+ * Humor só na moldura (carimbos, "Edição extra"); as cores de acerto falam do chute, nunca de
+ * um deputado ou de um voto. Animações só com prefers-reduced-motion: no-preference.
+ */
+
+/* Botões */
+.game-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.1rem;
+  border: 2px solid var(--color-accent-strong);
+  border-radius: 9999px;
+  background: var(--color-accent-strong);
+  color: var(--color-on-accent);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 150ms var(--ease-ink),
+    box-shadow 150ms var(--ease-ink);
+}
+.game-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 2px 3px 0 0 color-mix(in oklab, var(--color-ink) 18%, transparent);
+}
+.game-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+.game-button-ghost {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.game-button-small {
+  min-height: 2.25rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* Escolha entre opções (Sim / Não, estado, faixas): botões que ficam "marcados". */
+.choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  min-width: 5.5rem;
+  padding: 0.45rem 1rem;
+  border: 2px solid var(--color-ink);
+  border-radius: 0.5rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  cursor: pointer;
+}
+.choice[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* Peças de resposta do Dle: cor + símbolo (nunca só a cor). */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 3.6rem;
+  padding: 0.3rem 0.2rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--color-rule);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.tile-symbol {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.tile-hit {
+  background: var(--color-hit);
+  color: var(--color-on-hit);
+  border-color: var(--color-hit);
+}
+.tile-near {
+  background: var(--color-near);
+  color: var(--color-on-near);
+  border-color: var(--color-near);
+}
+.tile-miss {
+  background: var(--color-miss);
+  color: var(--color-on-miss);
+  border-color: var(--color-miss);
+}
+.tile-unknown {
+  background: var(--color-card);
+  color: var(--color-ink);
+}
+
+/* Carimbo grande da revelação: APROVADA / REJEITADA. Mesma cor para os dois resultados. */
+.stamp-big {
+  display: inline-block;
+  transform: rotate(-6deg);
+  border: 4px double var(--color-accent-ink);
+  border-radius: 0.4rem;
+  padding: 0.2rem 0.8rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 7vw, 2.8rem);
+  font-weight: 860;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-ink);
+  line-height: 1.1;
+}
+
+/* Faixa "Edição extra" acima da manchete da revelação. */
+.extra-banner {
+  border-top: 3px double var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  padding: 0.25rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Barra de placar: Sim e Não lado a lado (mesma tinta, com rótulo). */
+.score-bar {
+  display: flex;
+  height: 1.6rem;
+  border: 1px solid var(--color-ink);
+  border-radius: 0.3rem;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.score-bar > span {
+  display: flex;
+  align-items: center;
+  padding-inline: 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.score-yes {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.score-no {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-card) 0 6px,
+    color-mix(in oklab, var(--color-ink) 18%, var(--color-card)) 6px 8px
+  );
+  color: var(--color-ink);
+  justify-content: flex-end;
+  flex: 1;
+}
+
+/* Controle deslizante do placar */
+.slider {
+  width: 100%;
+  accent-color: var(--color-accent-strong);
+  height: 2.75rem;
+}
+
+/* Barra empilhada do ranking: uma faixa por métrica, tons de tinta (não é "bom" nem "ruim"). */
+.stack-bar {
+  display: flex;
+  height: 0.7rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: var(--color-card);
+  border: 1px solid var(--color-rule);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-in {
+    animation: extrapolar-stamp 380ms var(--ease-ink) both;
+  }
+  .tile-flip {
+    animation: extrapolar-flip 320ms var(--ease-ink) both;
+  }
+  .rise-in {
+    animation: extrapolar-rise-in 300ms var(--ease-ink) both;
+  }
+}
+
+@keyframes extrapolar-stamp {
+  from {
+    opacity: 0.2;
+    transform: rotate(-14deg) scale(1.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+}
+@keyframes extrapolar-flip {
+  from {
+    transform: rotateX(80deg);
+  }
+  to {
+    transform: rotateX(0);
+  }
+}
+@keyframes extrapolar-rise-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

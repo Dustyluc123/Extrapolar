@@ -25,6 +25,7 @@ import type { PipelineContext } from "./steps/context";
 import { fetchSources } from "./steps/fetch";
 import { normalize } from "./steps/normalize";
 import { publish } from "./steps/publish";
+import { buildGames } from "./steps/games";
 
 export interface RunOptions {
   refresh?: boolean;
@@ -55,6 +56,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
   const fetched = await fetchSources(context);
   const data = normalize(context, fetched);
   const computed = compute(context, data);
+  const games = await buildGames(context, data, computed);
 
   const quality = context.quality.list();
   for (const issue of quality) log.warn(`${issue.message} (${issue.count}x)`);
@@ -86,6 +88,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
       { name: "metricas.json", schema: metricsIndexSchema, data: computed.metricsIndex },
       { name: "frentes.json", schema: frontsIndexSchema, data: computed.fronts },
       { name: "meta.json", schema: datasetMetaSchema, data: meta },
+      ...games,
     ],
     { ownedDirs: ["deputados"] },
   );

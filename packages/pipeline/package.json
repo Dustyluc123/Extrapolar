@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@extrapolar/games": "workspace:*",
     "@extrapolar/metrics": "workspace:*",
     "@extrapolar/shared": "workspace:*",
     "fflate": "0.8.2"

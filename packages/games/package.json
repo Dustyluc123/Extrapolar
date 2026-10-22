@@ -1,0 +1,20 @@
+{
+  "name": "@extrapolar/games",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Regras puras dos jogos: dia de Brasília, sorteio diário, comparação, pontuação, concordância, sequência e compartilhar. Sem rede, sem disco e sem relógio.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

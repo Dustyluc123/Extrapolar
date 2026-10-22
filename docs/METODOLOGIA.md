@@ -521,3 +521,46 @@ Quantas frentes parlamentares registradas na legislatura têm o deputado entre o
 ## Perfil declarado
 
 Profissões (`deputadosProfissoes`) e ocupações (`deputadosOcupacoes`) declaradas pelo próprio deputado à Câmara, como publicadas (inclusive datas de ocupação em texto livre). **Não é métrica**: é contexto.
+
+<a id="votacoes-dos-jogos"></a>
+
+## Votações usadas nos jogos
+
+Três jogos (Placar, Vote você também e Seja deputado) mostram votações reais. Eles usam só as votações **elegíveis** (ADR 0019):
+
+1. **Nominais de plenário** (as únicas com o voto de cada deputado registrado) e **não secretas**.
+2. **De mérito:** a decisão sobre o conteúdo de uma proposição — o texto principal de um projeto de lei (PL, PLP), de uma PEC, de um projeto de decreto legislativo (PDL) ou de resolução (PRC), de uma medida provisória (MPV, inclusive na forma de projeto de lei de conversão) ou do texto que substitui o original por inteiro (substitutivo, subemenda substitutiva global, emenda aglutinativa substitutiva). Requerimentos (urgência, adiamento, retirada de pauta), recursos, destaques ("mantido o texto"), emendas isoladas (inclusive as do Senado), preferências, pareceres e redação final **ficam fora**: são difíceis de explicar e o jogador não teria como entender o que estava em jogo.
+3. **Com proposição identificada:** a citada na descrição oficial do resultado (sigla, número e ano), procurada nas proposições ligadas à votação, nos arquivos de proposições da legislatura e, para projetos antigos, na API da Câmara. Projetos antigos renumerados pela Câmara (o PL 6.385/2016 é hoje o PL 2.721/2023) valem só quando a proposição ligada à votação é a única do mesmo tipo e foi apresentada no ano citado; o site mostra o número atual. Sem proposição identificável, a votação fica fora.
+
+**Como separamos mérito de procedimento.** Os arquivos da Câmara não dizem isso diretamente. Usamos a **descrição oficial do resultado** (`descricao` no arquivo de votações), que segue um padrão estável: "Aprovado o Projeto de Lei nº…", "Aprovada, em segundo turno, a Proposta de Emenda à Constituição…", "Rejeitado o Requerimento.", "Mantido o texto.". Uma lista fechada de começos conta como mérito; todo o resto fica fora. Na dúvida, a votação fica fora. O resultado ainda tem de bater com o campo oficial `aprovacao`.
+
+**Medição.** Uma amostra fixa de 120 votações nominais de plenário (30 de cada ano, de 2023 a 2026, sorteadas por um código do id) foi conferida uma a uma, lendo a descrição e a abertura da votação:
+
+| Classificação                    | Votações | Conferência |
+| -------------------------------- | -------: | ----------- |
+| De mérito (elegíveis)            |       23 | 23 certas   |
+| Procedimento, destaque ou emenda |       96 | 96 certas   |
+| Secreta                          |        1 | certa       |
+
+Na primeira versão da regra, 1 votação de mérito ficou de fora (PEC 45/2019, 1º turno, porque a proposição citada não estava ligada diretamente à votação). A busca na API corrigiu o caso; com ela, nenhum erro na amostra. A amostra não tem rejeitadas de mérito (são raras: veja abaixo).
+
+**O que aparece no jogo:**
+
+- **Descrição:** a ementa oficial, com sigla, número e ano (ex.: "PL 6.139/2023") e link para a página da proposição na Câmara. Quando houver um resumo em linguagem simples escrito ou revisado à mão (`content/resumos/`, campo `revisado: true`), ele aparece no lugar, com a ementa como fonte. Nenhum resumo é gerado por IA.
+- **Resultado:** o campo oficial (aprovada ou rejeitada). Atenção: "aprovada" não é "mais Sim do que Não". Projeto de lei complementar precisa de **257** votos Sim (maioria absoluta) e PEC, de **308** (três quintos), em dois turnos. Ex.: o PLP 281/2019 teve 252 Sim e 176 Não em 14/10/2026 e foi rejeitado.
+- **Placar:** o oficial do arquivo de votações (Sim, Não e outros) e, a partir dos votos individuais, abstenção, obstrução e Art. 17 (quem preside a sessão).
+- **Voto de cada deputado:** só dos deputados em exercício hoje (os que têm ficha no site); quem não estava em exercício na data aparece como "sem voto registrado". Por isso a soma dos votos listados pode ser menor que o placar oficial.
+
+**Números da legislatura** (em 22/10/2026): das 1.128 votações nominais de plenário, **216 são elegíveis** (49 em 2023, 46 em 2024, 89 em 2025 e 32 em 2026); 908 ficaram fora por serem de procedimento, destaque ou emenda, 3 por serem secretas e 1 por não ter proposição identificável. Por tipo: 96 PL, 58 PLP, 32 PEC, 15 PDL (um ainda com a sigla antiga, PDC), 13 MPV e 2 PRC. Só **2 foram rejeitadas** (PLP 223/2023 em 18/02/2025 e PLP 281/2019 em 14/10/2026). A lista completa está em [/jogos/votacoes](/jogos/votacoes).
+
+**Limitações:**
+
+- Quase tudo o que chega a uma votação nominal de mérito é aprovado (os acordos costumam ser feitos antes). Por isso o Placar pergunta como votou a maioria do seu estado, e não se a proposta passou.
+- Uma votação é um momento de uma proposta que pode ter tido várias votações (primeiro e segundo turno, substitutivo e texto do Senado); cada uma aparece separada, com o turno quando houver.
+- Se a Câmara mudar a forma de escrever as descrições, votações de mérito podem deixar de ser reconhecidas: elas ficam fora, nunca entram erradas.
+
+### Jogos: regras de neutralidade
+
+- Os jogos testam **conhecimento sobre o que aconteceu**, nunca opinião: nenhum texto diz que um voto é bom ou ruim.
+- Não há jogo que compare deputados entre si ("quem gastou mais").
+- **O voto do jogador é dele:** escolhas, sequência e estatísticas ficam só no navegador (`localStorage`). Nada é enviado.
