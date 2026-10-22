@@ -29,6 +29,7 @@ export interface NormalizedData {
   propositionThemes: FetchedSources["propositionThemes"];
   themeNames: FetchedSources["themeNames"];
   organs: FetchedSources["organs"];
+  discourses: FetchedSources["discourses"];
 }
 
 export function normalize(context: PipelineContext, fetched: FetchedSources): NormalizedData {
@@ -74,6 +75,7 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
     propositionThemes: fetched.propositionThemes,
     themeNames: fetched.themeNames,
     organs: fetched.organs,
+    discourses: fetched.discourses,
     deputies,
     servicePeriods,
     plenary: fetched.plenary,

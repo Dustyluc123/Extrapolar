@@ -262,3 +262,13 @@ export const camaraThemeRefSchema = z.object({
   nome: z.string().min(1),
 });
 export const camaraThemeRefsSchema = z.object({ dados: z.array(camaraThemeRefSchema) });
+
+// ---- API: /deputados/{id}/discursos ----
+
+export const camaraDiscourseSchema = z.object({
+  dataHoraInicio: z.string().regex(LOCAL_DATE_TIME_MINUTES, "esperado AAAA-MM-DDTHH:mm"),
+  faseEvento: z.object({ titulo: z.string().nullable() }).nullable(),
+  tipoDiscurso: z.string(),
+});
+export type CamaraDiscourse = z.infer<typeof camaraDiscourseSchema>;
+export const camaraDiscoursesPageSchema = apiPageSchema(camaraDiscourseSchema);

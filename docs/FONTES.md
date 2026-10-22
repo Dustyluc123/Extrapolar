@@ -68,11 +68,12 @@ Formatos conferidos em 22/10/2026:
 
 ### API (`https://dadosabertos.camara.leg.br/api/v2`)
 
-| Endpoint                                                 | Uso                                                                                                           |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `GET /deputados?itens=100&pagina=N`                      | Deputados **em exercício** hoje (sem filtro de legislatura a API devolve só quem está em exercício; ~513)     |
-| `GET /blocos?idLegislatura=57` e `/blocos/{id}/partidos` | Federações e seus partidos (blocos comuns vêm sem partidos e sem datas; não usados, ADR 0014)                 |
-| `GET /deputados/{id}/historico`                          | Eventos do mandato (posse, licença, reassunção, troca de partido) usados para montar os períodos em exercício |
+| Endpoint                                                         | Uso                                                                                                           |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `GET /deputados?itens=100&pagina=N`                              | Deputados **em exercício** hoje (sem filtro de legislatura a API devolve só quem está em exercício; ~513)     |
+| `GET /blocos?idLegislatura=57` e `/blocos/{id}/partidos`         | Federações e seus partidos (blocos comuns vêm sem partidos e sem datas; não usados, ADR 0014)                 |
+| `GET /deputados/{id}/historico`                                  | Eventos do mandato (posse, licença, reassunção, troca de partido) usados para montar os períodos em exercício |
+| `GET /deputados/{id}/discursos?dataInicio=…&dataFim=…&itens=100` | Discursos (não há arquivo estático; atualização semanal, ADR 0015)                                            |
 
 Formato conferido em 22/10/2026:
 
@@ -82,6 +83,15 @@ Formato conferido em 22/10/2026:
   - Alguns históricos trazem eventos marcados com a 57ª legislatura, mas datados antes de 01/02/2023 (8 casos em 22/10/2026; ex.: uma troca de partido de 31/03/2022). O pipeline ignora esses eventos e registra o número em `meta.json`.
   - `CONVOCADO` é o passo anterior à posse do suplente (ainda não está em exercício). `SUPLENCIA` é o suplente voltando à reserva quando o titular reassume.
   - Valores de `condicaoEleitoral` encontrados: `Titular`, `Suplente`, `EFETIVADO`, `null`.
+
+### API — discursos (Fase 1, Caderno 5)
+
+Formato conferido em 22/10/2026: `{ "dados": [ { "dataHoraInicio": "2026-09-02T11:36" (sem segundos), "dataHoraFim": null, "uriEvento": "", "faseEvento": { "titulo": "Ordem do Dia" | null, … }, "tipoDiscurso": "PELA ORDEM", "sumario": "…" | null, "transcricao": "…", "keywords": "…" | null, "urlTexto": … } ], "links": [ … ] }`.
+
+- Não existe `discursos-{ano}.json` nos arquivos estáticos (404).
+- Cerca de 4 KB por discurso (a transcrição vem junto); ~1,5 s por página de 100.
+- Erro 500 persistente para alguns períodos de alguns deputados (em 22/10/2026: 29 meses de 24 deputados, todos entre agosto e outubro de 2026); o pipeline divide a consulta e registra o mês como indisponível (ADR 0015).
+- Fases encontradas: Ordem do Dia, Breves Comunicações, Encerramento, Homenagem, Comissão Geral, Abertura e fase vazia.
 
 ## Fotos dos deputados
 

@@ -12,13 +12,15 @@ import {
   type SourceInfo,
 } from "@extrapolar/shared";
 import type { CommitteeMeeting } from "@extrapolar/metrics";
-import { mapWithConcurrency } from "../lib/http";
+import { HttpClient, mapWithConcurrency } from "../lib/http";
 import { log } from "../lib/log";
 import {
   currentDeputiesSourceUrl,
   fetchCurrentDeputies,
+  fetchDeputyDiscourses,
   fetchDeputyHistory,
   fetchFederations,
+  type DeputyDiscourses,
   fetchThemeNames,
   historySourceUrl,
   type Federation,
@@ -84,6 +86,8 @@ export interface FetchedSources {
   propositionThemes: Map<number, number[]>;
   /** Nomes oficiais dos temas. */
   themeNames: Map<number, string>;
+  /** Discursos por deputado (API, atualização semanal — ADR 0015). */
+  discourses: Map<number, DeputyDiscourses & { consultedAt: string }>;
   sources: SourceInfo[];
 }
 
@@ -115,6 +119,54 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
       lastModified: null,
     },
   ];
+
+  log.step("Discursos de cada deputado (API da Câmara; cache de 7 dias)");
+  const from = context.legislature.start;
+  const to = context.referenceDateTime.slice(0, 10);
+  let discoursesDone = 0;
+  let stale = 0;
+  // Menos tentativas aqui: um erro persistente da API leva à divisão do período em anos e meses.
+  const discourseContext = {
+    ...context.fetch,
+    client: new HttpClient({
+      maxRetries: 2,
+      onRetry: ({ url, attempt, reason }) =>
+        log.info(`nova tentativa ${attempt} (${reason}): ${url.replace(/^.*\/deputados\//, "")}`),
+    }),
+  };
+  const discourseList = await mapWithConcurrency(list, 2, async (item) => {
+    const result = await fetchDeputyDiscourses(discourseContext, item.id, from, to, (reason) => {
+      stale++;
+      log.warn(`Discursos de ${item.id}: usando cache antigo (${reason})`);
+    });
+    discoursesDone++;
+    if (discoursesDone % 100 === 0 || discoursesDone === list.length) {
+      log.info(`${discoursesDone}/${list.length} deputados`);
+    }
+    return [item.id, result] as const;
+  });
+  if (stale > 0) {
+    context.quality.add(
+      "discursos-cache-antigo",
+      "A API de discursos falhou para alguns deputados; foram usados os dados da consulta anterior.",
+      stale,
+    );
+  }
+  const discourses = new Map(discourseList);
+  const unavailable = [...discourses.values()].reduce((n, d) => n + d.unavailableMonths.length, 0);
+  if (unavailable > 0) {
+    context.quality.add(
+      "discursos-mes-indisponivel",
+      "Meses de discursos que a API da Câmara não devolveu (erro persistente); indicados na ficha.",
+      unavailable,
+    );
+  }
+  sources.push({
+    id: "api-discursos",
+    name: "API da Câmara — discursos de cada deputado (atualização semanal)",
+    url: `${CAMARA_API_BASE}/deputados/{id}/discursos`,
+    lastModified: null,
+  });
 
   log.step("Baixando federações partidárias (API da Câmara)");
   const federations = await fetchFederations(context.fetch, context.legislature.id);
@@ -148,6 +200,7 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
   const deputyIds = new Set(list.map((item) => item.id));
   const years = await fetchYears(context, sources, committeeOrganIds, deputyIds);
   return {
+    discourses,
     themeNames,
     deputies,
     federations,

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FileCache } from "../src/lib/cache";
-import { fetchJsonCached } from "../src/lib/cached-fetch";
+import { cachedComputed, fetchJsonCached } from "../src/lib/cached-fetch";
 import { HttpClient } from "../src/lib/http";
 
 let dir: string;
@@ -111,5 +111,44 @@ describe("fetchJsonCached", () => {
     const result = await fetchJsonCached(context, "b.json", "https://x/b.json");
     expect(result.data).toEqual({ ok: true });
     expect(calls).toBe(2);
+  });
+});
+
+describe("cachedComputed", () => {
+  const context = () => ({
+    client: new HttpClient({ minIntervalMs: 0 }),
+    cache: new FileCache(dir),
+    refresh: false,
+  });
+
+  it("guarda o valor calculado e reaproveita dentro da validade", async () => {
+    let calls = 0;
+    const compute = async () => ({ n: ++calls });
+    expect((await cachedComputed(context(), "c.json", "x", compute)).data).toEqual({ n: 1 });
+    expect((await cachedComputed(context(), "c.json", "x", compute)).data).toEqual({ n: 1 });
+  });
+
+  it("recalcula quando o cache está num formato antigo", async () => {
+    await cachedComputed(context(), "d.json", "x", async () => [1, 2]);
+    const result = await cachedComputed(context(), "d.json", "x", async () => ({ items: [] }), {
+      isValid: (data) => !Array.isArray(data),
+    });
+    expect(result.data).toEqual({ items: [] });
+  });
+
+  it("se o cálculo falhar, usa o valor antigo e avisa", async () => {
+    await cachedComputed(context(), "e.json", "x", async () => ({ v: "antigo" }));
+    const warnings: string[] = [];
+    const result = await cachedComputed(
+      context(),
+      "e.json",
+      "x",
+      async () => {
+        throw new Error("API fora do ar");
+      },
+      { ttlMs: 0, onStale: (reason) => warnings.push(reason) },
+    );
+    expect(result.data).toEqual({ v: "antigo" });
+    expect(warnings).toEqual(["API fora do ar"]);
   });
 });

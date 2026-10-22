@@ -284,6 +284,25 @@ export const fiscalizacaoSchema = z.object({
 });
 export type Fiscalizacao = z.infer<typeof fiscalizacaoSchema>;
 
+// ---- Caderno 5 — Voz ----
+
+export const vozSchema = z.object({
+  total: count,
+  porAno: z.array(z.object({ ano: z.number().int(), quantidade: count })),
+  porFase: z.array(z.object({ fase: z.string(), quantidade: count })),
+  porTipo: z.array(z.object({ tipo: z.string(), quantidade: count })),
+  /** Data e hora do discurso mais recente (AAAA-MM-DDTHH:mm), ou null. */
+  ultimoDiscurso: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+    .nullable(),
+  /** Meses (AAAA-MM) que a API não devolveu por erro persistente do lado da Câmara. */
+  mesesIndisponiveis: z.array(z.string().regex(/^\d{4}-\d{2}$/)),
+  /** Quando os discursos foram consultados na API (atualização semanal, ADR 0015). */
+  consultadoEm: z.iso.datetime(),
+});
+export type Voz = z.infer<typeof vozSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -299,6 +318,7 @@ export const deputyDetailSchema = z.object({
   comissoes: comissoesSchema,
   projetos: projetosSchema,
   fiscalizacao: fiscalizacaoSchema,
+  voz: vozSchema,
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
 

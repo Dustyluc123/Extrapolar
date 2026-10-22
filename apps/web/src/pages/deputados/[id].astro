@@ -20,6 +20,7 @@ import OpinionsSection from "../../components/deputado/OpinionsSection.astro";
 import OversightSection from "../../components/deputado/OversightSection.astro";
 import ConvocationsSection from "../../components/deputado/ConvocationsSection.astro";
 import IndicationsSection from "../../components/deputado/IndicationsSection.astro";
+import VoiceSection from "../../components/deputado/VoiceSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -43,6 +44,7 @@ const cadernos = [
   { id: "caderno-comissoes", label: "Comissões" },
   { id: "caderno-projetos", label: "Projetos e leis" },
   { id: "caderno-fiscalizacao", label: "Fiscalização" },
+  { id: "caderno-voz", label: "Voz" },
 ];
 const conditionSlug =
   deputy.electoralCondition === "Titular"
@@ -166,6 +168,15 @@ const conditionSlug =
       <OversightSection fiscalizacao={detail.fiscalizacao} updatedAt={updatedAt} />
       <ConvocationsSection fiscalizacao={detail.fiscalizacao} updatedAt={updatedAt} />
       <IndicationsSection fiscalizacao={detail.fiscalizacao} updatedAt={updatedAt} />
+    </Caderno>
+
+    <Caderno
+      id="caderno-voz"
+      number={5}
+      title="Voz"
+      intro="O que o deputado fala na tribuna do plenário."
+    >
+      <VoiceSection voz={detail.voz} profileUrl={deputy.profileUrl} />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

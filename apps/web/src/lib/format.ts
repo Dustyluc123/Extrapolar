@@ -96,3 +96,19 @@ export function formatBRLCompact(value: number): string {
   if (abs >= 1_000) return `${sign}R$ ${compact1.format(abs / 1_000)} mil`;
   return `${sign}R$ ${integer.format(Math.round(abs))}`;
 }
+
+/** Instante ISO com fuso (ex.: "2026-10-22T14:10:00.000Z") → "AAAA-MM-DDTHH:mm:ss" em Brasília. */
+export function isoToBrasiliaLocal(iso: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(iso));
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
+}

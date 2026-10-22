@@ -1,0 +1,97 @@
+---
+// Métrica: discursos (Caderno 5 — Voz). Atualização semanal (ADR 0015).
+import type { Voz } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import BarList from "../charts/BarList.astro";
+import Columns from "../charts/Columns.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatDateTime, formatInteger, isoToBrasiliaLocal } from "../../lib/format";
+
+interface Props {
+  voz: Voz;
+  /** Página oficial do deputado (onde estão os textos dos discursos). */
+  profileUrl: string;
+}
+const { voz: v, profileUrl } = Astro.props;
+const max = Math.max(0, ...v.porAno.map((y) => y.quantidade));
+const consulted = isoToBrasiliaLocal(v.consultadoEm);
+const monthName = (key: string) =>
+  new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1)),
+  );
+---
+
+<Metric
+  id="discursos"
+  title="Discursos"
+  whatIs="Os discursos registrados pela Câmara: falas no plenário durante as sessões, como pedir a palavra 'pela ordem', encaminhar uma votação ou falar nas 'breves comunicações'. É um sinal de quanto o deputado usa a tribuna."
+  updatedAt={consulted}
+  methodologyAnchor="discursos"
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <BigNumber
+        value={formatInteger(v.total)}
+        label="Discursos na legislatura"
+        caption="Falas registradas pela Câmara desde 1º de fevereiro de 2023. Estes dados são atualizados uma vez por semana."
+      />
+      {v.total > 0 ? (
+        <div class="mt-6">
+          <Columns
+            title="Por ano"
+            description="Quantidade de discursos registrados em cada ano da legislatura."
+            labelHeader="Ano"
+            valueHeader="Discursos"
+            maxLabel={`máximo: ${formatInteger(max)}`}
+            items={v.porAno.map((y) => ({
+              label: String(y.ano),
+              tick: String(y.ano),
+              value: y.quantidade,
+              display: formatInteger(y.quantidade),
+            }))}
+          />
+        </div>
+      ) : null}
+    </div>
+    {v.porFase.length > 0 ? (
+      <BarList
+        title="Em que momento da sessão"
+        description="Discursos por fase da sessão em que aconteceram."
+        labelHeader="Fase"
+        valueHeader="Discursos"
+        items={v.porFase.map((p) => ({
+          label: p.fase,
+          value: p.quantidade,
+          display: formatInteger(p.quantidade),
+        }))}
+      />
+    ) : null}
+  </div>
+
+  {v.mesesIndisponiveis.length > 0 ? (
+    <p class="mt-4 rounded-card border border-rule bg-card p-3 font-sans text-sm">
+      A API da Câmara não devolveu os discursos de {v.mesesIndisponiveis.map(monthName).join(", ")}{" "}
+      (erro do lado da Câmara). Esses meses não estão na contagem.
+    </p>
+  ) : null}
+
+  {v.ultimoDiscurso ? (
+    <p class="caption mt-6">
+      Discurso mais recente registrado: {formatDateTime(v.ultimoDiscurso)}. O texto e o vídeo de
+      cada fala estão na <a href={profileUrl}>página oficial do deputado na Câmara</a>.
+    </p>
+  ) : null}
+
+  <Fragment slot="limites">
+    <li>Quantidade não diz nada sobre o conteúdo nem a qualidade das falas.</li>
+    <li>
+      Quem preside a sessão aparece com muitas falas do tipo "fala do presidente", que são parte da
+      condução dos trabalhos.
+    </li>
+    <li>Falas nas comissões não entram: a Câmara registra aqui as do plenário.</li>
+    <li>
+      O conteúdo das falas não é reproduzido aqui: para ler o que foi dito, use a página oficial do
+      deputado.
+    </li>
+  </Fragment>
+</Metric>

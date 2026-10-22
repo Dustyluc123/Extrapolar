@@ -43,6 +43,13 @@
 - Série trimestral de RIC + PFC (16 trimestres).
 - Convocações: viável por tipo oficial (codTipo), sem busca por palavras na ementa — não foi preciso medir precisão.
 
+### Etapa 6 — Voz
+
+- Discursos pela API (sem arquivo estático): ~800 requisições, cache de 7 dias (atualização semanal), primeira carga ~12 min; diário com cache ~1 min no total do pipeline.
+- API com erro 500 persistente em alguns períodos: coleta dividida em anos e meses; 29 meses de 24 deputados (ago–out/2026) ficaram indisponíveis e aparecem na ficha.
+- Mediana de 33 discursos; 25 deputados sem discurso; máximo 1.819.
+- Cache de discursos reduzido: 6,9 MB (sem transcrição nem resumo).
+
 ## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
@@ -58,6 +65,8 @@
 - ⚠ Pareceres: PRL + PRLP + PRLE de autoria do deputado, por órgão numerador (inclui a Mesa).
 - ⚠ Fiscalização conta autor principal como número principal (coautoria à parte), igual aos projetos.
 - ⚠ Convocação = só os 3 tipos oficiais de requerimento; convites (audiência pública) ficam fora.
+- ⚠ Discursos com atualização semanal (ADR 0015); a ficha mostra a data da consulta.
+- ⚠ A ficha não reproduz o conteúdo nem os resumos oficiais dos discursos, só contagens e a data do último (ADR 0016): os resumos traziam acusações contra terceiros citados pelo nome.
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
 
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.

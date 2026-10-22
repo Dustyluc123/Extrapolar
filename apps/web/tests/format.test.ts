@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isoToBrasiliaLocal,
   formatBRL,
   formatBRLCompact,
   formatDateTime,
@@ -63,5 +64,12 @@ describe("dinheiro", () => {
     expect(formatBRLCompact(950.4)).toBe("R$ 950");
     expect(formatBRLCompact(2_500_000_000)).toBe("R$ 2,5 bi");
     expect(formatBRLCompact(-1_500)).toBe("−R$ 1,5 mil");
+  });
+});
+
+describe("fuso", () => {
+  it("converte instante UTC para o horário de Brasília", () => {
+    expect(isoToBrasiliaLocal("2026-10-22T14:10:05.000Z")).toBe("2026-10-22T11:10:05");
+    expect(isoToBrasiliaLocal("2026-10-22T01:00:00Z")).toBe("2026-10-21T22:00:00");
   });
 });

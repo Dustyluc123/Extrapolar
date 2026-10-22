@@ -85,3 +85,49 @@ export async function fetchJsonCached(
   await cache.write(key, body, meta);
   return { data, meta, origin: "baixado" };
 }
+
+/**
+ * Cache de um valor calculado a partir de várias requisições (ex.: todas as páginas de uma
+ * consulta à API), guardando só o resultado reduzido. Se o cálculo falhar e houver um valor
+ * antigo no cache, usa o antigo e avisa (`onStale`), em vez de derrubar o pipeline.
+ */
+export async function cachedComputed(
+  context: CachedFetchContext,
+  key: string,
+  description: string,
+  compute: () => Promise<unknown>,
+  options: {
+    ttlMs?: number;
+    onStale?: (reason: string) => void;
+    /** Confere o formato do que está no cache; se não bater (formato antigo), recalcula. */
+    isValid?: (data: unknown) => boolean;
+  } = {},
+): Promise<{ data: unknown; meta: CacheEntryMeta; origin: CachedJson["origin"] }> {
+  const ttlMs = options.ttlMs ?? context.ttlMs ?? DEFAULT_TTL_MS;
+  const now = context.now ?? Date.now;
+  const isValid = options.isValid ?? (() => true);
+  let cached = await context.cache.read(key);
+  let cachedData: unknown = cached ? await context.cache.readJson(cached) : undefined;
+  if (cached && !isValid(cachedData)) {
+    cached = null;
+    cachedData = undefined;
+  }
+  if (!context.refresh && cached && isFresh(cached.meta, ttlMs, now())) {
+    return { data: cachedData, meta: cached.meta, origin: "cache" };
+  }
+  try {
+    const data = await compute();
+    const meta: CacheEntryMeta = {
+      url: description,
+      savedAt: new Date(now()).toISOString(),
+      lastModified: null,
+    };
+    await context.cache.write(key, JSON.stringify(data), meta);
+    return { data, meta, origin: "baixado" };
+  } catch (error) {
+    if (!cached) throw error;
+    const reason = error instanceof Error ? error.message : String(error);
+    options.onStale?.(reason);
+    return { data: cachedData, meta: cached.meta, origin: "cache" };
+  }
+}

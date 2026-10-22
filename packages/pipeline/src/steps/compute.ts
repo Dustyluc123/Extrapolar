@@ -14,6 +14,7 @@ import { computeComissoes } from "./metrics/comissoes";
 import { computePlenario } from "./metrics/plenario";
 import { computeFiscalizacao } from "./metrics/fiscalizacao";
 import { computeProjetos } from "./metrics/projetos";
+import { computeVoz } from "./metrics/voz";
 import type { NormalizedData } from "./normalize";
 
 export interface ComputedData {
@@ -172,6 +173,14 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     methodologyAnchor: "indicacoes",
     pick: (d) => okValue(d.fiscalizacao.indicacoes.autorPrincipal),
   },
+  {
+    key: "discursos",
+    caderno: "voz",
+    label: "Discursos registrados na legislatura",
+    unit: "contagem",
+    methodologyAnchor: "discursos",
+    pick: (d) => okValue(d.voz.total),
+  },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
@@ -183,6 +192,8 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
   const projetos = computeProjetos(context, data);
   log.step("Calculando o Caderno 4 — Fiscalização");
   const fiscalizacao = computeFiscalizacao(context, data);
+  log.step("Calculando o Caderno 5 — Voz");
+  const voz = computeVoz(context, data);
 
   const details: DeputyDetail[] = data.deputies.map((deputy) => {
     const of = <T>(map: Map<number, T>, caderno: string): T => {
@@ -199,6 +210,7 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
       comissoes: of(comissoes, "comissoes"),
       projetos: of(projetos, "projetos"),
       fiscalizacao: of(fiscalizacao, "fiscalizacao"),
+      voz: of(voz, "voz"),
     };
   });
 

@@ -392,3 +392,25 @@ Proposições do tipo `INC` apresentadas na legislatura, como autor principal (e
 ### Limitações
 
 - Não mostra se a sugestão foi atendida.
+
+<a id="discursos"></a>
+
+## Discursos
+
+### O que é
+
+Quantos discursos o deputado fez na legislatura, segundo o registro da Câmara, por ano e por fase da sessão (Ordem do Dia, Breves Comunicações, Homenagem...).
+
+### Como é calculado
+
+- Fonte: API `GET /deputados/{id}/discursos` (não há arquivo estático), consultada com `dataInicio` = início da legislatura e `dataFim` = data da consulta.
+- **Atualização semanal:** cada deputado é consultado de novo a cada 7 dias (ADR 0015). A ficha mostra quando foi a última consulta.
+- Fase e tipo como registrados pela Câmara (`faseEvento.titulo`, `tipoDiscurso`). Discursos sem fase aparecem como "Fase não informada".
+- **O conteúdo das falas não é reproduzido** (nem os resumos oficiais): a ficha mostra contagens e a data do último discurso, e aponta para a página oficial do deputado (ADR 0016).
+- **Meses indisponíveis:** quando a API dá erro persistente para um período, o mês fica de fora e a ficha avisa.
+
+### O que este número **não** mede
+
+- O conteúdo ou a qualidade das falas.
+- Falas em comissões.
+- Quem preside a sessão tem muitas falas do tipo "fala do presidente", que fazem parte da condução dos trabalhos.

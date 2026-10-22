@@ -7,3 +7,4 @@ export * from "./alignment";
 export * from "./committees";
 export * from "./propositions";
 export * from "./oversight";
+export * from "./discourses";
