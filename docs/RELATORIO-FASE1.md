@@ -28,6 +28,15 @@
 - Linha do tempo com vários trechos por comissão; comissões só de suplência numa lista recolhida.
 - Script de capturas aceita âncora (`/deputados/ID#caderno`) e passa por about:blank antes de navegar (navegação só de âncora travava).
 
+### Etapa 4 — Projetos e leis
+
+- Proposições (PL, PLP, PEC, PDL, PRC): mediana de 24 como autor principal (16 deputados com zero; máximo 1.223); 159 viraram norma no total; taxa de conversão com mediana 0%.
+- Situação: todos os 36 códigos encontrados de 2023 a 2026 classificados em 8 categorias.
+- Temas oficiais (32) com "Homenagens e Datas Comemorativas" (código 72) separado pelo nome oficial.
+- Pareceres de relator: viável (PRL/PRLP/PRLE têm um único autor, o relator); mediana 26; membros da Mesa chegam a 10.807 (pareceres sobre requerimentos de informação).
+- Download com nova tentativa quando a conexão cai no meio do corpo (aconteceu com o arquivo de 160 MB).
+- Heap do pipeline aumentada para 6 GB (arquivos de proposições).
+
 ## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
@@ -37,6 +46,10 @@
 - ⚠ "Comissão" = Permanente, Especial ou CPI; "titular" inclui presidente e vices (a linha de Titular some durante a presidência).
 - ⚠ Presença em comissões só com os 8 tipos de reunião com presença regularmente registrada; seminários, mesas-redondas, visitas etc. fora.
 - ⚠ Eventos a pedido: autor = proponente em qualquer posição (apoio não conta); evento conta uma vez por deputado.
+- ⚠ Projetos = PL, PLP, PEC, PDL e PRC; autor principal = ordemAssinatura 1; coautor = demais proponentes; apoio (proponente 0) não é autoria.
+- ⚠ Taxa de conversão = viraram norma (código 1140) ÷ apresentados como autor principal na legislatura; tabela de códigos de situação na metodologia.
+- ⚠ Temas: projeto conta em cada tema; homenagens pelo tema oficial 72, sem classificação própria.
+- ⚠ Pareceres: PRL + PRLP + PRLE de autoria do deputado, por órgão numerador (inclui a Mesa).
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
 
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.

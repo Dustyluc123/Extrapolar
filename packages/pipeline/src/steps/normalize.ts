@@ -25,6 +25,10 @@ export interface NormalizedData {
   eventRequests: FetchedSources["eventRequests"];
   requestedEventInfo: FetchedSources["requestedEventInfo"];
   authorship: FetchedSources["authorship"];
+  propositions: FetchedSources["propositions"];
+  propositionThemes: FetchedSources["propositionThemes"];
+  themeNames: FetchedSources["themeNames"];
+  organs: FetchedSources["organs"];
 }
 
 export function normalize(context: PipelineContext, fetched: FetchedSources): NormalizedData {
@@ -66,6 +70,10 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
     eventRequests: fetched.eventRequests,
     requestedEventInfo: fetched.requestedEventInfo,
     authorship: fetched.authorship,
+    propositions: fetched.propositions,
+    propositionThemes: fetched.propositionThemes,
+    themeNames: fetched.themeNames,
+    organs: fetched.organs,
     deputies,
     servicePeriods,
     plenary: fetched.plenary,

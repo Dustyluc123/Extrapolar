@@ -11,6 +11,8 @@ import {
   camaraOrganMembersFileSchema,
   camaraOrgansFileSchema,
   camaraPropositionAuthorsFileSchema,
+  camaraPropositionThemesFileSchema,
+  camaraPropositionsFileSchema,
   camaraOrientationsFileSchema,
   camaraVotesFileSchema,
   parseOrThrow,
@@ -55,6 +57,16 @@ export const YEAR_FILES = {
     folder: "proposicoesAutores",
     name: "Autores de proposições",
     schema: camaraPropositionAuthorsFileSchema,
+  },
+  propositions: {
+    folder: "proposicoes",
+    name: "Proposições",
+    schema: camaraPropositionsFileSchema,
+  },
+  propositionThemes: {
+    folder: "proposicoesTemas",
+    name: "Temas das proposições",
+    schema: camaraPropositionThemesFileSchema,
   },
 } as const;
 

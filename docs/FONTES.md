@@ -54,6 +54,18 @@ Formatos conferidos em 22/10/2026:
   - `ordemAssinatura = "1"` é o primeiro signatário (único por proposição, conferido).
   - `proponente = "0"` aparece só em assinaturas de deputados que não são o primeiro: são assinaturas de apoio.
 
+### Arquivos estáticos — Fase 1, Caderno 3 (Projetos e leis)
+
+Formatos conferidos em 22/10/2026:
+
+- `proposicoes/json/proposicoes-{ano}.json` (**~160 MB** em 2025; o download às vezes cai no meio e o pipeline tenta de novo): `{ "id": 106701, "siglaTipo": "PL", "codTipo": 139, "descricaoTipo": "Projeto de Lei", "ementa": "…", "dataApresentacao": "2025-…T…:…:…", "uriPropPrincipal": "" | ".../proposicoes/{id}", "uriOrgaoNumerador": ".../orgaos/{id}", "ultimoStatus": { "idSituacao": "915" | "", "descricaoSituacao": "Aguardando Parecer", … }, … }`.
+  - Traz **tudo** o que foi apresentado no ano, de todos os tipos (RPD, PRL, REQ, RIC, EMC, PL, PAR, INC...). Em 2025, 107.587 proposições, das quais 6.540 PL.
+  - 58 proposições do arquivo de 2025 têm `dataApresentacao` antiga (renumeradas ao chegar do Senado); o campo `ano` vem 0 para a maioria dos tipos acessórios.
+  - Subtipos de requerimento identificados por `codTipo` (ex.: 294 Audiência Pública, 523 Convocação de Ministro na Comissão, 356 Convocação de Ministro no Plenário, 150 Convocação de Autoridade).
+  - Pareceres de relator (PRL, PRLP, PRLE): todos com um único autor, o relator.
+- `proposicoesTemas/json/proposicoesTemas-{ano}.json`: `{ "uriProposicao": ".../proposicoes/106701", "codTema": 48, "tema": "Meio Ambiente e Desenvolvimento Sustentável", "relevancia": 0 }`. Até 12 temas por proposição.
+- API `/referencias/proposicoes/codTema`: 32 temas oficiais, entre eles **72 — Homenagens e Datas Comemorativas**.
+
 ### API (`https://dadosabertos.camara.leg.br/api/v2`)
 
 | Endpoint                                                 | Uso                                                                                                           |

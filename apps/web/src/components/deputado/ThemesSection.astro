@@ -1,0 +1,60 @@
+---
+// Métrica: temas oficiais dos projetos de que é autor principal (Caderno 3).
+import type { Projetos } from "@extrapolar/shared";
+import BarList from "../charts/BarList.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger, formatPercent, plural } from "../../lib/format";
+
+interface Props {
+  projetos: Projetos;
+  updatedAt: string;
+}
+const { projetos: p, updatedAt } = Astro.props;
+const t = p.temas;
+const TOP = 8;
+const shown = t.porTema.slice(0, TOP);
+const homageShare = t.comTema > 0 ? t.homenagens / t.comTema : null;
+---
+
+<Metric
+  id="temas"
+  title="Sobre o que são os projetos"
+  whatIs="A Câmara classifica cada projeto em um ou mais temas oficiais (Saúde, Educação, Economia...). Aqui estão os temas dos projetos de que o deputado é autor principal. Um projeto pode ter mais de um tema."
+  updatedAt={updatedAt}
+  methodologyAnchor="temas"
+>
+  {shown.length > 0 ? (
+    <div class="grid gap-8 lg:grid-cols-2">
+      <BarList
+        title={`Os ${Math.min(TOP, t.porTema.length)} temas mais frequentes`}
+        description={`Quantidade de projetos (como autor principal) em cada tema oficial, entre ${plural(t.comTema, "projeto com tema", "projetos com tema")}.`}
+        labelHeader="Tema"
+        valueHeader="Projetos"
+        items={shown.map((theme, index) => ({
+          label: theme.nome,
+          value: theme.quantidade,
+          display: formatInteger(theme.quantidade),
+          highlight: index === 0,
+        }))}
+      />
+      <div>
+        <p class="kicker m-0">Homenagens e Datas Comemorativas</p>
+        <p class="m-0 mt-1 font-display text-5xl font-[800] tabular-nums">
+          {homageShare !== null ? formatPercent(homageShare) : "Sem dado"}
+        </p>
+        <p class="caption mt-2">
+          {formatInteger(t.homenagens)} dos {formatInteger(t.comTema)} projetos com tema estão no
+          tema oficial "Homenagens e Datas Comemorativas" (por exemplo, criar um dia nacional ou dar
+          nome a uma rodovia). Mostramos essa parcela porque é um tema oficial da Câmara; o site não
+          classifica projetos como mais ou menos relevantes.
+        </p>
+      </div>
+    </div>
+  ) : (
+    <p class="caption m-0">Nenhum projeto como autor principal com tema oficial na legislatura.</p>
+  )}
+  <Fragment slot="limites">
+    <li>O tema diz o assunto, não o conteúdo nem a posição do projeto.</li>
+    <li>Alguns projetos recentes ainda não foram classificados por tema.</li>
+  </Fragment>
+</Metric>

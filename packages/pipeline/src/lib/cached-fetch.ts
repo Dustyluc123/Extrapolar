@@ -24,6 +24,26 @@ export interface CachedJson {
   origin: "cache" | "conferido" | "baixado";
 }
 
+/** Tentativas de baixar o corpo inteiro (a conexão às vezes cai no meio de arquivos grandes). */
+const BODY_ATTEMPTS = 3;
+
+async function downloadBody(
+  client: HttpClient,
+  url: string,
+): Promise<{ response: Response; body: Uint8Array }> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= BODY_ATTEMPTS; attempt++) {
+    const response = await client.request(url, { headers: { Accept: "application/json" } });
+    try {
+      return { response, body: new Uint8Array(await response.arrayBuffer()) };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  const reason = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`Download de ${url} interrompido ${BODY_ATTEMPTS} vezes: ${reason}`);
+}
+
 export async function fetchJsonCached(
   context: CachedFetchContext,
   key: string,
@@ -49,8 +69,7 @@ export async function fetchJsonCached(
     }
   }
 
-  const response = await client.request(url, { headers: { Accept: "application/json" } });
-  const body = new Uint8Array(await response.arrayBuffer());
+  const { response, body } = await downloadBody(client, url);
   const meta: CacheEntryMeta = {
     url,
     savedAt: new Date(now()).toISOString(),

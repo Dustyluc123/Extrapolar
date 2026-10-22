@@ -87,4 +87,29 @@ describe("fetchJsonCached", () => {
     );
     expect(await context.cache.read("a.json")).toBeNull();
   });
+
+  it("tenta de novo quando a conexão cai no meio do corpo", async () => {
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls++;
+      if (calls === 1) {
+        const broken = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('{"parc'));
+            controller.error(new Error("conexão encerrada"));
+          },
+        });
+        return new Response(broken, { status: 200 });
+      }
+      return new Response('{"ok":true}', { status: 200 });
+    }) as unknown as typeof fetch;
+    const context = {
+      client: new HttpClient({ fetchImpl, minIntervalMs: 0 }),
+      cache: new FileCache(dir),
+      refresh: false,
+    };
+    const result = await fetchJsonCached(context, "b.json", "https://x/b.json");
+    expect(result.data).toEqual({ ok: true });
+    expect(calls).toBe(2);
+  });
 });

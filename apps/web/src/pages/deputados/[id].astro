@@ -13,6 +13,10 @@ import AlignmentSection from "../../components/deputado/AlignmentSection.astro";
 import CommitteesSection from "../../components/deputado/CommitteesSection.astro";
 import CommitteePresenceSection from "../../components/deputado/CommitteePresenceSection.astro";
 import RequestedEventsSection from "../../components/deputado/RequestedEventsSection.astro";
+import PropositionsSection from "../../components/deputado/PropositionsSection.astro";
+import SituationSection from "../../components/deputado/SituationSection.astro";
+import ThemesSection from "../../components/deputado/ThemesSection.astro";
+import OpinionsSection from "../../components/deputado/OpinionsSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -34,6 +38,7 @@ const updatedAt = meta.referenceDateTime;
 const cadernos = [
   { id: "plenario", label: "Plenário" },
   { id: "caderno-comissoes", label: "Comissões" },
+  { id: "caderno-projetos", label: "Projetos e leis" },
 ];
 const conditionSlug =
   deputy.electoralCondition === "Titular"
@@ -134,6 +139,18 @@ const conditionSlug =
       />
       <CommitteePresenceSection comissoes={detail.comissoes} updatedAt={updatedAt} />
       <RequestedEventsSection comissoes={detail.comissoes} updatedAt={updatedAt} />
+    </Caderno>
+
+    <Caderno
+      id="caderno-projetos"
+      number={3}
+      title="Projetos e leis"
+      intro="As propostas que o deputado apresentou, o que aconteceu com elas e os pareceres que escreveu."
+    >
+      <PropositionsSection projetos={detail.projetos} updatedAt={updatedAt} />
+      <SituationSection projetos={detail.projetos} updatedAt={updatedAt} />
+      <ThemesSection projetos={detail.projetos} updatedAt={updatedAt} />
+      <OpinionsSection projetos={detail.projetos} updatedAt={updatedAt} />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

@@ -1,0 +1,72 @@
+---
+// Métrica: o que aconteceu com os projetos de que é autor principal (Caderno 3).
+import type { Projetos } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import BarList from "../charts/BarList.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
+import { formatInteger, formatPercent, plural } from "../../lib/format";
+
+interface Props {
+  projetos: Projetos;
+  updatedAt: string;
+}
+const { projetos: p, updatedAt } = Astro.props;
+const LABELS: Record<string, string> = {
+  norma: "Virou norma jurídica (lei, emenda constitucional...)",
+  "aprovada-fora": "Aprovado na Câmara, seguindo no Senado ou na sanção",
+  "em-tramitacao": "Em tramitação na Câmara",
+  apensada: "Tramitando junto com outro projeto (apensado)",
+  arquivada: "Arquivado",
+  "devolvida-retirada": "Devolvido ou retirado pelo autor",
+  "sem-situacao": "Sem situação informada pela Câmara",
+  outra: "Outra situação",
+};
+const s = p.situacao;
+---
+
+<Metric
+  id="situacao-proposicoes"
+  title="O que aconteceu com os projetos dele"
+  whatIs="Mostra a situação atual de cada projeto de que o deputado é autor principal: se virou lei, se ainda está sendo analisado, se foi juntado a outro parecido, se foi arquivado..."
+  updatedAt={updatedAt}
+  methodologyAnchor="situacao-proposicoes"
+>
+  {s.taxaConversao !== null ? (
+    <div class="grid gap-8 lg:grid-cols-2">
+      <BigNumber
+        value={formatInteger(s.viraramNorma)}
+        label="Viraram norma jurídica"
+        caption={`De ${plural(p.autorPrincipal, "projeto apresentado", "projetos apresentados")} como autor principal na legislatura, ${formatInteger(s.viraramNorma)} ${s.viraramNorma === 1 ? "virou" : "viraram"} norma (${formatPercent(s.taxaConversao)}).`}
+      />
+      <BarList
+        title="Situação atual"
+        description="Projetos de que é autor principal, pela situação atual informada pela Câmara."
+        labelHeader="Situação"
+        valueHeader="Projetos"
+        items={s.categorias.map((c) => ({
+          label: LABELS[c.categoria] ?? c.categoria,
+          value: c.quantidade,
+          display: formatInteger(c.quantidade),
+          highlight: c.categoria === "norma",
+        }))}
+      />
+    </div>
+  ) : (
+    <NoData reason="sem-proposicao-elegivel" label="Viraram norma jurídica" />
+  )}
+  <Fragment slot="limites">
+    <li>
+      Projetos levam anos: os apresentados nos últimos meses ainda não tiveram tempo de ser votados.
+    </li>
+    <li>
+      Muitos projetos são <Term slug="apensado">apensados</Term> a outros e aprovados "dentro"
+      deles; nesse caso, a norma aparece só no projeto principal, que pode ser de outro autor.
+    </li>
+    <li>
+      A aprovação depende da pauta, de acordos e do Senado, não só do autor. A taxa não mede esforço
+      nem qualidade.
+    </li>
+  </Fragment>
+</Metric>

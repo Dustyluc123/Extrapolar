@@ -5,3 +5,4 @@ export * from "./participation";
 export * from "./attendance";
 export * from "./alignment";
 export * from "./committees";
+export * from "./propositions";

@@ -1,0 +1,79 @@
+---
+// Métrica: pareceres apresentados como relator (Caderno 3).
+import type { Projetos } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import BarList from "../charts/BarList.astro";
+import Columns from "../charts/Columns.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger } from "../../lib/format";
+
+interface Props {
+  projetos: Projetos;
+  updatedAt: string;
+}
+const { projetos: p, updatedAt } = Astro.props;
+const o = p.pareceres;
+const max = Math.max(0, ...o.porAno.map((y) => y.quantidade));
+const organs = o.porOrgao.slice(0, 6);
+---
+
+<Metric
+  id="pareceres"
+  title="Pareceres como relator"
+  whatIs="Quando uma proposta chega a uma comissão, um deputado é escolhido relator: ele estuda o texto e escreve um parecer recomendando aprovar, mudar ou rejeitar. Aqui estão os pareceres que o deputado apresentou como relator."
+  updatedAt={updatedAt}
+  methodologyAnchor="pareceres"
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <BigNumber
+        value={formatInteger(o.total)}
+        label="Pareceres apresentados"
+        caption="Pareceres de relator em comissões, no plenário e sobre emendas, apresentados na legislatura."
+      />
+      {o.total > 0 ? (
+        <div class="mt-6">
+          <Columns
+            title="Por ano"
+            description="Quantidade de pareceres apresentados em cada ano da legislatura."
+            labelHeader="Ano"
+            valueHeader="Pareceres"
+            maxLabel={`máximo: ${formatInteger(max)}`}
+            items={o.porAno.map((y) => ({
+              label: String(y.ano),
+              tick: String(y.ano),
+              value: y.quantidade,
+              display: formatInteger(y.quantidade),
+            }))}
+          />
+        </div>
+      ) : null}
+    </div>
+    {organs.length > 0 ? (
+      <BarList
+        title="Onde foram apresentados"
+        description="Pareceres por órgão em que foram numerados (comissões, Mesa, plenário)."
+        labelHeader="Órgão"
+        valueHeader="Pareceres"
+        items={organs.map((organ) => ({
+          label: `${organ.sigla} — ${organ.nome}`,
+          value: organ.quantidade,
+          display: formatInteger(organ.quantidade),
+        }))}
+      />
+    ) : null}
+  </div>
+  <Fragment slot="limites">
+    <li>
+      Quem escolhe os relatores é o presidente de cada comissão; relatar mais ou menos depende
+      disso.
+    </li>
+    <li>
+      Pareceres têm tamanhos muito diferentes: alguns são de uma página, outros mudam um projeto
+      inteiro. Na <Term slug="mesa-diretora">Mesa</Term>, por exemplo, há muitos pareceres curtos
+      sobre pedidos de informação.
+    </li>
+    <li>O número não diz se o parecer recomendou aprovar ou rejeitar.</li>
+  </Fragment>
+</Metric>

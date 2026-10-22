@@ -216,6 +216,52 @@ export const comissoesSchema = z.object({
 });
 export type Comissoes = z.infer<typeof comissoesSchema>;
 
+// ---- Caderno 3 — Projetos e leis ----
+
+export const SITUATION_CATEGORY_KEYS = [
+  "norma",
+  "aprovada-fora",
+  "em-tramitacao",
+  "apensada",
+  "arquivada",
+  "devolvida-retirada",
+  "sem-situacao",
+  "outra",
+] as const;
+
+export const projetosSchema = z.object({
+  /** Tipos que podem virar norma (PL, PLP, PEC, PDL, PRC): autor principal e coautor. */
+  porTipo: z.array(z.object({ tipo: z.string(), autorPrincipal: count, coautor: count })),
+  porAno: z.array(z.object({ ano: z.number().int(), autorPrincipal: count })),
+  autorPrincipal: count,
+  coautor: count,
+  /** Assinaturas de apoio (não são autoria) nos tipos principais. */
+  apoio: count,
+  /** Todas as proposições de que é autor, de qualquer tipo (requerimentos, emendas...). */
+  todosOsTipos: z.array(
+    z.object({ tipo: z.string(), nome: z.string(), autorPrincipal: count, coautor: count }),
+  ),
+  situacao: z.object({
+    categorias: z.array(
+      z.object({ categoria: z.enum(SITUATION_CATEGORY_KEYS), quantidade: count }),
+    ),
+    viraramNorma: count,
+    /** viraramNorma ÷ autorPrincipal; null sem projeto como autor principal. */
+    taxaConversao: z.number().min(0).max(1).nullable(),
+  }),
+  temas: z.object({
+    comTema: count,
+    homenagens: count,
+    porTema: z.array(z.object({ codigo: z.number().int(), nome: z.string(), quantidade: count })),
+  }),
+  pareceres: z.object({
+    total: count,
+    porAno: z.array(z.object({ ano: z.number().int(), quantidade: count })),
+    porOrgao: z.array(z.object({ sigla: z.string(), nome: z.string(), quantidade: count })),
+  }),
+});
+export type Projetos = z.infer<typeof projetosSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -229,6 +275,7 @@ export const deputyDetailSchema = z.object({
     alinhamentoGoverno: alignmentSchema,
   }),
   comissoes: comissoesSchema,
+  projetos: projetosSchema,
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
 

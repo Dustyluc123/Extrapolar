@@ -1,0 +1,120 @@
+---
+// Métrica: proposições apresentadas, por tipo (Caderno 3).
+import type { Projetos } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import BarList from "../charts/BarList.astro";
+import Columns from "../charts/Columns.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger, plural } from "../../lib/format";
+
+interface Props {
+  projetos: Projetos;
+  updatedAt: string;
+}
+const { projetos: p, updatedAt } = Astro.props;
+const TYPE_NAMES: Record<string, string> = {
+  PL: "Projeto de Lei (PL)",
+  PLP: "Projeto de Lei Complementar (PLP)",
+  PEC: "Proposta de Emenda à Constituição (PEC)",
+  PDL: "Projeto de Decreto Legislativo (PDL)",
+  PRC: "Projeto de Resolução da Câmara (PRC)",
+};
+const max = Math.max(0, ...p.porAno.map((y) => y.autorPrincipal));
+const others = p.todosOsTipos.slice(0, 15);
+---
+
+<Metric
+  id="proposicoes"
+  title="Projetos apresentados"
+  whatIs="Projetos são as propostas que podem virar lei ou mudar regras (como a Constituição). Aqui contamos os projetos em que o deputado é o autor principal, o primeiro a assinar, e à parte os que ele assinou junto com outros."
+  updatedAt={updatedAt}
+  methodologyAnchor="proposicoes"
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <BigNumber
+        value={formatInteger(p.autorPrincipal)}
+        label="Projetos como autor principal"
+        caption={`Projetos de lei, de lei complementar, de emenda à Constituição, de decreto legislativo e de resolução apresentados na legislatura como primeiro signatário. Como coautor, assinou outros ${formatInteger(p.coautor)}.`}
+      />
+      <div class="mt-6">
+        <Columns
+          title="Por ano (autor principal)"
+          description="Quantidade de projetos apresentados como autor principal em cada ano da legislatura."
+          labelHeader="Ano"
+          valueHeader="Projetos"
+          maxLabel={`máximo: ${formatInteger(max)}`}
+          items={p.porAno.map((y) => ({
+            label: String(y.ano),
+            tick: String(y.ano),
+            value: y.autorPrincipal,
+            display: formatInteger(y.autorPrincipal),
+          }))}
+        />
+      </div>
+    </div>
+    <BarList
+      title="Por tipo (autor principal)"
+      description="Projetos apresentados como primeiro signatário, por tipo oficial."
+      labelHeader="Tipo"
+      valueHeader="Projetos"
+      items={p.porTipo.map((t) => ({
+        label: TYPE_NAMES[t.tipo] ?? t.tipo,
+        value: t.autorPrincipal,
+        display: `${formatInteger(t.autorPrincipal)}${t.coautor > 0 ? ` · coautor em ${formatInteger(t.coautor)}` : ""}`,
+      }))}
+    />
+  </div>
+
+  {others.length > 0 ? (
+    <details class="mt-6">
+      <summary class="cursor-pointer font-sans text-sm font-semibold">
+        Tudo o que assinou como autor, por tipo oficial (requerimentos, emendas, pareceres...)
+      </summary>
+      <table class="mt-2 w-full border-collapse font-sans text-sm">
+        <thead>
+          <tr class="border-b border-ink">
+            <th scope="col" class="py-1 text-left font-semibold">
+              Tipo
+            </th>
+            <th scope="col" class="py-1 text-right font-semibold">
+              Autor principal
+            </th>
+            <th scope="col" class="py-1 text-right font-semibold">
+              Coautor
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {others.map((t) => (
+            <tr class="border-b border-rule/60">
+              <th scope="row" class="py-1 pr-2 text-left font-normal">
+                <span class="text-ink-soft">{t.tipo}</span> · {t.nome}
+              </th>
+              <td class="py-1 text-right tabular-nums">{formatInteger(t.autorPrincipal)}</td>
+              <td class="py-1 text-right tabular-nums">{formatInteger(t.coautor)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {p.todosOsTipos.length > others.length ? (
+        <p class="caption mt-2">
+          Mostrando os {others.length} tipos mais frequentes de {p.todosOsTipos.length}.
+        </p>
+      ) : null}
+    </details>
+  ) : null}
+
+  <Fragment slot="limites">
+    <li>Quantidade não é medida de importância: um projeto pode mudar muito ou quase nada.</li>
+    <li>
+      Muitos projetos são parecidos com outros já existentes e acabam sendo{" "}
+      <Term slug="apensado">apensados</Term> a eles.
+    </li>
+    <li>
+      Assinaturas de apoio (por exemplo, as necessárias para uma PEC começar a tramitar) não contam
+      como autoria: foram {plural(p.apoio, "assinatura", "assinaturas")} assim.
+    </li>
+  </Fragment>
+</Metric>

@@ -226,3 +226,39 @@ export type CamaraPropositionAuthor = z.infer<typeof camaraPropositionAuthorSche
 export const camaraPropositionAuthorsFileSchema = z.object({
   dados: z.array(camaraPropositionAuthorSchema),
 });
+
+// ---- Arquivos: proposicoes-{ano} e proposicoesTemas-{ano}; API: /referencias/proposicoes/codTema ----
+
+export const camaraPropositionSchema = z.object({
+  id: z.number().int().positive(),
+  siglaTipo: z.string(),
+  codTipo: z.number().int(),
+  descricaoTipo: z.string(),
+  dataApresentacao: z.string().regex(LOCAL_DATE_TIME),
+  /** Proposição à qual esta está apensada (tramitando em conjunto), ou "". */
+  uriPropPrincipal: z.union([z.literal(""), apiUri("proposicoes")]),
+  uriOrgaoNumerador: apiUri("orgaos"),
+  ultimoStatus: z.object({
+    /** Código da situação atual ("" quando não informada). */
+    idSituacao: z.string().regex(/^\d*$/),
+    descricaoSituacao: z.string(),
+  }),
+});
+export type CamaraProposition = z.infer<typeof camaraPropositionSchema>;
+export const camaraPropositionsFileSchema = z.object({ dados: z.array(camaraPropositionSchema) });
+
+export const camaraPropositionThemeSchema = z.object({
+  uriProposicao: apiUri("proposicoes"),
+  codTema: z.number().int(),
+  tema: z.string(),
+});
+export type CamaraPropositionTheme = z.infer<typeof camaraPropositionThemeSchema>;
+export const camaraPropositionThemesFileSchema = z.object({
+  dados: z.array(camaraPropositionThemeSchema),
+});
+
+export const camaraThemeRefSchema = z.object({
+  cod: z.string().regex(/^\d+$/),
+  nome: z.string().min(1),
+});
+export const camaraThemeRefsSchema = z.object({ dados: z.array(camaraThemeRefSchema) });

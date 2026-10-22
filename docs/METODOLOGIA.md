@@ -237,3 +237,97 @@ Quantos eventos (audiências públicas, seminários, sessões solenes, compareci
 - Muitos eventos são pedidos por vários deputados juntos; todos eles contam o evento.
 - Pedidos rejeitados ou ainda não realizados.
 - A qualidade ou o resultado do evento.
+
+<a id="proposicoes"></a>
+
+## Projetos apresentados
+
+### O que é
+
+Quantos projetos que podem virar norma o deputado apresentou na legislatura **como autor principal** (o primeiro a assinar), e à parte quantos assinou **como coautor**.
+
+### Como é calculado
+
+- **Tipos contados:** Projeto de Lei (PL), Projeto de Lei Complementar (PLP), Proposta de Emenda à Constituição (PEC), Projeto de Decreto Legislativo (PDL) e Projeto de Resolução da Câmara (PRC).
+- **Autoria:** arquivo `proposicoesAutores-{ano}`. **Autor principal** = assinatura com `ordemAssinatura = 1` (é única por proposição; conferido). **Coautor** = demais assinaturas com `proponente = 1`. As assinaturas com `proponente = 0` são **de apoio** (por exemplo, as exigidas para uma PEC começar a tramitar) e não contam como autoria; a ficha mostra quantas foram.
+- **Período:** proposições apresentadas (`dataApresentacao`) de 1º de fevereiro de 2023 até a data da atualização. O arquivo de um ano traz também algumas proposições renumeradas com data antiga (vindas do Senado); elas ficam fora pela data.
+- **Todos os tipos:** a ficha também lista, por subtipo oficial, tudo o que o deputado assinou como autor (requerimentos, emendas, pareceres, indicações...).
+
+### O que este número **não** mede
+
+- A importância ou a qualidade dos projetos: um projeto pode mudar muito ou quase nada. O site não classifica projetos por relevância (isso seria opinião).
+- O trabalho de construir um projeto em conjunto com outros deputados, quando ele aparece só como coautor.
+
+<a id="situacao-proposicoes"></a>
+
+## O que aconteceu com os projetos
+
+### O que é
+
+A situação atual dos projetos de que o deputado é autor principal (mesmos tipos acima) e a **taxa de conversão**: quantos viraram norma jurídica.
+
+```
+taxa de conversão = projetos (autor principal) transformados em norma jurídica
+                    ÷ projetos apresentados como autor principal na legislatura
+```
+
+### Como é calculado
+
+A situação vem do código oficial `ultimoStatus.idSituacao` de cada proposição, agrupado assim (todos os códigos encontrados de 2023 a 2026 estão classificados; um código novo aparece como "outra situação" e gera aviso no pipeline):
+
+| Categoria na ficha                                  | Códigos oficiais                                                                                                 |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Virou norma jurídica                                | 1140 (Transformado em Norma Jurídica)                                                                            |
+| Aprovado na Câmara, seguindo no Senado ou na sanção | 926, 1150, 939, 900, 1293, 929, 1270                                                                             |
+| Em tramitação na Câmara                             | 907, 915, 924, 1170, 1201, 905, 904, 903, 918, 902, 932, 1220, 901, 1200, 910, 1221, 1091, 922, 1110, 1382, 1210 |
+| Tramitando junto com outro projeto (apensado)       | 925, 927                                                                                                         |
+| Arquivado                                           | 923                                                                                                              |
+| Devolvido ou retirado                               | 1120, 950                                                                                                        |
+| Sem situação informada                              | código vazio                                                                                                     |
+| Outra situação                                      | 1230 (Transformado em nova proposição) e códigos novos                                                           |
+
+Sem projeto como autor principal, a taxa é "sem dado".
+
+### Limitações obrigatórias
+
+- **Projetos levam anos.** Os apresentados recentemente ainda não tiveram tempo de ser votados; a taxa tende a ser baixa no começo de qualquer legislatura.
+- **Apensação:** muitos projetos são juntados a outros parecidos e aprovados "dentro" deles. Nesse caso, a norma aparece só no projeto principal, que pode ser de outro autor; o projeto apensado continua como "tramitando junto".
+- A aprovação depende da pauta, de acordos e do Senado, não só do autor. A taxa não mede esforço nem qualidade.
+
+<a id="temas"></a>
+
+## Temas dos projetos
+
+### O que é
+
+A distribuição dos projetos de que o deputado é autor principal pelos **temas oficiais** da Câmara (arquivo `proposicoesTemas-{ano}` e lista oficial `/referencias/proposicoes/codTema`, com 32 temas).
+
+### Como é calculado
+
+- Um projeto pode ter vários temas (até 12); ele conta uma vez em cada tema. A ficha mostra os 8 temas mais frequentes e a tabela completa.
+- **Homenagens e Datas Comemorativas** (código 72) é um tema oficial da Câmara; a ficha mostra a parcela de projetos nesse tema, entre os que têm tema, usando o nome oficial.
+- O site **não** cria classificação própria ("relevante", "estrutural"...): isso seria opinião.
+
+### Limitações
+
+- O tema diz o assunto, não o conteúdo nem a posição do projeto.
+- Projetos recentes podem ainda não ter tema.
+
+<a id="pareceres"></a>
+
+## Pareceres como relator
+
+### O que é
+
+Quantos pareceres o deputado apresentou como **relator** na legislatura, por ano e por órgão.
+
+### Como é calculado
+
+- Os pareceres aparecem nos dados como proposições dos tipos **PRL** (Parecer do Relator, em comissão), **PRLP** (Parecer Proferido em Plenário) e **PRLE** (parecer às emendas). Conferido em 2025: todos (16.071) têm exatamente um autor, o deputado relator.
+- O órgão é o que numerou o parecer (`uriOrgaoNumerador`): uma comissão, a Mesa ou o plenário.
+
+### Limitações
+
+- Quem escolhe os relatores é o presidente de cada comissão.
+- Pareceres têm tamanhos muito diferentes. Na Mesa Diretora há muitos pareceres curtos sobre requerimentos de informação; por isso, membros da Mesa aparecem com milhares de pareceres.
+- O número não diz se o parecer recomendou aprovar ou rejeitar.

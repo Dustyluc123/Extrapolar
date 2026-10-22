@@ -3,6 +3,7 @@ import {
   CAMARA_API_BASE,
   camaraBlocPartiesPageSchema,
   camaraBlocsPageSchema,
+  camaraThemeRefsSchema,
   camaraDeputyListPageSchema,
   camaraHistoryResponseSchema,
   parseOrThrow,
@@ -79,4 +80,12 @@ export async function fetchFederations(
     federations.push({ name: bloc.nome, parties: parties.map((p) => p.sigla) });
   }
   return federations;
+}
+
+/** Lista oficial de temas de proposições (/referencias/proposicoes/codTema). */
+export async function fetchThemeNames(context: CachedFetchContext): Promise<Map<number, string>> {
+  const url = `${CAMARA_API_BASE}/referencias/proposicoes/codTema`;
+  const { data } = await fetchJsonCached(context, "api/referencias/codTema.json", url);
+  const parsed = parseOrThrow(camaraThemeRefsSchema, data, url).dados;
+  return new Map(parsed.map((t) => [Number(t.cod), t.nome]));
 }

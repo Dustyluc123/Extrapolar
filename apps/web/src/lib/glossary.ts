@@ -141,6 +141,66 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition:
       "Grupo de deputados que dirige os trabalhos da Câmara: presidente, vice-presidentes e secretários. É eleita para mandatos de dois anos.",
   },
+  {
+    slug: "pl",
+    term: "Projeto de Lei",
+    short: "PL",
+    definition:
+      "Proposta para criar, mudar ou revogar uma lei ordinária. Precisa ser aprovada pela Câmara e pelo Senado e sancionada pelo Presidente da República.",
+  },
+  {
+    slug: "plp",
+    term: "Projeto de Lei Complementar",
+    short: "PLP",
+    definition:
+      "Proposta de lei sobre assuntos que a Constituição exige que sejam tratados por lei complementar. Precisa de maioria absoluta para ser aprovada.",
+  },
+  {
+    slug: "pec",
+    term: "Proposta de Emenda à Constituição",
+    short: "PEC",
+    definition:
+      "Proposta para mudar a Constituição. Precisa da assinatura de pelo menos um terço dos deputados para começar e de três quintos dos votos, em dois turnos, na Câmara e no Senado.",
+    plain: "É a proposta mais difícil de aprovar: mexe nas regras principais do país.",
+  },
+  {
+    slug: "pdl",
+    term: "Projeto de Decreto Legislativo",
+    short: "PDL",
+    definition:
+      "Proposta sobre assuntos que são decididos só pelo Congresso, sem sanção do Presidente — por exemplo, aprovar tratados ou suspender atos do Poder Executivo.",
+  },
+  {
+    slug: "prc",
+    term: "Projeto de Resolução da Câmara",
+    short: "PRC",
+    definition: "Proposta sobre assuntos internos da Câmara, como o seu regimento.",
+  },
+  {
+    slug: "apensado",
+    term: "Apensação",
+    definition:
+      "Quando um projeto trata de assunto parecido com outro que já está tramitando, ele é juntado (apensado) ao mais antigo e os dois passam a andar juntos.",
+    plain: "É colocar no mesmo “pacote” projetos sobre o mesmo assunto.",
+  },
+  {
+    slug: "norma-juridica",
+    term: "Norma jurídica",
+    definition:
+      "O resultado final de uma proposta aprovada: uma lei, lei complementar, emenda constitucional, decreto legislativo ou resolução.",
+  },
+  {
+    slug: "relator",
+    term: "Relator e parecer",
+    definition:
+      "Relator é o deputado escolhido para estudar uma proposta numa comissão (ou no plenário). O texto em que ele recomenda aprovar, mudar ou rejeitar a proposta é o parecer.",
+  },
+  {
+    slug: "primeiro-signatario",
+    term: "Autor principal (primeiro signatário)",
+    definition:
+      "O primeiro deputado a assinar uma proposta. Os demais que assinam como autores são coautores; há ainda as assinaturas de apoio, que não são autoria.",
+  },
 ];
 
 export function glossaryEntry(slug: string): GlossaryEntry {

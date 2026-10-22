@@ -12,6 +12,7 @@ import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
 import { computeComissoes } from "./metrics/comissoes";
 import { computePlenario } from "./metrics/plenario";
+import { computeProjetos } from "./metrics/projetos";
 import type { NormalizedData } from "./normalize";
 
 export interface ComputedData {
@@ -109,6 +110,35 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     methodologyAnchor: "eventos-requeridos",
     pick: (d) => okValue(d.comissoes.eventosRequeridos.total),
   },
+  {
+    key: "projetos-autor-principal",
+    caderno: "projetos",
+    label: "Projetos apresentados como autor principal (PL, PLP, PEC, PDL, PRC)",
+    unit: "contagem",
+    methodologyAnchor: "proposicoes",
+    pick: (d) => okValue(d.projetos.autorPrincipal),
+  },
+  {
+    key: "projetos-viraram-norma",
+    caderno: "projetos",
+    label: "Projetos como autor principal transformados em norma jurídica",
+    unit: "proporcao",
+    methodologyAnchor: "situacao-proposicoes",
+    pick: (d) =>
+      ratioValue(
+        d.projetos.situacao.viraramNorma,
+        d.projetos.autorPrincipal,
+        "sem-proposicao-elegivel",
+      ),
+  },
+  {
+    key: "pareceres-relator",
+    caderno: "projetos",
+    label: "Pareceres apresentados como relator",
+    unit: "contagem",
+    methodologyAnchor: "pareceres",
+    pick: (d) => okValue(d.projetos.pareceres.total),
+  },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
@@ -116,16 +146,23 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
   const plenario = computePlenario(context, data);
   log.step("Calculando o Caderno 2 — Comissões");
   const comissoes = computeComissoes(context, data);
+  log.step("Calculando o Caderno 3 — Projetos e leis");
+  const projetos = computeProjetos(context, data);
 
   const details: DeputyDetail[] = data.deputies.map((deputy) => {
-    const p = plenario.get(deputy.id);
-    const c = comissoes.get(deputy.id);
-    if (!p || !c) throw new Error(`Cadernos não calculados para o deputado ${deputy.id}.`);
+    const of = <T>(map: Map<number, T>, caderno: string): T => {
+      const value = map.get(deputy.id);
+      if (value === undefined) {
+        throw new Error(`Caderno "${caderno}" não calculado para o deputado ${deputy.id}.`);
+      }
+      return value;
+    };
     return {
       schemaVersion: GENERATED_SCHEMA_VERSION,
       deputyId: deputy.id,
-      plenario: p,
-      comissoes: c,
+      plenario: of(plenario, "plenario"),
+      comissoes: of(comissoes, "comissoes"),
+      projetos: of(projetos, "projetos"),
     };
   });
 

@@ -19,6 +19,7 @@ import {
   fetchCurrentDeputies,
   fetchDeputyHistory,
   fetchFederations,
+  fetchThemeNames,
   historySourceUrl,
   type Federation,
 } from "../sources/camara-api";
@@ -35,6 +36,11 @@ import {
   type Authorship,
 } from "../normalize/committees";
 import type { DeputyWithHistory } from "../normalize/deputies";
+import {
+  addThemes,
+  reducePropositions,
+  type PropositionsReduction,
+} from "../normalize/propositions";
 import { selectPlenarySessions, type PlenarySessionsSelection } from "../normalize/sessions";
 import {
   PLENARY_ORGAN,
@@ -72,6 +78,12 @@ export interface FetchedSources {
   requestedEventInfo: Map<number, EventInfo>;
   /** Autoria (só deputados) das proposições apresentadas na legislatura. */
   authorship: Map<number, Authorship[]>;
+  /** Proposições reduzidas (tipos dos cadernos 3 e 4) e contagens por tipo. */
+  propositions: PropositionsReduction;
+  /** Temas oficiais das proposições principais. */
+  propositionThemes: Map<number, number[]>;
+  /** Nomes oficiais dos temas. */
+  themeNames: Map<number, string>;
   sources: SourceInfo[];
 }
 
@@ -125,8 +137,18 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
     organs.items.filter((o) => COMMITTEE_TYPES.has(o.tipoOrgao)).map((o) => idFromUri(o.uri)),
   );
 
-  const years = await fetchYears(context, sources, committeeOrganIds);
+  const themeNames = await fetchThemeNames(context.fetch);
+  sources.push({
+    id: "api-temas",
+    name: "API da Câmara — lista oficial de temas",
+    url: `${CAMARA_API_BASE}/referencias/proposicoes/codTema`,
+    lastModified: null,
+  });
+
+  const deputyIds = new Set(list.map((item) => item.id));
+  const years = await fetchYears(context, sources, committeeOrganIds, deputyIds);
   return {
+    themeNames,
     deputies,
     federations,
     organs: organs.items,
@@ -145,6 +167,7 @@ async function fetchYears(
   context: PipelineContext,
   sources: SourceInfo[],
   committeeOrganIds: ReadonlySet<number>,
+  deputyIds: ReadonlySet<number>,
 ): Promise<
   Pick<
     FetchedSources,
@@ -155,6 +178,8 @@ async function fetchYears(
     | "eventRequests"
     | "requestedEventInfo"
     | "authorship"
+    | "propositions"
+    | "propositionThemes"
   >
 > {
   log.step("Baixando arquivos anuais (arquivos estáticos da Câmara)");
@@ -168,6 +193,9 @@ async function fetchYears(
   const eventRequests = new Map<number, number[]>();
   const requestedEventInfo = new Map<number, EventInfo>();
   const authorship = new Map<number, Authorship[]>();
+  const propositions: PropositionsReduction = { propositions: new Map(), typeCounts: new Map() };
+  const propositionThemes = new Map<number, number[]>();
+  const limit = end < referenceDateTime ? end : referenceDateTime;
   const seenVotes = new Set<string>();
 
   const addPresences = (byDeputy: Map<number, Set<number>>) => {
@@ -272,10 +300,23 @@ async function fetchYears(
       });
     }
 
-    // Autores de proposições (arquivo grande: reduzido na hora)
+    // Autores e proposições (arquivos grandes: reduzidos na hora; autores antes das proposições)
     const authorsFile = await fetchYearFile(context.fetch, YEAR_FILES.propositionAuthors, year);
     sources.push(authorsFile.source);
     addAuthors(authorship, authorsFile.items);
+    const propositionsFile = await fetchYearFile(context.fetch, YEAR_FILES.propositions, year);
+    sources.push(propositionsFile.source);
+    reducePropositions({
+      target: propositions,
+      items: propositionsFile.items,
+      authorship,
+      deputyIds,
+      start,
+      limit,
+    });
+    const themesFile = await fetchYearFile(context.fetch, YEAR_FILES.propositionThemes, year);
+    sources.push(themesFile.source);
+    addThemes(propositionThemes, themesFile.items, propositions.propositions);
 
     log.info(
       `${year}: ${newVotes.length} votações nominais, ${yearSessions.sessions.length} sessões deliberativas, ${yearMeetings.length} reuniões de comissão`,
@@ -292,5 +333,7 @@ async function fetchYears(
     eventRequests,
     requestedEventInfo,
     authorship,
+    propositions,
+    propositionThemes,
   };
 }
