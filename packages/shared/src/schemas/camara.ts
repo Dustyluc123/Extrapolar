@@ -97,3 +97,65 @@ export const camaraBallotSchema = z.object({
 });
 export type CamaraBallot = z.infer<typeof camaraBallotSchema>;
 export const camaraBallotsFileSchema = z.object({ dados: z.array(camaraBallotSchema) });
+
+// ---- Arquivos: eventos-{ano}, eventosOrgaos-{ano}, eventosPresencaDeputados-{ano} ----
+
+export const camaraEventSchema = z.object({
+  id: z.number().int().positive(),
+  dataHoraInicio: z.string().regex(LOCAL_DATE_TIME),
+  situacao: z.string(),
+  descricaoTipo: z.string(),
+  descricao: z.string(),
+});
+export type CamaraEvent = z.infer<typeof camaraEventSchema>;
+export const camaraEventsFileSchema = z.object({ dados: z.array(camaraEventSchema) });
+
+export const camaraEventOrganSchema = z.object({
+  idEvento: z.number().int().positive(),
+  idOrgao: z.number().int(),
+  siglaOrgao: z.string(),
+});
+export type CamaraEventOrgan = z.infer<typeof camaraEventOrganSchema>;
+export const camaraEventOrgansFileSchema = z.object({ dados: z.array(camaraEventOrganSchema) });
+
+export const camaraEventPresenceSchema = z.object({
+  idEvento: z.number().int().positive(),
+  idDeputado: z.number().int().positive(),
+});
+export type CamaraEventPresence = z.infer<typeof camaraEventPresenceSchema>;
+export const camaraEventPresencesFileSchema = z.object({
+  dados: z.array(camaraEventPresenceSchema),
+});
+
+// ---- Arquivo: votacoesOrientacoes-{ano} ----
+
+/** Valores de orientação encontrados (2023–2026). Um valor novo faz o pipeline falhar. */
+export const CAMARA_ORIENTATION_VALUES = [
+  "Sim",
+  "Não",
+  "Obstrução",
+  "Abstenção",
+  "Liberado",
+  "",
+] as const;
+
+export const camaraOrientationSchema = z.object({
+  idVotacao: z.string().min(1),
+  siglaOrgao: z.string(),
+  siglaBancada: z.string(),
+  orientacao: z.enum(CAMARA_ORIENTATION_VALUES),
+});
+export type CamaraOrientation = z.infer<typeof camaraOrientationSchema>;
+export const camaraOrientationsFileSchema = z.object({ dados: z.array(camaraOrientationSchema) });
+
+// ---- API: /blocos e /blocos/{id}/partidos (usados só para federações) ----
+
+export const camaraBlocSchema = z.object({
+  id: z.string().regex(/^\d+$/),
+  nome: z.string(),
+  idLegislatura: z.string().regex(/^\d+$/),
+  federacao: z.boolean(),
+});
+export const camaraBlocsPageSchema = apiPageSchema(camaraBlocSchema);
+export const camaraBlocPartySchema = z.object({ sigla: z.string().min(1), nome: z.string() });
+export const camaraBlocPartiesPageSchema = apiPageSchema(camaraBlocPartySchema);

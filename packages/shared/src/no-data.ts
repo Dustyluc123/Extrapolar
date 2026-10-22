@@ -5,7 +5,7 @@ export const NO_DATA_REASONS = {
   "sem-votacao-elegivel": "Não houve votação nominal no plenário enquanto estava em exercício.",
   "sem-sessao-elegivel": "Não houve sessão deliberativa do plenário enquanto estava em exercício.",
   "sem-orientacao-elegivel":
-    "Não houve votação em que tenha votado e a bancada tenha orientado (fora 'Liberado').",
+    "Não houve votação em que tenha votado e o partido (ou a federação) tenha orientado; orientação só do bloco não entra.",
   "sem-orientacao-do-governo":
     "Não houve votação em que tenha votado e o Governo tenha orientado (fora 'Liberado').",
   "nao-e-titular-de-comissao": "Não foi titular de nenhuma comissão enquanto estava em exercício.",

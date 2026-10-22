@@ -1,0 +1,18 @@
+---
+// Aviso de base pequena: com poucas ocorrências, a porcentagem muda muito (docs/METODOLOGIA.md).
+import { formatInteger } from "../../lib/format";
+
+interface Props {
+  count: number;
+  noun: string;
+}
+const { count, noun } = Astro.props;
+const FEW_THRESHOLD = 30;
+---
+
+{count < FEW_THRESHOLD ? (
+  <p class="mt-4 rounded-card border border-rule bg-card p-3 font-sans text-sm">
+    Base pequena: só {formatInteger(count)} {noun} na conta. Com tão poucas, a porcentagem pode
+    mudar bastante a cada nova atualização.
+  </p>
+) : null}

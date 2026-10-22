@@ -1,5 +1,8 @@
 // Etapa 2: converte o formato da Câmara para os tipos internos.
-import type { Deputy, ServicePeriod } from "@extrapolar/shared";
+import type { CamaraOrientation, Deputy, ServicePeriod } from "@extrapolar/shared";
+import { indexOrientations } from "../normalize/orientations";
+import type { PlenarySessionsSelection } from "../normalize/sessions";
+import type { Federation } from "../sources/camara-api";
 import type { PlenaryVotesSelection } from "../normalize/votes";
 import { buildServicePeriods } from "../normalize/service-periods";
 import { log } from "../lib/log";
@@ -11,6 +14,10 @@ export interface NormalizedData {
   deputies: Deputy[];
   servicePeriods: Map<number, ServicePeriod[]>;
   plenary: PlenaryVotesSelection;
+  /** Orientações por votação (só votações nominais de plenário selecionadas). */
+  orientationsByVote: Map<string, CamaraOrientation[]>;
+  sessions: PlenarySessionsSelection;
+  federations: Federation[];
 }
 
 export function normalize(context: PipelineContext, fetched: FetchedSources): NormalizedData {
@@ -31,5 +38,17 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
   log.info(
     `${fetched.plenary.votes.length} votações nominais de plenário, ${fetched.plenary.ballots.length} votos individuais`,
   );
-  return { deputies, servicePeriods, plenary: fetched.plenary };
+  const voteIds = new Set(fetched.plenary.votes.map((vote) => vote.id));
+  const orientationsByVote = indexOrientations(fetched.orientations, voteIds);
+  log.info(
+    `${fetched.sessions.sessions.length} sessões deliberativas; orientações em ${orientationsByVote.size} votações`,
+  );
+  return {
+    deputies,
+    servicePeriods,
+    plenary: fetched.plenary,
+    orientationsByVote,
+    sessions: fetched.sessions,
+    federations: fetched.federations,
+  };
 }

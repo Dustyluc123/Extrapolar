@@ -8,6 +8,8 @@ import Rule from "../../components/ui/Rule.astro";
 import Term from "../../components/ui/Term.astro";
 import DeputyPhoto from "../../components/deputado/DeputyPhoto.astro";
 import ParticipationSection from "../../components/deputado/ParticipationSection.astro";
+import PresenceSection from "../../components/deputado/PresenceSection.astro";
+import AlignmentSection from "../../components/deputado/AlignmentSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -100,6 +102,17 @@ const conditionSlug =
       intro="O que acontece na sala onde todos os 513 deputados votam."
     >
       <ParticipationSection participation={detail.plenario.participacao} updatedAt={updatedAt} />
+      <PresenceSection attendance={detail.plenario.presencaSessoes} updatedAt={updatedAt} />
+      <AlignmentSection
+        kind="partido"
+        alignment={detail.plenario.alinhamentoPartido}
+        updatedAt={updatedAt}
+      />
+      <AlignmentSection
+        kind="governo"
+        alignment={detail.plenario.alinhamentoGoverno}
+        updatedAt={updatedAt}
+      />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

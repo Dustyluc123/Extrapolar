@@ -1,0 +1,65 @@
+---
+// Métrica: presença em sessões deliberativas do plenário (Caderno 1).
+import type { Attendance } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import RateBar from "../charts/RateBar.astro";
+import FewNotice from "../ficha/FewNotice.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
+import { formatInteger, formatPercent, plural } from "../../lib/format";
+
+interface Props {
+  attendance: Attendance;
+  updatedAt: string;
+}
+const { attendance: a, updatedAt } = Astro.props;
+---
+
+<Metric
+  id="presenca-sessoes"
+  title="Presença em sessões deliberativas"
+  whatIs="Mostra em quantas sessões do plenário em que se vota (as deliberativas) o deputado registrou presença, contando só os dias em que estava no cargo. Estar presente é diferente de votar: a presença é registrada na sessão inteira."
+  updatedAt={updatedAt}
+  methodologyAnchor="presenca-sessoes"
+>
+  {a.rate !== null ? (
+    <div class="max-w-xl">
+      <BigNumber
+        value={formatPercent(a.rate)}
+        label="Esteve presente em"
+        caption={`Registrou presença em ${formatInteger(a.attendedEvents)} das ${plural(a.eligibleEvents, "sessão deliberativa", "sessões deliberativas")} do plenário enquanto estava em exercício.`}
+      />
+      <RateBar
+        share={a.rate}
+        filledLabel="Com presença registrada"
+        emptyLabel="Sem presença registrada"
+      />
+      <FewNotice count={a.eligibleEvents} noun="sessões" />
+      {a.attendedOutsideServicePeriods > 0 ? (
+        <p class="caption mt-3">
+          {plural(
+            a.attendedOutsideServicePeriods,
+            "presença foi registrada",
+            "presenças foram registradas",
+          )}{" "}
+          fora dos períodos em exercício do histórico e{" "}
+          {a.attendedOutsideServicePeriods === 1 ? "foi contada" : "foram contadas"} mesmo assim.
+        </p>
+      ) : null}
+    </div>
+  ) : (
+    <NoData reason="sem-sessao-elegivel" label="Esteve presente em" />
+  )}
+  <Fragment slot="limites">
+    <li>
+      Ausências justificadas (missão oficial, licença médica curta) aparecem como ausência: os dados
+      abertos não informam a justificativa.
+    </li>
+    <li>
+      Sessões solenes e <Term slug="sessao-deliberativa">não deliberativas</Term> não entram, porque
+      não têm presença registrada.
+    </li>
+    <li>Presença não diz o que o deputado fez na sessão nem se votou.</li>
+  </Fragment>
+</Metric>

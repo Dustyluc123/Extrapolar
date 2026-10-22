@@ -66,8 +66,8 @@ describe("selectNominalPlenaryVotes", () => {
     });
     expect(result.votes).toEqual([{ id: "nominal", dateTime: "2024-03-01T15:00:00" }]);
     expect(result.ballots).toEqual([
-      { voteId: "nominal", deputyId: 1, value: "yes" },
-      { voteId: "nominal", deputyId: 2, value: "obstruction" },
+      { voteId: "nominal", deputyId: 1, value: "yes", party: "ABC" },
+      { voteId: "nominal", deputyId: 2, value: "obstruction", party: "ABC" },
     ]);
     expect(quality.list()).toEqual([]);
   });
@@ -95,7 +95,9 @@ describe("selectNominalPlenaryVotes", () => {
       ],
       ballots: [ballot("secreta", 1, "")],
     });
-    expect(result.ballots).toEqual([{ voteId: "secreta", deputyId: 1, value: "secret" }]);
+    expect(result.ballots).toEqual([
+      { voteId: "secreta", deputyId: 1, value: "secret", party: "ABC" },
+    ]);
   });
 
   it("voto vazio em votação não secreta faz o pipeline falhar", () => {

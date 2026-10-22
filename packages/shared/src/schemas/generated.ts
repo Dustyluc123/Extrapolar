@@ -139,6 +139,43 @@ export const participationSchema = z
   );
 export type Participation = z.infer<typeof participationSchema>;
 
+// ---- presença e alinhamento (Caderno 1 — Plenário) ----
+
+const count = z.number().int().nonnegative();
+
+export const attendanceSchema = z
+  .object({
+    eligibleEvents: count,
+    attendedEvents: count,
+    rate: z.number().min(0).max(1).nullable(),
+    attendedOutsideServicePeriods: count,
+  })
+  .refine((a) => a.attendedEvents <= a.eligibleEvents, {
+    message: "attendedEvents não pode ser maior que eligibleEvents",
+    path: ["attendedEvents"],
+  });
+export type Attendance = z.infer<typeof attendanceSchema>;
+
+export const alignmentSchema = z
+  .object({
+    comparableVotes: count,
+    alignedVotes: count,
+    rate: z.number().min(0).max(1).nullable(),
+    excluded: z.object({
+      free: count,
+      noOrientation: count,
+      blocOnly: count,
+      ballotNotComparable: count,
+    }),
+    /** Das votações comparáveis, quantas usaram a orientação da federação (e não do partido). */
+    federationVotes: count,
+  })
+  .refine((a) => a.alignedVotes <= a.comparableVotes, {
+    message: "alignedVotes não pode ser maior que comparableVotes",
+    path: ["alignedVotes"],
+  });
+export type Alignment = z.infer<typeof alignmentSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -147,6 +184,9 @@ export const deputyDetailSchema = z.object({
   deputyId: z.number().int().positive(),
   plenario: z.object({
     participacao: participationSchema,
+    presencaSessoes: attendanceSchema,
+    alinhamentoPartido: alignmentSchema,
+    alinhamentoGoverno: alignmentSchema,
   }),
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;

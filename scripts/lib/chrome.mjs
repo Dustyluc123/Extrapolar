@@ -13,7 +13,7 @@ const PORT = 9333;
 export const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function connect() {
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 150; i++) {
     try {
       const targets = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
       const page = targets.find((t) => t.type === "page");

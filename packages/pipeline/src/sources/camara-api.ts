@@ -1,6 +1,8 @@
 // Fonte: API de Dados Abertos da Câmara (/api/v2). Usada só quando não há arquivo estático.
 import {
   CAMARA_API_BASE,
+  camaraBlocPartiesPageSchema,
+  camaraBlocsPageSchema,
   camaraDeputyListPageSchema,
   camaraHistoryResponseSchema,
   parseOrThrow,
@@ -39,4 +41,42 @@ export async function fetchDeputyHistory(
   const url = `${CAMARA_API_BASE}/deputados/${deputyId}/historico`;
   const { data } = await fetchJsonCached(context, `api/historico/${deputyId}.json`, url);
   return parseOrThrow(camaraHistoryResponseSchema, data, url).dados;
+}
+
+export interface Federation {
+  name: string;
+  parties: string[];
+}
+
+/**
+ * Federações partidárias da legislatura e seus partidos (API /blocos, só os marcados como
+ * federação). Usadas para achar a orientação de um partido federado. Blocos comuns não entram:
+ * a API não informa a composição deles nas datas passadas (ADR 0014).
+ */
+export async function fetchFederations(
+  context: CachedFetchContext,
+  legislatureId: number,
+): Promise<Federation[]> {
+  const url = `${CAMARA_API_BASE}/blocos?idLegislatura=${legislatureId}&itens=100`;
+  const { data } = await fetchJsonCached(
+    context,
+    `api/blocos/legislatura-${legislatureId}.json`,
+    url,
+  );
+  const blocs = parseOrThrow(camaraBlocsPageSchema, data, url).dados.filter((b) => b.federacao);
+  const federations: Federation[] = [];
+  for (const bloc of blocs) {
+    const partiesUrl = `${CAMARA_API_BASE}/blocos/${bloc.id}/partidos`;
+    const result = await fetchJsonCached(
+      context,
+      `api/blocos/${bloc.id}-partidos.json`,
+      partiesUrl,
+    );
+    const parties = parseOrThrow(camaraBlocPartiesPageSchema, result.data, partiesUrl).dados;
+    if (parties.length === 0) {
+      throw new Error(`A federação "${bloc.nome}" veio sem partidos em ${partiesUrl}.`);
+    }
+    federations.push({ name: bloc.nome, parties: parties.map((p) => p.sigla) });
+  }
+  return federations;
 }

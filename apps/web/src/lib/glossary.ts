@@ -70,6 +70,43 @@ export const GLOSSARY: GlossaryEntry[] = [
     term: "Titular",
     definition: "Deputado eleito diretamente para a vaga na eleição.",
   },
+  {
+    slug: "sessao-deliberativa",
+    term: "Sessão deliberativa",
+    definition:
+      "Sessão do plenário em que há votação de propostas. As sessões não deliberativas (como as solenes, de homenagem) não têm votação.",
+    plain: "É a sessão “de trabalho”, em que se decide alguma coisa.",
+  },
+  {
+    slug: "orientacao-de-bancada",
+    term: "Orientação de bancada",
+    definition:
+      "Recomendação que a liderança de um partido, federação, bloco, do Governo ou da oposição faz aos seus deputados sobre como votar em cada votação: Sim, Não, Obstrução, Abstenção ou voto liberado.",
+    plain: "É o “recado do líder” antes de votar. O voto continua sendo de cada deputado.",
+  },
+  {
+    slug: "liberado",
+    term: "Voto liberado",
+    definition: "Quando a liderança não recomenda um voto e deixa cada deputado decidir sozinho.",
+  },
+  {
+    slug: "lider-do-governo",
+    term: "Líder do Governo",
+    definition:
+      "Deputado indicado pelo Presidente da República para representar o Governo na Câmara. Ele também orienta o voto em cada votação.",
+  },
+  {
+    slug: "federacao",
+    term: "Federação partidária",
+    definition:
+      "União de partidos que atuam juntos, como se fossem um só, durante toda a legislatura. Na Câmara, a federação tem uma liderança e orienta o voto dos deputados dos partidos que a formam.",
+  },
+  {
+    slug: "bloco-parlamentar",
+    term: "Bloco parlamentar",
+    definition:
+      "Aliança de partidos (e federações) formada dentro da Câmara para atuar em conjunto. Pode mudar ao longo da legislatura.",
+  },
 ];
 
 export function glossaryEntry(slug: string): GlossaryEntry {

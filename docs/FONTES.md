@@ -28,12 +28,26 @@ Formato conferido em 22/10/2026 (amostra de 2023):
   - Só traz votações **nominais** (de plenário e de comissões). Em 2023: 447 votações com votos individuais, 300 delas de plenário (de 1.090 votações de plenário no total; as demais são simbólicas).
 - Horários sem fuso: são horário de Brasília.
 
+### Arquivos estáticos — Fase 1, Caderno 1 (Plenário)
+
+Formatos conferidos em 22/10/2026 (amostras de 2023 a 2026):
+
+- `eventos/json/eventos-{ano}.json`: `{ "dados": [ { "id": 80865, "dataHoraInicio": "2025-12-22T16:52:06", "dataHoraFim": "…" | "", "situacao": "Encerrada (Final)", "descricao": "…", "descricaoTipo": "Reunião Deliberativa", "localCamara": {…}, … } ] }`.
+  - `situacao`: `Encerrada`, `Encerrada (Final)`, `Encerrada (Termo)`, `Cancelada`. Os arquivos não trazem eventos futuros (conferido).
+  - No plenário, `descricaoTipo`: `Sessão Deliberativa`, `Sessão Não Deliberativa Solene`, `Comissão Geral`, `Outro Evento`, `Sessão Preparatória - Eleição`/`- Posse`. Só as deliberativas têm presença registrada.
+- `eventosOrgaos/json/eventosOrgaos-{ano}.json`: `{ "idEvento": 75481, "idOrgao": 539635, "siglaOrgao": "CEDESNAT", … }`. O plenário é `PLEN`. Alguns eventos têm mais de um órgão (reuniões conjuntas).
+- `eventosPresencaDeputados/json/eventosPresencaDeputados-{ano}.json` (~30 MB por ano): `{ "idEvento": 74527, "dataHoraInicio": "…", "idDeputado": 204351 (número), … }`. Só registra **presenças** (não há registro de ausência nem de justificativa).
+- `votacoesOrientacoes/json/votacoesOrientacoes-{ano}.json`: `{ "idVotacao": "…", "siglaOrgao": "PLEN", "siglaBancada": "PL", "orientacao": "Sim", … }`.
+  - `orientacao`: `Sim`, `Não`, `Obstrução`, `Liberado` e `""` (sem orientação). `Abstenção` é aceito, mas não apareceu.
+  - `siglaBancada` no plenário: lideranças (`Governo`, `Maioria`, `Minoria`, `Oposição`), partidos (às vezes abreviados: `Solidaried`, `Republican`; `Podemos` para o PODE), federações (`Fdr PT-PCdoB-PV`, `Fdr PSOL-REDE`, `Fdr PSDB-CIDADANIA`) e blocos com nome abreviado (`Bl UniPpFdrPsdbCid...`, `Bloco Parlamentar`). Ver ADR 0014.
+
 ### API (`https://dadosabertos.camara.leg.br/api/v2`)
 
-| Endpoint                            | Uso                                                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `GET /deputados?itens=100&pagina=N` | Deputados **em exercício** hoje (sem filtro de legislatura a API devolve só quem está em exercício; ~513)     |
-| `GET /deputados/{id}/historico`     | Eventos do mandato (posse, licença, reassunção, troca de partido) usados para montar os períodos em exercício |
+| Endpoint                                                 | Uso                                                                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `GET /deputados?itens=100&pagina=N`                      | Deputados **em exercício** hoje (sem filtro de legislatura a API devolve só quem está em exercício; ~513)     |
+| `GET /blocos?idLegislatura=57` e `/blocos/{id}/partidos` | Federações e seus partidos (blocos comuns vêm sem partidos e sem datas; não usados, ADR 0014)                 |
+| `GET /deputados/{id}/historico`                          | Eventos do mandato (posse, licença, reassunção, troca de partido) usados para montar os períodos em exercício |
 
 Formato conferido em 22/10/2026:
 

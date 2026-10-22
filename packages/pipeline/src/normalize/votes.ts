@@ -93,7 +93,12 @@ export function selectNominalPlenaryVotes(input: {
             "O formato dos votos pode ter mudado; confira antes de publicar (ADR 0008).",
         );
       }
-      ballots.push({ voteId: vote.id, deputyId, value: BALLOT_VALUES[ballot.voto] });
+      ballots.push({
+        voteId: vote.id,
+        deputyId,
+        value: BALLOT_VALUES[ballot.voto],
+        party: ballot.deputado_.siglaPartido,
+      });
     }
   }
 

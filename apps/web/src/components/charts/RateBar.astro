@@ -1,0 +1,26 @@
+---
+// Barra de proporção (parte cheia × parte hachurada) com rótulos nas pontas.
+// Usada nas métricas de porcentagem. Decorativa: o número e a tabela levam a informação.
+interface Props {
+  /** 0 a 1. */
+  share: number;
+  filledLabel: string;
+  emptyLabel: string;
+}
+const { share, filledLabel, emptyLabel } = Astro.props;
+const pct = Math.min(100, Math.max(0, share * 100));
+---
+
+<div class="mt-5" aria-hidden="true">
+  <div class="flex h-3 overflow-hidden rounded-full border border-ink/70">
+    <div class="bar-grow h-full bg-ink" style={`width: ${pct.toFixed(2)}%`}></div>
+    <div
+      class="h-full flex-1"
+      style="background-image: repeating-linear-gradient(135deg, var(--color-rule) 0 1px, transparent 1px 6px);"
+    ></div>
+  </div>
+  <div class="mt-1.5 flex justify-between gap-3 font-sans text-xs text-ink-soft">
+    <span>{filledLabel}</span>
+    <span class="text-right">{emptyLabel}</span>
+  </div>
+</div>

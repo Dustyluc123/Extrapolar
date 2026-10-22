@@ -7,9 +7,10 @@ import {
   type MetricsIndex,
   type MetricValue,
 } from "@extrapolar/shared";
-import { computeParticipationForAll, participationValue } from "@extrapolar/metrics";
+import { participationValue, ratioValue } from "@extrapolar/metrics";
 import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
+import { computePlenario } from "./metrics/plenario";
 import type { NormalizedData } from "./normalize";
 
 export interface ComputedData {
@@ -35,36 +36,58 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     label: "Participação em votações nominais de plenário",
     unit: "proporcao",
     methodologyAnchor: "participacao",
-    pick: (detail) => participationValue(detail.plenario.participacao),
+    pick: (d) => participationValue(d.plenario.participacao),
+  },
+  {
+    key: "presenca-sessoes",
+    caderno: "plenario",
+    label: "Presença em sessões deliberativas do plenário",
+    unit: "proporcao",
+    methodologyAnchor: "presenca-sessoes",
+    pick: (d) =>
+      ratioValue(
+        d.plenario.presencaSessoes.attendedEvents,
+        d.plenario.presencaSessoes.eligibleEvents,
+        "sem-sessao-elegivel",
+      ),
+  },
+  {
+    key: "alinhamento-partido",
+    caderno: "plenario",
+    label: "Alinhamento com a orientação do partido",
+    unit: "proporcao",
+    methodologyAnchor: "alinhamento-partido",
+    pick: (d) =>
+      ratioValue(
+        d.plenario.alinhamentoPartido.alignedVotes,
+        d.plenario.alinhamentoPartido.comparableVotes,
+        "sem-orientacao-elegivel",
+      ),
+  },
+  {
+    key: "alinhamento-governo",
+    caderno: "plenario",
+    label: "Alinhamento com a orientação do Governo",
+    unit: "proporcao",
+    methodologyAnchor: "alinhamento-governo",
+    pick: (d) =>
+      ratioValue(
+        d.plenario.alinhamentoGoverno.alignedVotes,
+        d.plenario.alinhamentoGoverno.comparableVotes,
+        "sem-orientacao-do-governo",
+      ),
   },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
-  log.step("Calculando participação em votações nominais de plenário");
-  const participation = computeParticipationForAll({
-    deputies: data.deputies.map((deputy) => ({
-      deputyId: deputy.id,
-      servicePeriods: data.servicePeriods.get(deputy.id) ?? [],
-    })),
-    votes: data.plenary.votes,
-    ballots: data.plenary.ballots,
-    referenceDateTime: context.referenceDateTime,
+  log.step("Calculando o Caderno 1 — Plenário");
+  const plenario = computePlenario(context, data);
+
+  const details: DeputyDetail[] = data.deputies.map((deputy) => {
+    const p = plenario.get(deputy.id);
+    if (!p) throw new Error(`Plenário não calculado para o deputado ${deputy.id}.`);
+    return { schemaVersion: GENERATED_SCHEMA_VERSION, deputyId: deputy.id, plenario: p };
   });
-
-  const outside = participation.reduce((sum, p) => sum + p.ballotsOutsideServicePeriods, 0);
-  if (outside > 0) {
-    context.quality.add(
-      "voto-fora-do-periodo",
-      "Votos registrados em votações fora dos períodos em exercício do histórico (contados mesmo assim).",
-      outside,
-    );
-  }
-
-  const details: DeputyDetail[] = participation.map((entry) => ({
-    schemaVersion: GENERATED_SCHEMA_VERSION,
-    deputyId: entry.deputyId,
-    plenario: { participacao: entry },
-  }));
 
   const lastVote = data.plenary.votes.at(-1);
   return {

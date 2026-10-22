@@ -1,0 +1,120 @@
+---
+// Métricas: alinhamento com a orientação do partido ou do Governo (Caderno 1).
+// Texto estritamente descritivo: alinhamento alto ou baixo não é avaliado.
+import type { Alignment } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import RateBar from "../charts/RateBar.astro";
+import FewNotice from "../ficha/FewNotice.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
+import { formatInteger, formatPercent, plural } from "../../lib/format";
+
+interface Props {
+  kind: "partido" | "governo";
+  alignment: Alignment;
+  /** Partido atual (só para contexto; a conta usa o partido na data de cada votação). */
+  updatedAt: string;
+}
+const { kind, alignment: a, updatedAt } = Astro.props;
+const isParty = kind === "partido";
+const id = isParty ? "alinhamento-partido" : "alinhamento-governo";
+const who = isParty
+  ? "a bancada do partido em que estava na data de cada votação"
+  : "o líder do Governo";
+const rows = [
+  { label: isParty ? "Partido liberou o voto" : "Governo liberou o voto", value: a.excluded.free },
+  {
+    label: isParty ? "Partido não orientou" : "Governo não orientou",
+    value: a.excluded.noOrientation,
+  },
+  ...(isParty
+    ? [{ label: "Só o bloco orientou (não atribuível ao partido)", value: a.excluded.blocOnly }]
+    : []),
+  { label: "Voto do deputado foi Artigo 17 ou secreto", value: a.excluded.ballotNotComparable },
+];
+---
+
+<Metric
+  id={id}
+  title={isParty ? "Votou como o partido orientou?" : "Votou como o Governo orientou?"}
+  whatIs={
+    isParty
+      ? "Antes de cada votação, a liderança de cada partido diz à bancada como recomenda votar (a orientação). Este número mostra em quantas votações o deputado votou igual a essa recomendação. Um número alto ou baixo não é, por si só, positivo nem negativo: é um retrato de como ele vota em relação ao partido."
+      : "O líder do Governo na Câmara também orienta o voto em cada votação. Este número mostra em quantas votações o deputado votou igual a essa orientação. Ele descreve o comportamento de voto; não diz se o deputado é da base ou da oposição."
+  }
+  updatedAt={updatedAt}
+  methodologyAnchor={id}
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      {a.rate !== null ? (
+        <>
+          <BigNumber
+            value={formatPercent(a.rate)}
+            label={isParty ? "Igual à orientação do partido" : "Igual à orientação do Governo"}
+            caption={`Votou igual à orientação de ${who} em ${formatInteger(a.alignedVotes)} de ${plural(a.comparableVotes, "votação comparável", "votações comparáveis")}.`}
+          />
+          <RateBar
+            share={a.rate}
+            filledLabel="Igual à orientação"
+            emptyLabel="Diferente da orientação"
+          />
+          <FewNotice count={a.comparableVotes} noun="votações" />
+          {isParty && a.federationVotes > 0 ? (
+            <p class="caption mt-3">
+              Em {plural(a.federationVotes, "votação", "votações")}, a orientação usada foi a da{" "}
+              <Term slug="federacao">federação</Term> do partido.
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <NoData
+          reason={isParty ? "sem-orientacao-elegivel" : "sem-orientacao-do-governo"}
+          label={isParty ? "Igual à orientação do partido" : "Igual à orientação do Governo"}
+        />
+      )}
+    </div>
+    <div>
+      <table class="w-full border-collapse font-sans text-sm">
+        <caption class="kicker mb-2 text-left">
+          Votações em que votou e ficaram fora da conta
+        </caption>
+        <thead class="sr-only">
+          <tr>
+            <th scope="col">Motivo</th>
+            <th scope="col">Votações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr class="border-b border-rule/70">
+              <th scope="row" class="py-1.5 text-left font-normal">
+                {row.label}
+              </th>
+              <td class="py-1.5 text-right tabular-nums">{formatInteger(row.value)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <Fragment slot="limites">
+    <li>
+      Só conta votações em que o deputado votou. Ausências não entram (elas aparecem na
+      participação).
+    </li>
+    {isParty ? (
+      <li>
+        Quando o partido está num <Term slug="bloco-parlamentar">bloco</Term> e só o bloco orientou,
+        a votação fica fora: os dados abertos não dizem quais partidos formavam o bloco naquela
+        data.
+      </li>
+    ) : null}
+    <li>
+      Não mostra o conteúdo das votações nem por que o deputado votou diferente da{" "}
+      <Term slug="orientacao-de-bancada">orientação</Term>.
+    </li>
+    <li>A orientação é uma recomendação; o voto é sempre individual.</li>
+  </Fragment>
+</Metric>

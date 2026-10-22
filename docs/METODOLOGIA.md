@@ -80,3 +80,90 @@ participação = votações em que o deputado registrou voto
 ### Exemplo
 
 Se, enquanto um deputado estava em exercício, houve 200 votações nominais no plenário e ele registrou voto em 180 delas, a participação dele é 180 ÷ 200 = 90%.
+
+<a id="presenca-sessoes"></a>
+
+## Presença em sessões deliberativas do plenário
+
+### O que é
+
+A porcentagem das sessões deliberativas do plenário (as sessões em que há votação) em que o deputado registrou presença, contando só os dias em que estava em exercício.
+
+### Como é calculado
+
+```
+presença = sessões deliberativas com presença registrada
+           ÷ sessões deliberativas do plenário enquanto ele estava em exercício
+```
+
+1. **Sessões que entram:** eventos do órgão Plenário (`PLEN`) do tipo "Sessão Deliberativa" com situação "Encerrada" (ou "Encerrada (Final)"), dentro da legislatura e até a data da atualização. Ficam fora sessões canceladas, sessões não deliberativas (solenes, de homenagem), comissões gerais e outros eventos: nenhum deles tem presença registrada nos dados.
+2. **Períodos em exercício:** os mesmos da participação (histórico oficial de cada deputado).
+3. **Presença fora do período:** se há presença registrada numa sessão fora dos períodos montados pelo histórico, ela conta (se estava presente, estava em exercício). O pipeline registra quantos casos assim aconteceram (39 em 22/10/2026).
+4. **Sem sessões elegíveis:** "sem dado", nunca 0%.
+
+### O que este número **não** mede
+
+- **Não diferencia ausência justificada** (missão oficial, licença médica curta, compromisso no estado): os dados abertos registram só a presença.
+- **Não é o mesmo que votar:** a presença vale para a sessão; o deputado pode estar presente e não votar numa votação (isso aparece na participação).
+- **Não mede o que o deputado fez na sessão** (discursos, articulação).
+
+### Fontes usadas
+
+- Eventos: `https://dadosabertos.camara.leg.br/arquivos/eventos/json/eventos-{ano}.json`
+- Órgãos de cada evento: `https://dadosabertos.camara.leg.br/arquivos/eventosOrgaos/json/eventosOrgaos-{ano}.json`
+- Presenças: `https://dadosabertos.camara.leg.br/arquivos/eventosPresencaDeputados/json/eventosPresencaDeputados-{ano}.json`
+
+<a id="alinhamento-partido"></a>
+
+## Alinhamento com a orientação do partido
+
+### O que é
+
+Antes de cada votação, a liderança de cada partido (ou federação, ou bloco) recomenda como a bancada deve votar: a **orientação de bancada**. Este número é a porcentagem das votações nominais do plenário em que o deputado votou igual à orientação do partido dele.
+
+**Alinhamento alto ou baixo não é, por si só, positivo nem negativo.** Ele descreve como o deputado vota em relação à recomendação do partido; o voto é sempre individual.
+
+### Como é calculado
+
+```
+alinhamento = votações em que o voto foi igual à orientação
+              ÷ votações comparáveis
+```
+
+1. **Votações:** as mesmas votações nominais de plenário da participação, só aquelas em que o deputado votou.
+2. **Partido:** o partido do deputado **na data da votação**, como registrado no próprio voto (quem trocou de partido é comparado com o partido de cada momento).
+3. **Qual orientação vale:** a do próprio partido. Se o partido não orientou e faz parte de uma **federação**, vale a da federação (a composição das federações vem da API oficial `/blocos` e é fixa durante a legislatura). **Orientação de bloco não é usada:** os dados abertos não informam quais partidos formavam cada bloco na data da votação (o nome do bloco vem abreviado e a API só lista os blocos atuais), então não dá para atribuir com segurança a orientação do bloco a um partido (ADR 0014).
+4. **Votação comparável:** o deputado votou Sim, Não, Abstenção ou Obstrução, e a orientação foi Sim, Não, Abstenção ou Obstrução. Ficam fora — e aparecem contadas na ficha — as votações em que a orientação foi "Liberado", em que não houve orientação, em que só o bloco orientou, e aquelas em que o voto do deputado foi "Artigo 17" ou secreto.
+5. **Sem votação comparável:** "sem dado", nunca 0%. Com menos de 30 votações comparáveis, a ficha avisa que a base é pequena.
+
+### Limitações conhecidas
+
+- **Partidos que orientam pelo bloco ficam com poucas votações na conta.** Em 22/10/2026, deputados de União, PP, MDB, Republicanos e Podemos tinham, em média, de 14 a 41 votações comparáveis (contra mais de 400 em partidos que orientam sozinhos, como PL, PT e Novo); 37 deputados ficaram "sem dado". Isso é efeito da regra conservadora acima, não de comportamento do deputado.
+- **Nomes de bancada:** a Câmara abrevia alguns nomes ("Solidaried", "Republican") e usa "Podemos" para o PODE. O pipeline reconhece esses casos (lista conferida nos arquivos de 2023 a 2026); um nome novo não reconhecido deixa a votação como "sem orientação".
+- **Não mostra o conteúdo** das votações nem o motivo de votar diferente.
+
+### Fontes usadas
+
+- Orientações: `https://dadosabertos.camara.leg.br/arquivos/votacoesOrientacoes/json/votacoesOrientacoes-{ano}.json`
+- Votos: os mesmos da participação.
+- Federações: `GET https://dadosabertos.camara.leg.br/api/v2/blocos?idLegislatura=57` e `/blocos/{id}/partidos`
+
+<a id="alinhamento-governo"></a>
+
+## Alinhamento com a orientação do Governo
+
+### O que é
+
+O **líder do Governo** na Câmara também orienta o voto em cada votação. Este número é a porcentagem das votações nominais do plenário em que o deputado votou igual a essa orientação.
+
+É um número **descritivo**: não classifica o deputado como "da base" ou "da oposição" e não avalia se votar com o Governo é positivo ou negativo.
+
+### Como é calculado
+
+Igual ao alinhamento com o partido, usando a orientação da bancada "Governo" nos arquivos de orientação. O Governo orientou em 1.127 das 1.128 votações nominais de plenário da legislatura (até 22/10/2026). Votações com orientação "Liberado" ou sem orientação ficam fora e aparecem contadas na ficha.
+
+### O que este número **não** mede
+
+- Não diz por que o deputado votou com ou contra o Governo, nem o tema das votações.
+- O Governo muda de posição conforme o tema; o número mistura votações de assuntos muito diferentes.
+- Não conta ausências (elas aparecem na participação).

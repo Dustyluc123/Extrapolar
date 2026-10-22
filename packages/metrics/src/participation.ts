@@ -21,6 +21,8 @@ export interface Ballot {
   voteId: string;
   deputyId: number;
   value: BallotValue;
+  /** Partido do deputado na data da votação (como registrado no voto). */
+  party?: string | null;
 }
 
 export interface DeputyServiceRecord {

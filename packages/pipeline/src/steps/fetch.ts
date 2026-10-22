@@ -7,21 +7,34 @@ import {
 } from "@extrapolar/shared";
 import { mapWithConcurrency } from "../lib/http";
 import { log } from "../lib/log";
+import { CAMARA_API_BASE, type CamaraOrientation } from "@extrapolar/shared";
 import {
   currentDeputiesSourceUrl,
   fetchCurrentDeputies,
   fetchDeputyHistory,
+  fetchFederations,
   historySourceUrl,
+  type Federation,
 } from "../sources/camara-api";
-import { fetchBallotsFile, fetchVotesFile } from "../sources/camara-arquivos";
+import { YEAR_FILES, fetchYearFile } from "../sources/camara-arquivos";
 import type { DeputyWithHistory } from "../normalize/deputies";
-import { selectNominalPlenaryVotes, type PlenaryVotesSelection } from "../normalize/votes";
+import { selectPlenarySessions, type PlenarySessionsSelection } from "../normalize/sessions";
+import {
+  PLENARY_ORGAN,
+  selectNominalPlenaryVotes,
+  type PlenaryVotesSelection,
+} from "../normalize/votes";
 import type { PipelineContext } from "./context";
 
 export interface FetchedSources {
   deputies: DeputyWithHistory[];
-  /** Votações nominais de plenário e votos, já reduzidos ano a ano (ver fetchPlenaryVotes). */
+  /** Votações nominais de plenário e votos, já reduzidos ano a ano (ver fetchPlenaryYears). */
   plenary: PlenaryVotesSelection;
+  /** Orientações de bancada em votações de plenário (todas; filtradas na normalização). */
+  orientations: CamaraOrientation[];
+  /** Sessões deliberativas do plenário e presenças. */
+  sessions: PlenarySessionsSelection;
+  federations: Federation[];
   sources: SourceInfo[];
 }
 
@@ -53,28 +66,64 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
       lastModified: null,
     },
   ];
-  const plenary = await fetchPlenaryVotes(context, sources);
-  return { deputies, plenary, sources };
+  log.step("Baixando federações partidárias (API da Câmara)");
+  const federations = await fetchFederations(context.fetch, context.legislature.id);
+  log.info(federations.map((f) => `${f.name}: ${f.parties.join(", ")}`).join(" · "));
+  sources.push({
+    id: "api-blocos",
+    name: "API da Câmara — federações partidárias",
+    url: `${CAMARA_API_BASE}/blocos?idLegislatura=${context.legislature.id}`,
+    lastModified: null,
+  });
+
+  const years = await fetchPlenaryYears(context, sources);
+  return { deputies, federations, sources, ...years };
 }
 
 /**
- * Baixa os arquivos de votações e votos de cada ano da legislatura e, logo depois de validar,
- * reduz cada ano às votações nominais de plenário. Fazer isso ano a ano evita manter na memória
- * os arquivos brutos de todos os anos ao mesmo tempo (o de votos de um ano passa de 70 MB).
+ * Baixa, ano a ano, os arquivos do plenário (votações, votos, orientações, eventos e presenças) e,
+ * logo depois de validar, reduz cada ano ao que interessa. Assim os arquivos brutos de todos os
+ * anos nunca ficam na memória ao mesmo tempo (o de votos de um ano passa de 70 MB).
  */
-async function fetchPlenaryVotes(
+async function fetchPlenaryYears(
   context: PipelineContext,
   sources: SourceInfo[],
-): Promise<PlenaryVotesSelection> {
-  log.step("Baixando votações e votos (arquivos estáticos da Câmara)");
+): Promise<Pick<FetchedSources, "plenary" | "orientations" | "sessions">> {
+  log.step("Baixando arquivos do plenário (arquivos estáticos da Câmara)");
   const { legislature, referenceDateTime, quality } = context;
   const selection: PlenaryVotesSelection = { votes: [], ballots: [] };
+  const orientations: CamaraOrientation[] = [];
+  const sessions: PlenarySessionsSelection = { sessions: [], presencesByDeputy: new Map() };
   const seenVotes = new Set<string>();
 
   for (const year of legislatureYears(legislature, referenceDateTime)) {
-    const votesFile = await fetchVotesFile(context.fetch, year);
-    const ballotsFile = await fetchBallotsFile(context.fetch, year);
-    sources.push(votesFile.source, ballotsFile.source);
+    const votesFile = await fetchYearFile(context.fetch, YEAR_FILES.votes, year);
+    const ballotsFile = await fetchYearFile(context.fetch, YEAR_FILES.ballots, year);
+    const orientationsFile = await fetchYearFile(context.fetch, YEAR_FILES.orientations, year);
+    sources.push(votesFile.source, ballotsFile.source, orientationsFile.source);
+    for (const orientation of orientationsFile.items) {
+      if (orientation.siglaOrgao === PLENARY_ORGAN) orientations.push(orientation);
+    }
+
+    const eventsFile = await fetchYearFile(context.fetch, YEAR_FILES.events, year);
+    const organsFile = await fetchYearFile(context.fetch, YEAR_FILES.eventOrgans, year);
+    const presencesFile = await fetchYearFile(context.fetch, YEAR_FILES.eventPresences, year);
+    sources.push(eventsFile.source, organsFile.source, presencesFile.source);
+    const yearSessions = selectPlenarySessions({
+      events: eventsFile.items,
+      eventOrgans: organsFile.items,
+      presences: presencesFile.items,
+      start: legislatureStartDateTime(legislature),
+      end: legislatureEndDateTime(legislature),
+      referenceDateTime,
+    });
+    for (const session of yearSessions.sessions) sessions.sessions.push(session);
+    for (const [deputyId, ids] of yearSessions.presencesByDeputy) {
+      const set = sessions.presencesByDeputy.get(deputyId) ?? new Set<number>();
+      for (const id of ids) set.add(id);
+      sessions.presencesByDeputy.set(deputyId, set);
+    }
+    log.info(`${year}: ${yearSessions.sessions.length} sessões deliberativas do plenário`);
 
     const yearSelection = selectNominalPlenaryVotes({
       votes: votesFile.items,
@@ -101,5 +150,6 @@ async function fetchPlenaryVotes(
     log.info(`${year}: ${newVotes.length} votações nominais de plenário`);
   }
   selection.votes.sort((a, b) => a.dateTime.localeCompare(b.dateTime) || a.id.localeCompare(b.id));
-  return selection;
+  sessions.sessions.sort((a, b) => a.dateTime.localeCompare(b.dateTime) || a.id - b.id);
+  return { plenary: selection, orientations, sessions };
 }
