@@ -1,11 +1,14 @@
 ---
-// Glossário: os termos das fichas em linguagem simples.
+// Glossário no estilo "Classificados": os termos das fichas em linguagem simples.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Headline from "../components/ui/Headline.astro";
 import { GLOSSARY } from "../lib/glossary";
 
 const collator = new Intl.Collator("pt-BR", { sensitivity: "base" });
 const entries = [...GLOSSARY].sort((a, b) => collator.compare(a.term, b.term));
+const letterOf = (term: string) =>
+  term.normalize("NFD").replace(/[̀-ͯ]/g, "").charAt(0).toUpperCase();
+const letters = [...new Set(entries.map((e) => letterOf(e.term)))];
 ---
 
 <BaseLayout
@@ -13,30 +16,61 @@ const entries = [...GLOSSARY].sort((a, b) => collator.compare(a.term, b.term));
   description="Os termos do Congresso usados no Extrapolar, explicados em linguagem simples."
   current="glossario"
 >
-  <p class="kicker m-0">Para consultar</p>
+  <div class="flex flex-wrap items-center gap-3">
+    <p class="kicker m-0">Classificados</p>
+    <span class="stamp" aria-hidden="true">
+      Sem juridiquês
+    </span>
+  </div>
   <Headline as="h1" size="xl" class="mt-2">
     Glossário
   </Headline>
   <p class="mt-3 max-w-prose text-lg">
-    As palavras do Congresso que aparecem nas fichas, explicadas sem juridiquês.
+    Procura-se o significado de “PEC”, “empenho” ou “orientação de bancada”? Está tudo aqui, em
+    {entries.length} anúncios curtos.
   </p>
 
-  <dl class="mt-8 grid gap-x-10 sm:grid-cols-2">
-    {entries.map((entry) => (
-      <div id={entry.slug} class="scroll-mt-4 border-t border-rule py-4">
-        <dt class="font-display text-xl font-[700]">
-          {entry.term}
-          {entry.short ? <span class="kicker ml-2">{entry.short}</span> : null}
-        </dt>
-        <dd class="m-0 mt-1">
-          {entry.definition}
+  <nav aria-label="Letras do glossário" class="mt-6">
+    <ul class="m-0 flex list-none flex-wrap gap-1.5 p-0">
+      {letters.map((letter) => (
+        <li>
+          <a
+            href={`#letra-${letter}`}
+            class="inline-flex size-8 items-center justify-center rounded-full border border-ink/50 font-sans text-sm font-semibold no-underline hover:bg-ink hover:text-paper"
+          >
+            {letter}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <div class="mt-8 gap-5 sm:columns-2 lg:columns-3">
+    {entries.map((entry, index) => {
+      const letter = letterOf(entry.term);
+      const firstOfLetter = index === 0 || letterOf(entries[index - 1]!.term) !== letter;
+      return (
+        <article
+          id={entry.slug}
+          class="clipping mb-5 break-inside-avoid scroll-mt-4"
+          aria-labelledby={`${entry.slug}-termo`}
+        >
+          {firstOfLetter ? <span id={`letra-${letter}`} class="block scroll-mt-4" /> : null}
+          <h2 id={`${entry.slug}-termo`} class="m-0 font-display text-xl font-[750]">
+            {entry.term}
+            {entry.short ? <span class="kicker ml-2">{entry.short}</span> : null}
+          </h2>
+          <p class="mt-1 mb-0">{entry.definition}</p>
           {entry.plain ? (
-            <p class="caption mt-2 mb-0">
-              <strong class="not-italic">Traduzindo:</strong> {entry.plain}
+            <p class="mt-3 mb-0">
+              <span class="translate-note">
+                <strong class="font-sans text-xs tracking-[0.1em] uppercase">Traduzindo:</strong>{" "}
+                {entry.plain}
+              </span>
             </p>
           ) : null}
-        </dd>
-      </div>
-    ))}
-  </dl>
+        </article>
+      );
+    })}
+  </div>
 </BaseLayout>

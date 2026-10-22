@@ -1,0 +1,28 @@
+---
+// Página não encontrada.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Headline from "../components/ui/Headline.astro";
+---
+
+<BaseLayout title="Página não encontrada" description="Essa página não existe no Extrapolar.">
+  <div class="py-10">
+    <span class="stamp" aria-hidden="true">
+      Erro 404
+    </span>
+    <Headline as="h1" size="xl" class="mt-4">
+      Essa notícia não saiu nesta edição.
+    </Headline>
+    <p class="mt-4 max-w-prose text-lg">
+      A página que você procurou não existe (ou mudou de endereço). Que tal voltar para a capa e
+      procurar o deputado do seu estado?
+    </p>
+    <p class="mt-6 flex flex-wrap gap-3 font-sans">
+      <a href="/" class="clipping tilt-l inline-block font-semibold no-underline">
+        ← Ir para a capa
+      </a>
+      <a href="/glossario" class="clipping tilt-r inline-block font-semibold no-underline">
+        Ver o glossário
+      </a>
+    </p>
+  </div>
+</BaseLayout>

@@ -65,6 +65,13 @@
 - Perfil: profissões (506 deputados) e ocupações (298), como declaradas.
 - 5 linhas de coordenador de frente sem id do deputado: ignoradas (sem ligação por nome).
 
+### Etapa 9 — Ficha completa e design mais leve
+
+- Resumo em números (6 fixos para todos: participação, presença, projetos, RIC, comissões hoje, cota).
+- "Traduzindo:" em cada métrica (frases sem pronome de gênero), carimbos, recortes de papel, sublinhado à mão, glossário como "Classificados" (42 termos, índice por letra), "Errata" no Sobre, 404 simpática, "Sem dado" com "Regra da casa".
+- Animações ligadas à rolagem, sem JS, com ponto de partida nunca invisível; desligadas em reduced-motion. Scripts de captura e acessibilidade emulam reduced-motion.
+- Ficha: ~24 KB comprimida; CSS 7,6 KB; site com 518 páginas.
+
 ## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
@@ -87,6 +94,7 @@
 - ⚠ Equipe: zero secretários no arquivo = "sem dado" (abaixo do mínimo legal de 5).
 - ⚠ Emendas: só individuais; orçamentos 2024+; ligação estrita por nome único (todos os anos); execução inclui restos a pagar pagos (ADR 0018).
 - ⚠ Frentes: linhas sem id do deputado ignoradas; "Coordernador" = coordenador.
+- ⚠ Resumo em números fixo (decidido no plano); "Traduzindo:" com tom leve, sem humor sobre deputados ou partidos.
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
 
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.

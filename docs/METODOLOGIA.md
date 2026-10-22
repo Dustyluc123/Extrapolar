@@ -12,11 +12,21 @@ Nenhum indicador sozinho diz se um mandato é bom ou ruim. Eles mostram uma part
 ## Regras gerais
 
 - **Fonte:** [Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/). Usamos os arquivos que a Câmara publica todos os dias e, quando não há arquivo, a API oficial.
+- **Emendas parlamentares:** [Portal da Transparência](https://portaldatransparencia.gov.br/emendas), da Controladoria-Geral da União (CGU), download em lote.
+- **Discursos:** atualizados uma vez por semana (a única fonte é a API, mais lenta).
 - **Atualização:** os dados são baixados uma vez por dia. Cada página mostra a data da última atualização.
 - **Período:** a legislatura atual (57ª, de 1º de fevereiro de 2023 a 31 de janeiro de 2027), até a data da última atualização.
 - **Quem aparece:** os deputados que estão em exercício na data da atualização, segundo a Câmara.
 - **Dado ausente** aparece como "sem dado", nunca como zero.
-- **Sem ranking:** o site não ordena deputados por nenhum indicador.
+- **Sem ranking:** o site não ordena deputados por nenhum indicador nem mostra médias ou comparações. Os valores brutos de cada métrica ficam guardados (com numerador e denominador) para uma futura ferramenta em que o próprio leitor escolhe o que comparar.
+
+### O que ficou de fora (e por quê)
+
+- **"Eficiência" da verba de gabinete:** a Câmara não publica o gasto com salários por gabinete em formato de dados abertos (só em páginas da web); o site mostra só o tamanho da equipe.
+- **"Relevância" ou "qualidade" dos projetos:** exigiria julgar o mérito, o que fere a neutralidade. No lugar, a ficha mostra os temas oficiais da Câmara.
+- **"Representar a sociedade e ouvir a base":** não há dado oficial que meça isso diretamente. O mais próximo são as audiências e eventos realizados a pedido do deputado e os discursos.
+- **Conteúdo dos discursos:** a ficha mostra quantidades, não o que foi dito (ADR 0016); o texto está na página oficial do deputado.
+- **Orientação de bloco no alinhamento com o partido:** a composição histórica dos blocos não é publicada (ADR 0014).
 
 <a id="participacao"></a>
 

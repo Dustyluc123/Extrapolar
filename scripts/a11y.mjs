@@ -23,7 +23,11 @@ await withChrome(async (page) => {
   });
   for (const scheme of ["light", "dark"]) {
     await page.send("Emulation.setEmulatedMedia", {
-      features: [{ name: "prefers-color-scheme", value: scheme }],
+      features: [
+        { name: "prefers-color-scheme", value: scheme },
+        // Sem animações: audita todos os elementos no estado final.
+        { name: "prefers-reduced-motion", value: "reduce" },
+      ],
     });
     for (const path of paths) {
       await open(page, BASE_URL + path, 800);

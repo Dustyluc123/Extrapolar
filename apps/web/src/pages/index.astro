@@ -23,11 +23,12 @@ const parties = [...new Set(deputies.map((d) => d.party))].sort(collator.compare
       <p class="kicker m-0">Câmara dos Deputados</p>
       <Headline as="h1" size="xl" class="mt-2">
         {formatInteger(deputies.length)} deputados em exercício.{" "}
-        <span class="marker">Veja o que cada um</span> fez no plenário.
+        <span class="marker">Veja o que cada um</span> fez na Câmara.
       </Headline>
       <p class="mt-4 max-w-prose text-lg">
-        Escolha um nome para ver os dados oficiais dessa pessoa, explicados em poucas linhas. Sem
-        ranking e sem adjetivo: você olha o dado e tira suas conclusões.
+        Escolha um nome para ver a ficha completa: votações, comissões, projetos, fiscalização,
+        discursos, gastos e emendas, com dados oficiais explicados em poucas linhas. Sem ranking e
+        sem adjetivo: você olha o dado e tira suas conclusões.
       </p>
     </div>
     <div class="lg:pl-8">

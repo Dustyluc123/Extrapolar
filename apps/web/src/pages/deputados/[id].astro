@@ -29,6 +29,7 @@ import RolesSection from "../../components/deputado/RolesSection.astro";
 import ProfileSection from "../../components/deputado/ProfileSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
+import SummaryNumbers from "../../components/ficha/SummaryNumbers.astro";
 import { repository } from "../../lib/data";
 import { formatDateTime } from "../../lib/format";
 import { stateName } from "../../lib/states";
@@ -118,6 +119,8 @@ const conditionSlug =
         </dd>
       </div>
     </dl>
+
+    <SummaryNumbers detail={detail} />
 
     <CadernoNav items={cadernos} />
 

@@ -49,16 +49,23 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
     <h2>De onde vêm os dados</h2>
     <p>
-      De <a href={CAMARA_PORTAL_URL}>Dados Abertos da Câmara dos Deputados</a>: a lista de deputados
-      em exercício, o histórico de cada mandato e o registro de cada votação nominal no plenário. As
-      fotos são as oficiais da Câmara. Os detalhes estão na <a href="/metodologia">metodologia</a>.
+      Quase tudo vem dos <a href={CAMARA_PORTAL_URL}>Dados Abertos da Câmara dos Deputados</a>:
+      deputados em exercício, votações, presenças, comissões, proposições, discursos, cota
+      parlamentar, equipe dos gabinetes, frentes e cargos. As emendas parlamentares vêm do
+      <a href="https://portaldatransparencia.gov.br/emendas">Portal da Transparência</a>, da
+      Controladoria-Geral da União (CGU). As fotos são as oficiais da Câmara. Os detalhes de cada
+      número estão na <a href="/metodologia">metodologia</a>, e os termos difíceis, no
+      <a href="/glossario">glossário</a>.
     </p>
 
-    <h2>Encontrou um erro?</h2>
+    <h2>Errata</h2>
     <p>
-      Os números seguem exatamente o que a Câmara publica. Se algo parecer errado, confira a
-      <a href="/metodologia">metodologia</a> e a página oficial do deputado no site da Câmara.
+      Todo jornal erra, e o certo é corrigir em público. Os números do Extrapolar seguem exatamente
+      o que a Câmara e a CGU publicam; se algo parecer errado, confira a
+      <a href="/metodologia">metodologia</a> e a página oficial do deputado. Quando um erro for
+      nosso, a correção vai ficar registrada aqui, com data.
       {/* TODO (Lucas): definir um canal de contato (e-mail ou formulário) e colocar aqui. */}
     </p>
+    <p class="caption">Nenhuma correção publicada até agora.</p>
   </article>
 </BaseLayout>

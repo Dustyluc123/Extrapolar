@@ -35,7 +35,11 @@ await withChrome(async (page) => {
         mobile: view.mobile,
       });
       await page.send("Emulation.setEmulatedMedia", {
-        features: [{ name: "prefers-color-scheme", value: view.scheme }],
+        features: [
+          { name: "prefers-color-scheme", value: view.scheme },
+          // Sem animações: a captura mostra o estado final de barras e números.
+          { name: "prefers-reduced-motion", value: "reduce" },
+        ],
       });
       await open(page, BASE_URL + path);
       const info = await evaluate(

@@ -8,18 +8,28 @@ interface Props {
   title: string;
   /** Uma ou duas frases em linguagem simples. */
   whatIs: string;
+  /** "Traduzindo:" — a ideia numa frase de conversa (opcional). */
+  plain?: string;
   updatedAt: string;
   methodologyAnchor: string;
   sourceName?: string;
   sourceUrl?: string;
 }
-const { id, title, whatIs, updatedAt, methodologyAnchor, sourceName, sourceUrl } = Astro.props;
+const { id, title, whatIs, plain, updatedAt, methodologyAnchor, sourceName, sourceUrl } =
+  Astro.props;
 ---
 
 <article id={id} aria-labelledby={`${id}-titulo`} class="scroll-mt-4 py-8">
   <h3 id={`${id}-titulo`} class="m-0 font-display text-2xl font-[700] sm:text-[1.75rem]">
     {title}
   </h3>
+  {plain ? (
+    <p class="mt-2 mb-0">
+      <span class="translate-note">
+        <strong class="font-sans text-xs tracking-[0.1em] uppercase">Traduzindo:</strong> {plain}
+      </span>
+    </p>
+  ) : null}
 
   <div class="mt-4">
     <slot />

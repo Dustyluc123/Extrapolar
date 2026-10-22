@@ -97,3 +97,27 @@ Tratamento de foto de jornal **só em CSS**, sem alterar o arquivo original:
 - Busca e filtros com `<label>` e anúncio do número de resultados em `aria-live="polite"`.
 - Textos alternativos em todas as imagens; ícones decorativos com `aria-hidden`.
 - `lang="pt-BR"` em todas as páginas.
+
+## Fase 1 — um pouco menos sério
+
+A estética de jornal antigo continua; o humor fica **na moldura e nos textos de apoio**, nunca sobre deputados, partidos ou posições políticas, e nunca nos números e explicações.
+
+### Elementos
+
+- **Carimbo** (`.stamp`): etiqueta em caixa-alta com borda vermelha, girada −4°. Usado em "Dado oficial" (resumo da ficha), "Sem juridiquês" (glossário) e "Erro 404".
+- **Recorte** (`.clipping`, `.tilt-l`, `.tilt-r`): cartão de papel com sombra curta e rotação de ±0,6°, que se endireita ao passar o mouse ou focar. Usado no resumo em números, nos anúncios do glossário e na página 404.
+- **Traço de caneta** (`.scribble`): sublinhado "feito à mão" em vermelho-tomate nos títulos dos cadernos.
+- **"Traduzindo:"** (`.translate-note`): bilhete em marca-texto, levemente torto, com a ideia da métrica numa frase de conversa ("bateu o ponto nas sessões em que se vota?"). Sem pronome de gênero (as frases valem para deputados e deputadas).
+- **Seções de jornal:** a ficha é dividida em **cadernos** numerados; o glossário é a página de **Classificados**; a página "Sobre" tem uma **Errata**; a 404 diz "Essa notícia não saiu nesta edição".
+- **Estados vazios simpáticos:** todo "Sem dado" vem com "Regra da casa: sem fonte oficial, sem número. A gente não inventa."
+
+### Microinterações
+
+- Barras e colunas **crescem** e números-manchete **sobem** ao entrar na tela, com animação ligada à rolagem (`animation-timeline: view()`), **sem JavaScript**. Onde o navegador não suporta, aparecem prontos. O ponto de partida nunca é invisível (opacidade 0,35; barras a 15%), para nenhum número sumir se algo falhar.
+- Tudo desligado com `prefers-reduced-motion: reduce`. Os scripts de capturas e de acessibilidade emulam essa preferência, para ver e auditar o estado final.
+
+### Gráficos (ADR 0013)
+
+- Infográfico de jornal: tinta sobre papel; vermelho-tomate só para destacar o valor principal (a primeira barra, o tipo mais frequente) — nunca para indicar "bom" ou "ruim".
+- Rótulos diretos ao lado das barras, valores em pt-BR (`R$ 1,2 mi`), tabela com os mesmos dados em "Ver os dados em tabela".
+- Colunas em SVG com posições em %; barras e linhas do tempo em HTML/CSS (rótulos longos quebram linha no celular).
