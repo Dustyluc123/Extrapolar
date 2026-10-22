@@ -1,0 +1,108 @@
+{
+  "dados": [
+    {
+      "id": "2351332-7",
+      "uri": "https://dadosabertos.camara.leg.br/api/v2/votacoes/2351332-7",
+      "data": "2023-03-14",
+      "dataHoraRegistro": "2023-03-14T19:20:56",
+      "idOrgao": 180,
+      "uriOrgao": "https://dadosabertos.camara.leg.br/api/v2/orgaos/180",
+      "siglaOrgao": "PLEN",
+      "idEvento": 67223,
+      "uriEvento": "https://dadosabertos.camara.leg.br/api/v2/eventos/67223",
+      "aprovacao": 1,
+      "votosSim": 366,
+      "votosNao": 41,
+      "votosOutros": 2,
+      "descricao": "Aprovado o Requerimento de Urgência (Art. 154 do RICD). Sim: 366; não: 41; abstenção: 1; total: 408.",
+      "ultimaAberturaVotacao": {
+        "dataHoraRegistro": "",
+        "descricao": ""
+      },
+      "ultimaApresentacaoProposicao": {
+        "dataHoraRegistro": "",
+        "descricao": "",
+        "idProposicao": 0,
+        "uriProposicao": ""
+      }
+    },
+    {
+      "id": "2345140-8",
+      "uri": "https://dadosabertos.camara.leg.br/api/v2/votacoes/2345140-8",
+      "data": "2023-03-14",
+      "dataHoraRegistro": "2023-03-14T19:48:40",
+      "idOrgao": 180,
+      "uriOrgao": "https://dadosabertos.camara.leg.br/api/v2/orgaos/180",
+      "siglaOrgao": "PLEN",
+      "idEvento": 67223,
+      "uriEvento": "https://dadosabertos.camara.leg.br/api/v2/eventos/67223",
+      "aprovacao": 1,
+      "votosSim": 374,
+      "votosNao": 27,
+      "votosOutros": 3,
+      "descricao": "Aprovado o Requerimento de Urgência (Art. 155 do RICD). Sim: 374; não: 27; abstenção: 2; total: 403.",
+      "ultimaAberturaVotacao": {
+        "dataHoraRegistro": "",
+        "descricao": ""
+      },
+      "ultimaApresentacaoProposicao": {
+        "dataHoraRegistro": "",
+        "descricao": "",
+        "idProposicao": 0,
+        "uriProposicao": ""
+      }
+    },
+    {
+      "id": "2301213-63",
+      "uri": "https://dadosabertos.camara.leg.br/api/v2/votacoes/2301213-63",
+      "data": "2023-02-07",
+      "dataHoraRegistro": "2023-02-07T18:50:55",
+      "idOrgao": 180,
+      "uriOrgao": "https://dadosabertos.camara.leg.br/api/v2/orgaos/180",
+      "siglaOrgao": "PLEN",
+      "idEvento": 67091,
+      "uriEvento": "https://dadosabertos.camara.leg.br/api/v2/eventos/67091",
+      "aprovacao": 1,
+      "votosSim": 0,
+      "votosNao": 0,
+      "votosOutros": 0,
+      "descricao": "Aprovada a Redação Final assinada pelo Dep. Rui Falcão (PT-SP).",
+      "ultimaAberturaVotacao": {
+        "dataHoraRegistro": "2023-02-07T18:50:36",
+        "descricao": "Votação da Redação Final."
+      },
+      "ultimaApresentacaoProposicao": {
+        "dataHoraRegistro": "",
+        "descricao": "",
+        "idProposicao": 0,
+        "uriProposicao": ""
+      }
+    },
+    {
+      "id": "2345508-7",
+      "uri": "https://dadosabertos.camara.leg.br/api/v2/votacoes/2345508-7",
+      "data": "2023-01-09",
+      "dataHoraRegistro": "",
+      "idOrgao": 4,
+      "uriOrgao": "https://dadosabertos.camara.leg.br/api/v2/orgaos/4",
+      "siglaOrgao": "MESA",
+      "idEvento": 0,
+      "uriEvento": "",
+      "aprovacao": 0,
+      "votosSim": 0,
+      "votosNao": 0,
+      "votosOutros": 0,
+      "descricao": "Apresentação do Voto em Separado n. 1 MESA, pela Deputada Carla Zambelli (PL/SP).",
+      "ultimaAberturaVotacao": {
+        "dataHoraRegistro": "",
+        "descricao": ""
+      },
+      "ultimaApresentacaoProposicao": {
+        "dataHoraRegistro": "",
+        "descricao": "",
+        "idProposicao": 0,
+        "uriProposicao": ""
+      }
+    }
+  ]
+}

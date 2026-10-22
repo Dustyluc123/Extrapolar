@@ -1,0 +1,84 @@
+{
+  "dados": [
+    {
+      "idVotacao": "1197773-90",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/1197773-90",
+      "dataHoraVoto": "2023-08-09T19:27:16",
+      "voto": "Sim",
+      "deputado_": {
+        "id": "220714",
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/deputados/220714",
+        "nome": "Adail Filho",
+        "siglaPartido": "REPUBLICANOS",
+        "uriPartido": "https://dadosabertos.camara.leg.br/api/v2/partidos/37908",
+        "siglaUf": "AM",
+        "idLegislatura": "57",
+        "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/220714.jpg"
+      }
+    },
+    {
+      "idVotacao": "1197773-90",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/1197773-90",
+      "dataHoraVoto": "2023-08-09T19:28:56",
+      "voto": "Não",
+      "deputado_": {
+        "id": "221328",
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/deputados/221328",
+        "nome": "Adilson Barroso",
+        "siglaPartido": "PL",
+        "uriPartido": "https://dadosabertos.camara.leg.br/api/v2/partidos/37906",
+        "siglaUf": "SP",
+        "idLegislatura": "57",
+        "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/221328.jpg"
+      }
+    },
+    {
+      "idVotacao": "1197773-90",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/1197773-90",
+      "dataHoraVoto": "2023-08-09T19:30:04",
+      "voto": "Abstenção",
+      "deputado_": {
+        "id": "204511",
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/deputados/204511",
+        "nome": "David Soares",
+        "siglaPartido": "UNIÃO",
+        "uriPartido": "https://dadosabertos.camara.leg.br/api/v2/partidos/38009",
+        "siglaUf": "SP",
+        "idLegislatura": "57",
+        "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/204511.jpg"
+      }
+    },
+    {
+      "idVotacao": "1548579-109",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/1548579-109",
+      "dataHoraVoto": "2023-12-21T19:19:31",
+      "voto": "Obstrução",
+      "deputado_": {
+        "id": "220593",
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/deputados/220593",
+        "nome": "Abilio Brunini",
+        "siglaPartido": "PL",
+        "uriPartido": "https://dadosabertos.camara.leg.br/api/v2/partidos/37906",
+        "siglaUf": "MT",
+        "idLegislatura": "57",
+        "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/220593.jpg"
+      }
+    },
+    {
+      "idVotacao": "1197773-90",
+      "uriVotacao": "https://dadosabertos.camara.leg.br/api/v2/votacoes/1197773-90",
+      "dataHoraVoto": "2023-08-09T19:26:21",
+      "voto": "Artigo 17",
+      "deputado_": {
+        "id": "160541",
+        "uri": "https://dadosabertos.camara.leg.br/api/v2/deputados/160541",
+        "nome": "Arthur Lira",
+        "siglaPartido": "PP",
+        "uriPartido": "https://dadosabertos.camara.leg.br/api/v2/partidos/37903",
+        "siglaUf": "AL",
+        "idLegislatura": "57",
+        "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/160541.jpg"
+      }
+    }
+  ]
+}
