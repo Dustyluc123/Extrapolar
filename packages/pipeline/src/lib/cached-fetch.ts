@@ -33,7 +33,7 @@ async function downloadBody(
 ): Promise<{ response: Response; body: Uint8Array }> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= BODY_ATTEMPTS; attempt++) {
-    const response = await client.request(url, { headers: { Accept: "application/json" } });
+    const response = await client.request(url);
     try {
       return { response, body: new Uint8Array(await response.arrayBuffer()) };
     } catch (error) {
@@ -44,12 +44,22 @@ async function downloadBody(
   throw new Error(`Download de ${url} interrompido ${BODY_ATTEMPTS} vezes: ${reason}`);
 }
 
-export async function fetchJsonCached(
+export interface CachedBytes {
+  body: Uint8Array;
+  meta: CacheEntryMeta;
+  origin: CachedJson["origin"];
+}
+
+/**
+ * Busca um arquivo qualquer (bytes) com a mesma política de cache. `validate` confere o conteúdo
+ * antes de gravar no cache (lança erro se for inválido).
+ */
+export async function fetchBytesCached(
   context: CachedFetchContext,
   key: string,
   url: string,
-  options: { checkLastModified?: boolean } = {},
-): Promise<CachedJson> {
+  options: { checkLastModified?: boolean; validate?: (body: Uint8Array) => void } = {},
+): Promise<CachedBytes> {
   const { client, cache, refresh } = context;
   const ttlMs = context.ttlMs ?? DEFAULT_TTL_MS;
   const now = context.now ?? Date.now;
@@ -57,33 +67,47 @@ export async function fetchJsonCached(
 
   if (cached && cached.meta.url === url) {
     if (isFresh(cached.meta, ttlMs, now())) {
-      return { data: await cache.readJson(cached), meta: cached.meta, origin: "cache" };
+      return { body: await cache.readBytes(cached), meta: cached.meta, origin: "cache" };
     }
     if (options.checkLastModified && cached.meta.lastModified) {
       const lastModified = await client.headLastModified(url);
       if (lastModified && lastModified === cached.meta.lastModified) {
         const meta = { ...cached.meta, savedAt: new Date(now()).toISOString() };
         await cache.writeMeta(key, meta);
-        return { data: await cache.readJson(cached), meta, origin: "conferido" };
+        return { body: await cache.readBytes(cached), meta, origin: "conferido" };
       }
     }
   }
 
   const { response, body } = await downloadBody(client, url);
+  options.validate?.(body);
   const meta: CacheEntryMeta = {
     url,
     savedAt: new Date(now()).toISOString(),
     lastModified: response.headers.get("last-modified"),
   };
-  let data: unknown;
-  try {
-    data = JSON.parse(new TextDecoder().decode(body));
-  } catch {
-    throw new Error(`Resposta de ${url} não é um JSON válido.`);
-  }
-  // Só grava no cache depois de confirmar que é JSON.
+  // Só grava no cache depois de validar o conteúdo.
   await cache.write(key, body, meta);
-  return { data, meta, origin: "baixado" };
+  return { body, meta, origin: "baixado" };
+}
+
+export async function fetchJsonCached(
+  context: CachedFetchContext,
+  key: string,
+  url: string,
+  options: { checkLastModified?: boolean } = {},
+): Promise<CachedJson> {
+  let data: unknown;
+  const decode = (body: Uint8Array) => {
+    try {
+      data = JSON.parse(new TextDecoder().decode(body));
+    } catch {
+      throw new Error(`Resposta de ${url} não é um JSON válido.`);
+    }
+  };
+  const result = await fetchBytesCached(context, key, url, { ...options, validate: decode });
+  if (data === undefined) decode(result.body);
+  return { data, meta: result.meta, origin: result.origin };
 }
 
 /**

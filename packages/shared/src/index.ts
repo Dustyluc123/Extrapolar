@@ -6,6 +6,8 @@ export const PROJECT_NAME = "Extrapolar";
 export * from "./legislature";
 export * from "./text";
 export * from "./no-data";
+export * from "./config/ceap-tetos";
+export * from "./config/emendas-autores";
 export * from "./sources";
 export * from "./validation";
 export * from "./schemas/camara";

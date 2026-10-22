@@ -8,3 +8,5 @@ export * from "./committees";
 export * from "./propositions";
 export * from "./oversight";
 export * from "./discourses";
+export * from "./ceap";
+export * from "./amendments";

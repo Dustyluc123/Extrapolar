@@ -2,6 +2,13 @@
 import type { CamaraOrientation, Deputy, ServicePeriod } from "@extrapolar/shared";
 import { indexOrientations } from "../normalize/orientations";
 import { buildOrganMemberships, type DeputyOrgans } from "../normalize/committees";
+import {
+  amendmentRowsByAuthor,
+  linkAmendmentAuthors,
+  type AuthorLinking,
+} from "../normalize/money";
+import { MANUAL_AMENDMENT_AUTHORS } from "@extrapolar/shared";
+import type { AmendmentRow } from "@extrapolar/metrics";
 import type { PlenarySessionsSelection } from "../normalize/sessions";
 import type { Federation } from "../sources/camara-api";
 import type { PlenaryVotesSelection } from "../normalize/votes";
@@ -30,6 +37,11 @@ export interface NormalizedData {
   themeNames: FetchedSources["themeNames"];
   organs: FetchedSources["organs"];
   discourses: FetchedSources["discourses"];
+  ceap: FetchedSources["ceap"];
+  staff: FetchedSources["staff"];
+  amendmentLinks: AuthorLinking;
+  amendmentsByAuthor: Map<string, AmendmentRow[]>;
+  amendmentYears: number[];
 }
 
 export function normalize(context: PipelineContext, fetched: FetchedSources): NormalizedData {
@@ -65,6 +77,22 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
   log.info(
     `${fetched.committeeMeetings.length} reuniões de comissão; ${fetched.eventRequests.size} eventos com requerimento; ${fetched.authorship.size} proposições com autoria de deputado`,
   );
+  // Emendas: orçamentos de 2024 a 2027 (apresentadas neste mandato), até o ano de referência.
+  const referenceYear = Number(context.referenceDateTime.slice(0, 4));
+  const amendmentYears = [2024, 2025, 2026, 2027].filter((y) => y <= referenceYear);
+  const amendmentLinks = linkAmendmentAuthors({
+    rows: fetched.amendmentRows,
+    deputies: deputies.map((d) => ({ id: d.id, name: d.name })),
+    manual: MANUAL_AMENDMENT_AUTHORS,
+    years: amendmentYears,
+  });
+  log.info(
+    `emendas: ${amendmentLinks.links.size} deputados ligados a um autor; ${amendmentLinks.unlinkedAuthors.length} autores de emendas individuais sem deputado atual correspondente`,
+  );
+  if (process.env.EXTRAPOLAR_LIST_UNLINKED) {
+    for (const a of amendmentLinks.unlinkedAuthors)
+      log.info(`  autor não ligado: ${a.name} [${a.code}]`);
+  }
   return {
     organsByDeputy,
     committeeMeetings: fetched.committeeMeetings,
@@ -76,6 +104,11 @@ export function normalize(context: PipelineContext, fetched: FetchedSources): No
     themeNames: fetched.themeNames,
     organs: fetched.organs,
     discourses: fetched.discourses,
+    ceap: fetched.ceap,
+    staff: fetched.staff,
+    amendmentLinks,
+    amendmentsByAuthor: amendmentRowsByAuthor(fetched.amendmentRows, amendmentYears),
+    amendmentYears,
     deputies,
     servicePeriods,
     plenary: fetched.plenary,

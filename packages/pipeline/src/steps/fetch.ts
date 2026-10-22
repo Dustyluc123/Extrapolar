@@ -9,6 +9,7 @@ import {
   type CamaraOrgan,
   type CamaraOrganMember,
   type CamaraOrientation,
+  type CguAmendmentRow,
   type SourceInfo,
 } from "@extrapolar/shared";
 import type { CommitteeMeeting } from "@extrapolar/metrics";
@@ -38,6 +39,8 @@ import {
   type Authorship,
 } from "../normalize/committees";
 import type { DeputyWithHistory } from "../normalize/deputies";
+import { reduceCeap, type DeputyCeap } from "../normalize/money";
+import { fetchAmendments, fetchCeapYear, fetchStaff } from "../sources/dinheiro";
 import {
   addThemes,
   reducePropositions,
@@ -86,6 +89,12 @@ export interface FetchedSources {
   propositionThemes: Map<number, number[]>;
   /** Nomes oficiais dos temas. */
   themeNames: Map<number, string>;
+  /** Cota parlamentar reduzida por deputado (mês de competência × categoria). */
+  ceap: Map<number, DeputyCeap>;
+  /** Linhas de emendas da CGU (todas; a ligação com deputados é feita na normalização). */
+  amendmentRows: CguAmendmentRow[];
+  /** Secretários parlamentares por gabinete (retrato do dia anterior). */
+  staff: { counts: Map<number, number>; lastModified: string | null };
   /** Discursos por deputado (API, atualização semanal — ADR 0015). */
   discourses: Map<number, DeputyDiscourses & { consultedAt: string }>;
   sources: SourceInfo[];
@@ -199,7 +208,35 @@ export async function fetchSources(context: PipelineContext): Promise<FetchedSou
 
   const deputyIds = new Set(list.map((item) => item.id));
   const years = await fetchYears(context, sources, committeeOrganIds, deputyIds);
+
+  log.step("Cota parlamentar (arquivos da Câmara)");
+  const ceap = new Map<number, DeputyCeap>();
+  for (const year of legislatureYears(context.legislature, context.referenceDateTime)) {
+    const file = await fetchCeapYear(context.fetch, year);
+    sources.push(file.source);
+    reduceCeap(ceap, file.rows, deputyIds);
+  }
+
+  log.step("Funcionários dos gabinetes (arquivo da Câmara)");
+  const staffFile = await fetchStaff(context.fetch);
+  sources.push(staffFile.source);
+  const staffCounts = new Map<number, number>();
+  for (const person of staffFile.items) {
+    if (person.grupo !== "Secretário Parlamentar") continue;
+    const match = /\/deputados\/(\d+)$/.exec(person.uriLotacao);
+    if (!match) continue;
+    const id = Number(match[1]);
+    staffCounts.set(id, (staffCounts.get(id) ?? 0) + 1);
+  }
+
+  log.step("Emendas parlamentares (Portal da Transparência, CGU)");
+  const amendments = await fetchAmendments(context.fetch);
+  sources.push(amendments.source);
+  log.info(`${amendments.rows.length} linhas de emendas`);
   return {
+    ceap,
+    amendmentRows: amendments.rows,
+    staff: { counts: staffCounts, lastModified: staffFile.source.lastModified },
     discourses,
     themeNames,
     deputies,

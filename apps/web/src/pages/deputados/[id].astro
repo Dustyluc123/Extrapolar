@@ -21,6 +21,9 @@ import OversightSection from "../../components/deputado/OversightSection.astro";
 import ConvocationsSection from "../../components/deputado/ConvocationsSection.astro";
 import IndicationsSection from "../../components/deputado/IndicationsSection.astro";
 import VoiceSection from "../../components/deputado/VoiceSection.astro";
+import CeapSection from "../../components/deputado/CeapSection.astro";
+import StaffSection from "../../components/deputado/StaffSection.astro";
+import AmendmentsSection from "../../components/deputado/AmendmentsSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -45,6 +48,7 @@ const cadernos = [
   { id: "caderno-projetos", label: "Projetos e leis" },
   { id: "caderno-fiscalizacao", label: "Fiscalização" },
   { id: "caderno-voz", label: "Voz" },
+  { id: "caderno-dinheiro", label: "Dinheiro público" },
 ];
 const conditionSlug =
   deputy.electoralCondition === "Titular"
@@ -177,6 +181,17 @@ const conditionSlug =
       intro="O que o deputado fala na tribuna do plenário."
     >
       <VoiceSection voz={detail.voz} profileUrl={deputy.profileUrl} />
+    </Caderno>
+
+    <Caderno
+      id="caderno-dinheiro"
+      number={6}
+      title="Dinheiro público"
+      intro="Quanto o mandato gasta da cota, o tamanho da equipe e as emendas que o deputado indicou no Orçamento."
+    >
+      <CeapSection cota={detail.dinheiro.cota} state={deputy.state} updatedAt={updatedAt} />
+      <StaffSection equipe={detail.dinheiro.equipe} updatedAt={updatedAt} />
+      <AmendmentsSection emendas={detail.dinheiro.emendas} updatedAt={updatedAt} />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

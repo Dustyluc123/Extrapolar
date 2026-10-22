@@ -303,6 +303,68 @@ export const vozSchema = z.object({
 });
 export type Voz = z.infer<typeof vozSchema>;
 
+// ---- Caderno 6 — Dinheiro público ----
+
+const money = z.number();
+
+export const cotaSchema = z.object({
+  /** Soma do valor líquido debitado da cota na legislatura (mês de competência). */
+  total: money,
+  porAno: z.array(z.object({ ano: z.number().int(), valor: money })),
+  porMes: z.array(z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/), valor: money })),
+  porCategoria: z.array(z.object({ categoria: z.string(), valor: money })),
+  /** Valores devolvidos pelo deputado à Câmara (informativo; não descontado do total). */
+  restituicoes: money,
+  /** Comparação com o teto oficial, só nos meses com tabela oficial e em exercício (ADR 0017). */
+  teto: z.array(
+    z.object({
+      ano: z.number().int(),
+      meses: z.array(z.string().regex(/^\d{4}-\d{2}$/)),
+      gasto: money,
+      limite: money,
+      proporcao: z.number(),
+    }),
+  ),
+});
+export type Cota = z.infer<typeof cotaSchema>;
+
+export const equipeSchema = z.object({
+  /** Secretários parlamentares lotados no gabinete no retrato do dia anterior; null se nenhum no arquivo. */
+  secretarios: count.nullable(),
+  /** Data do arquivo de funcionários (Last-Modified), AAAA-MM-DD. */
+  dataArquivo: localDate.nullable(),
+});
+
+const amendmentValues = z.object({
+  empenhado: money,
+  liquidado: money,
+  pago: money,
+  /** Restos a pagar pagos (pagamentos feitos nos anos seguintes). */
+  restosPagos: money,
+});
+
+export const emendasSchema = z.object({
+  /** Autor na base da CGU ligado a este deputado; null = não identificado (sem dado). */
+  autor: z
+    .object({ codigo: z.string(), nome: z.string(), ligacao: z.enum(["nome", "manual"]) })
+    .nullable(),
+  /** Orçamentos de 2024 em diante (emendas apresentadas neste mandato). */
+  porAno: z.array(amendmentValues.extend({ ano: z.number().int() })),
+  total: amendmentValues,
+  /** (pago + restos a pagar pagos) ÷ empenhado; null sem valor empenhado. */
+  execucao: z.number().nullable(),
+  porTipo: z.array(amendmentValues.extend({ tipo: z.string() })),
+  destinos: z.array(z.object({ local: z.string(), empenhado: money })).max(5),
+});
+export type Emendas = z.infer<typeof emendasSchema>;
+
+export const dinheiroSchema = z.object({
+  cota: cotaSchema,
+  equipe: equipeSchema,
+  emendas: emendasSchema,
+});
+export type Dinheiro = z.infer<typeof dinheiroSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -319,6 +381,7 @@ export const deputyDetailSchema = z.object({
   projetos: projetosSchema,
   fiscalizacao: fiscalizacaoSchema,
   voz: vozSchema,
+  dinheiro: dinheiroSchema,
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
 

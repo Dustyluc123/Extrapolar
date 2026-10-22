@@ -230,6 +230,51 @@ export const GLOSSARY: GlossaryEntry[] = [
       "Sugestão formal de um deputado ao Poder Executivo (ou a outro órgão) para que tome alguma providência. Não obriga o governo a agir nem a responder.",
     plain: "É uma “sugestão por escrito” para o governo.",
   },
+  {
+    slug: "ceap",
+    term: "Cota para o Exercício da Atividade Parlamentar",
+    short: "CEAP",
+    definition:
+      "Verba mensal de cada deputado para despesas do mandato (passagens, combustível, escritório no estado, divulgação). O valor varia por estado e o saldo de um mês pode ser usado nos meses seguintes do mesmo ano.",
+    plain: "É o “cartão corporativo” do mandato, pago por reembolso com nota fiscal.",
+  },
+  {
+    slug: "verba-de-gabinete",
+    term: "Verba de gabinete",
+    definition:
+      "Valor mensal que cada deputado tem para pagar os salários da equipe do gabinete. É separado da cota parlamentar.",
+  },
+  {
+    slug: "secretario-parlamentar",
+    term: "Secretário parlamentar",
+    definition:
+      "Funcionário contratado pelo deputado para trabalhar no gabinete, em Brasília ou no estado. Cada gabinete pode ter de 5 a 25 (Ato da Mesa nº 72/1997).",
+  },
+  {
+    slug: "emenda-individual",
+    term: "Emenda individual",
+    definition:
+      "Parte do Orçamento federal que cada deputado e senador pode indicar onde será gasta. Parte do valor tem de ir para a saúde.",
+  },
+  {
+    slug: "transferencia-especial",
+    term: "Transferência especial",
+    definition:
+      "Tipo de emenda individual em que o dinheiro vai direto para o estado ou município, sem um projeto ou convênio definido na própria emenda. É popularmente chamada de “emenda Pix”.",
+  },
+  {
+    slug: "emenda-de-bancada",
+    term: "Emenda de bancada",
+    definition:
+      "Emenda ao Orçamento apresentada em conjunto pelos deputados e senadores de um mesmo estado. Não pertence a um único parlamentar.",
+  },
+  {
+    slug: "empenho",
+    term: "Empenho, liquidação e pagamento",
+    definition:
+      "As etapas do gasto público: o empenho reserva o dinheiro no Orçamento; a liquidação confirma que o serviço ou a obra foi entregue; o pagamento é a saída do dinheiro. O que fica empenhado e não é pago no ano vira “restos a pagar”.",
+    plain: "Empenhar é “separar o dinheiro”; pagar é “o dinheiro sair de fato”.",
+  },
 ];
 
 export function glossaryEntry(slug: string): GlossaryEntry {

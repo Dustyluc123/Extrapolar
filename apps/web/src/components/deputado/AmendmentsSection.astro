@@ -1,0 +1,116 @@
+---
+// Métrica: emendas parlamentares individuais (orçamentos de 2024 em diante) — Caderno 6.
+import type { Emendas } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import BarList from "../charts/BarList.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
+import { formatBRL, formatBRLCompact, formatPercent } from "../../lib/format";
+
+interface Props {
+  emendas: Emendas;
+  updatedAt: string;
+}
+const { emendas: e, updatedAt } = Astro.props;
+const TYPE_LABELS: Record<string, string> = {
+  "Emenda Individual - Transferências com Finalidade Definida":
+    "Individual — transferência com finalidade definida",
+  "Emenda Individual - Transferências Especiais": "Individual — transferência especial",
+};
+const paidTotal = e.total.pago + e.total.restosPagos;
+---
+
+<Metric
+  id="emendas"
+  title="Emendas parlamentares"
+  whatIs="Todo ano, cada deputado pode indicar como gastar uma parte do Orçamento federal: são as emendas individuais. O dinheiro vai para obras, saúde, educação... em estados e municípios. Aqui estão as emendas dos orçamentos de 2024 em diante, apresentadas neste mandato."
+  updatedAt={updatedAt}
+  methodologyAnchor="emendas"
+  sourceName="Portal da Transparência (CGU)"
+  sourceUrl="https://portaldatransparencia.gov.br/emendas"
+>
+  {e.autor === null ? (
+    <NoData reason="autor-nao-identificado" label="Emendas empenhadas" />
+  ) : (
+    <>
+      <div class="grid gap-8 lg:grid-cols-2">
+        <div>
+          <BigNumber
+            value={formatBRLCompact(e.total.empenhado)}
+            label="Empenhado (reservado no Orçamento)"
+            caption={`${formatBRL(e.total.empenhado)} empenhados em emendas individuais dos orçamentos de ${e.porAno[0]?.ano ?? 2024} a ${e.porAno.at(-1)?.ano ?? 2024}. Pago até agora: ${formatBRL(paidTotal)}.`}
+          />
+          <div class="mt-5 rounded-card border border-rule bg-card p-4">
+            <p class="kicker m-0">Execução</p>
+            <p class="m-0 mt-1 font-display text-4xl font-[800] tabular-nums">
+              {e.execucao !== null ? formatPercent(e.execucao) : "Sem dado"}
+            </p>
+            <p class="caption mt-1 mb-0">
+              Quanto do valor empenhado já foi pago (inclusive restos a pagar). Quem decide o ritmo
+              dos pagamentos é o Poder Executivo, não o deputado.
+            </p>
+          </div>
+        </div>
+        <BarList
+          title="Por ano do orçamento"
+          description="Valor empenhado em emendas individuais em cada orçamento."
+          labelHeader="Ano"
+          valueHeader="Empenhado · pago"
+          items={e.porAno.map((y) => ({
+            label: String(y.ano),
+            value: y.empenhado,
+            display: `${formatBRLCompact(y.empenhado)} · pago ${formatBRLCompact(y.pago + y.restosPagos)}`,
+          }))}
+        />
+      </div>
+
+      <div class="mt-6 grid gap-8 lg:grid-cols-2">
+        <BarList
+          title="Por tipo"
+          description="Valor empenhado por tipo oficial de emenda."
+          labelHeader="Tipo"
+          valueHeader="Empenhado"
+          items={e.porTipo.map((t, index) => ({
+            label: TYPE_LABELS[t.tipo] ?? t.tipo,
+            value: t.empenhado,
+            display: formatBRLCompact(t.empenhado),
+            highlight: index === 0,
+          }))}
+        />
+        {e.destinos.length > 0 ? (
+          <BarList
+            title="Principais destinos"
+            description="Os cinco locais que mais receberam valor empenhado, como informa a CGU."
+            labelHeader="Local"
+            valueHeader="Empenhado"
+            items={e.destinos.map((d) => ({
+              label: d.local,
+              value: d.empenhado,
+              display: formatBRLCompact(d.empenhado),
+            }))}
+          />
+        ) : null}
+      </div>
+      <p class="caption mt-4">
+        Autor na base da CGU: {e.autor.nome} (código {e.autor.codigo}
+        {e.autor.ligacao === "manual" ? ", ligação conferida à mão" : ", ligado pelo nome"}).
+      </p>
+    </>
+  )}
+  <Fragment slot="limites">
+    <li>
+      <strong>Execução não é eficiência do gabinete:</strong> quem libera os pagamentos é o governo
+      federal, que decide o ritmo.
+    </li>
+    <li>
+      <Term slug="transferencia-especial">Transferências especiais</Term> (apelidadas de "emendas
+      Pix") vão direto para o caixa de estados e municípios, sem um projeto definido na emenda.
+    </li>
+    <li>
+      Emendas de bancada, de comissão e de relator não entram: não dá para atribuí-las a um único
+      deputado.
+    </li>
+    <li>A ligação com o deputado é feita pelo nome na base da CGU, sem palpites.</li>
+  </Fragment>
+</Metric>

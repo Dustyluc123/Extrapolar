@@ -64,6 +64,10 @@ describe("dinheiro", () => {
     expect(formatBRLCompact(950.4)).toBe("R$ 950");
     expect(formatBRLCompact(2_500_000_000)).toBe("R$ 2,5 bi");
     expect(formatBRLCompact(-1_500)).toBe("−R$ 1,5 mil");
+    // na fronteira, sobe de unidade em vez de mostrar "1.000 mil"
+    expect(formatBRLCompact(999_999.99)).toBe("R$ 1 mi");
+    expect(formatBRLCompact(999.7)).toBe("R$ 1 mil");
+    expect(formatBRLCompact(999_960_000)).toBe("R$ 1 bi");
   });
 });
 

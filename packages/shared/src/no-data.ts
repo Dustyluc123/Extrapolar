@@ -14,9 +14,13 @@ export const NO_DATA_REASONS = {
     "Não apresentou, como autor principal, proposição que possa virar norma.",
   "sem-teto-oficial": "Não encontramos a tabela oficial do teto da cota para este período.",
   "sem-gasto-no-periodo": "Não há despesa registrada na cota no período em exercício.",
+  "sem-equipe-no-arquivo":
+    "O arquivo de funcionários da Câmara (retrato do dia anterior) não traz secretários lotados neste gabinete; pode ser posse recente.",
+  "sem-emenda-empenhada":
+    "Não há emenda individual empenhada deste autor nos orçamentos de 2024 em diante.",
   "fonte-indisponivel": "A fonte oficial não estava disponível na última atualização.",
   "autor-nao-identificado":
-    "Não foi possível ligar com segurança o autor das emendas na base da CGU a este deputado.",
+    "Não encontramos, na base da CGU, um autor de emendas com o mesmo nome deste deputado (por exemplo, por posse recente, licença ou grafia diferente). Não ligamos por palpite.",
 } as const;
 
 export type NoDataReason = keyof typeof NO_DATA_REASONS;

@@ -272,3 +272,53 @@ export const camaraDiscourseSchema = z.object({
 });
 export type CamaraDiscourse = z.infer<typeof camaraDiscourseSchema>;
 export const camaraDiscoursesPageSchema = apiPageSchema(camaraDiscourseSchema);
+
+// ---- Arquivo: https://www.camara.leg.br/cotas/Ano-{ano}.csv.zip (CSV dentro de zip) ----
+
+const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "esperado número com ponto decimal");
+
+/** Linha do CSV da cota parlamentar (campos usados). Ver docs/FONTES.md. */
+export const camaraCeapRowSchema = z.object({
+  /** Id do deputado na API; vazio para lideranças. */
+  ideCadastro: z.union([z.literal(""), z.string().regex(/^\d+$/)]),
+  numAno: z.string().regex(/^\d{4}$/),
+  numMes: z.string().regex(/^(1[0-2]|[1-9])$/),
+  numSubCota: z.string().regex(/^\d+$/),
+  txtDescricao: z.string().min(1),
+  sgUF: z.string(),
+  vlrLiquido: decimal,
+  vlrRestituicao: z.union([z.literal(""), decimal]),
+});
+export type CamaraCeapRow = z.infer<typeof camaraCeapRowSchema>;
+
+// ---- Arquivo: funcionarios/json/funcionarios.json (retrato do dia anterior) ----
+
+export const camaraStaffSchema = z.object({
+  codGrupo: z.number().int(),
+  grupo: z.string(),
+  /** Para secretários parlamentares: ".../deputados/{id}" do gabinete. Pode vir vazio para outros grupos. */
+  uriLotacao: z.string(),
+});
+export const camaraStaffFileSchema = z.object({ dados: z.array(camaraStaffSchema) });
+
+// ---- CGU: EmendasParlamentares.csv (Portal da Transparência, download em lote) ----
+
+/** Valor com vírgula decimal, como no CSV da CGU ("390000,00"). */
+const decimalComma = z.string().regex(/^-?\d+(,\d+)?$/, "esperado número com vírgula decimal");
+
+export const cguAmendmentRowSchema = z.object({
+  "Código da Emenda": z.string(),
+  "Ano da Emenda": z.string().regex(/^\d{4}$/),
+  "Tipo de Emenda": z.string().min(1),
+  "Código do Autor da Emenda": z.string(),
+  "Nome do Autor da Emenda": z.string(),
+  "Localidade de aplicação do recurso": z.string(),
+  UF: z.string(),
+  "Valor Empenhado": decimalComma,
+  "Valor Liquidado": decimalComma,
+  "Valor Pago": decimalComma,
+  "Valor Restos A Pagar Inscritos": decimalComma,
+  "Valor Restos A Pagar Cancelados": decimalComma,
+  "Valor Restos A Pagar Pagos": decimalComma,
+});
+export type CguAmendmentRow = z.infer<typeof cguAmendmentRowSchema>;

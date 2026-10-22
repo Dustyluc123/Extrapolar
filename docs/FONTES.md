@@ -93,6 +93,26 @@ Formato conferido em 22/10/2026: `{ "dados": [ { "dataHoraInicio": "2026-09-02T1
 - Erro 500 persistente para alguns períodos de alguns deputados (em 22/10/2026: 29 meses de 24 deputados, todos entre agosto e outubro de 2026); o pipeline divide a consulta e registra o mês como indisponível (ADR 0015).
 - Fases encontradas: Ordem do Dia, Breves Comunicações, Encerramento, Homenagem, Comissão Geral, Abertura e fase vazia.
 
+## Fase 1, Caderno 6 — Dinheiro público
+
+### Cota parlamentar (Câmara)
+
+- `https://www.camara.leg.br/cotas/Ano-{ano}.csv.zip` (~6 MB por ano; `Last-Modified` diário). Dentro, um CSV em UTF-8 com BOM, separado por `;`, todos os campos entre aspas; alguns campos têm `;` dentro das aspas (por isso o pipeline usa um leitor de CSV completo).
+- Campos usados: `ideCadastro` (id do deputado na API; vazio para lideranças), `numAno`, `numMes` (competência), `numSubCota` e `txtDescricao` (categoria, 18 valores em 2025), `sgUF`, `vlrLiquido` (decimal com ponto; pode ser negativo), `vlrRestituicao` (vazio em todos os registros de 2025).
+- Significado dos campos: [Dados abertos — CEAP](https://dadosabertos.camara.leg.br/howtouse/2023-12-26-dados-ceap.html).
+- Teto por UF: [Cota Parlamentar — guia para jornalistas](https://www2.camara.leg.br/comunicacao/assessoria-de-imprensa/guia-para-jornalistas/cota-parlamentar) ("valores atuais", sem data) e [Ato da Mesa nº 244/2026](https://www2.camara.leg.br/legin/int/atomes/2026/atodamesa-244-20-fevereiro-2026-798720-norma-cd-mesa.html). TODO (Lucas): conferir a tabela no Diário da Câmara de 20/02/2026, p. 2216, e achar a tabela vigente de fev/2023 a fev/2026 (ADR 0017).
+
+### Funcionários (Câmara)
+
+- `https://dadosabertos.camara.leg.br/arquivos/funcionarios/json/funcionarios.json` (~7 MB): retrato do dia anterior, sem histórico. Campos usados: `grupo` ("Secretário Parlamentar", "Cargo de Natureza Especial", "Quadro Efetivo - RJU", "Parlamentar") e `uriLotacao` (para secretários: `.../deputados/{id}`). O arquivo traz nomes de pessoas; o site só publica a contagem.
+- Limite de 5 a 25 por gabinete: [Ato da Mesa nº 72/1997](https://www2.camara.leg.br/legin/int/atomes/1997/atodamesa-72-16-setembro-1997-321031-normaatualizada-cd-mesa.html), art. 7º.
+
+### Emendas parlamentares (CGU)
+
+- Download em lote: `https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares/UNICO` (redireciona para `dadosabertos-download.cgu.gov.br/.../EmendasParlamentares.zip`, ~33 MB). Dentro: `EmendasParlamentares.csv` (~47 MB, ISO-8859-1, CRLF), `EmendasParlamentares_Convenios.csv` e `EmendasParlamentares_PorFavorecido.csv` (não usados).
+- Campos usados: `Ano da Emenda`, `Tipo de Emenda` (Individual — Transferências com Finalidade Definida, Individual — Transferências Especiais, de Relator, de Bancada, de Comissão), `Código do Autor da Emenda`, `Nome do Autor da Emenda`, `Localidade de aplicação do recurso`, `Valor Empenhado`, `Valor Liquidado`, `Valor Pago`, `Valor Restos A Pagar Pagos` (vírgula decimal).
+- Condições de uso: TODO (Lucas): conferir a licença dos dados do Portal da Transparência.
+
 ## Fotos dos deputados
 
 - Origem: URL oficial de cada deputado (`urlFoto`), servida por `https://www.camara.leg.br/internet/deputado/bandep/{id}.jpg`.

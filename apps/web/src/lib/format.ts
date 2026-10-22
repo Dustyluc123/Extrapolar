@@ -91,9 +91,12 @@ const compact1 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 export function formatBRLCompact(value: number): string {
   const sign = value < 0 ? "−" : "";
   const abs = Math.abs(value);
-  if (abs >= 1_000_000_000) return `${sign}R$ ${compact1.format(abs / 1_000_000_000)} bi`;
-  if (abs >= 1_000_000) return `${sign}R$ ${compact1.format(abs / 1_000_000)} mi`;
-  if (abs >= 1_000) return `${sign}R$ ${compact1.format(abs / 1_000)} mil`;
+  // Compara já arredondado a uma casa, para 999.999 virar "R$ 1 mi" e não "R$ 1.000 mil".
+  const round1 = (v: number) => Math.round(v * 10) / 10;
+  if (round1(abs / 1_000_000) >= 1_000)
+    return `${sign}R$ ${compact1.format(abs / 1_000_000_000)} bi`;
+  if (round1(abs / 1_000) >= 1_000) return `${sign}R$ ${compact1.format(abs / 1_000_000)} mi`;
+  if (Math.round(abs) >= 1_000) return `${sign}R$ ${compact1.format(abs / 1_000)} mil`;
   return `${sign}R$ ${integer.format(Math.round(abs))}`;
 }
 

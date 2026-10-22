@@ -1,0 +1,113 @@
+---
+// Métrica: cota parlamentar (CEAP) — Caderno 6.
+import type { Cota } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import BarList from "../charts/BarList.astro";
+import Columns from "../charts/Columns.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatBRL, formatBRLCompact, formatPercent } from "../../lib/format";
+import { stateName } from "../../lib/states";
+
+interface Props {
+  cota: Cota;
+  state: string;
+  updatedAt: string;
+}
+const { cota: c, state, updatedAt } = Astro.props;
+const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const monthLabel = (key: string) => `${MONTHS[Number(key.slice(5, 7)) - 1]}/${key.slice(0, 4)}`;
+const sentence = (text: string) => {
+  const lower = text
+    .toLowerCase()
+    .replace(/\s+([,.])/g, "$1")
+    .replace(/\.$/, "");
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
+const maxMonth = Math.max(0, ...c.porMes.map((m) => m.valor));
+const categories = c.porCategoria.filter((x) => x.valor !== 0);
+const lastCeiling = c.teto.at(-1);
+---
+
+<Metric
+  id="cota"
+  title="Cota parlamentar"
+  whatIs="Cada deputado tem uma verba mensal, a Cota para o Exercício da Atividade Parlamentar (CEAP), para pagar despesas do mandato: passagens, combustível, aluguel de escritório no estado, divulgação do trabalho. O valor gasto é reembolsado pela Câmara mediante nota fiscal."
+  updatedAt={updatedAt}
+  methodologyAnchor="cota"
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <BigNumber
+        value={formatBRLCompact(c.total)}
+        label="Gasto na legislatura"
+        caption={`${formatBRL(c.total)} debitados da cota desde fevereiro de 2023, pelo mês de competência da despesa.${c.restituicoes > 0 ? ` O deputado devolveu ${formatBRL(c.restituicoes)} à Câmara (não descontado).` : ""}`}
+      />
+      <div class="mt-5 rounded-card border border-rule bg-card p-4">
+        <p class="kicker m-0">Em relação ao teto de {stateName(state)}</p>
+        {lastCeiling ? (
+          <>
+            <p class="m-0 mt-1 font-display text-4xl font-[800] tabular-nums">
+              {formatPercent(lastCeiling.proporcao)}
+            </p>
+            <p class="caption mt-1 mb-0">
+              Em {lastCeiling.ano}, de {monthLabel(lastCeiling.meses[0] ?? "")} a{" "}
+              {monthLabel(lastCeiling.meses.at(-1) ?? "")}: gastou {formatBRL(lastCeiling.gasto)} de
+              um limite somado de {formatBRL(lastCeiling.limite)}. Só há tabela oficial do teto a
+              partir de março de 2026; antes disso, mostramos apenas o valor gasto.
+            </p>
+          </>
+        ) : (
+          <p class="caption mt-1 mb-0">
+            Sem comparação: não encontramos a tabela oficial do teto para os meses em que o deputado
+            esteve em exercício. Mostramos apenas o valor gasto.
+          </p>
+        )}
+      </div>
+    </div>
+    {categories.length > 0 ? (
+      <BarList
+        title="Por tipo de despesa"
+        description="Valor líquido gasto na legislatura em cada categoria oficial da cota."
+        labelHeader="Categoria"
+        valueHeader="Valor"
+        items={categories.map((x, index) => ({
+          label: sentence(x.categoria),
+          value: Math.max(0, x.valor),
+          display: formatBRLCompact(x.valor),
+          highlight: index === 0,
+        }))}
+      />
+    ) : null}
+  </div>
+  <div class="mt-6">
+    <Columns
+      title="Por mês"
+      description="Valor líquido debitado da cota em cada mês de competência da legislatura."
+      labelHeader="Mês"
+      valueHeader="Valor"
+      maxLabel={`máximo: ${formatBRLCompact(maxMonth)}`}
+      items={c.porMes.map((m, index) => ({
+        label: monthLabel(m.mes),
+        tick: m.mes.endsWith("-01") || index === 0 ? m.mes.slice(0, 4) : "",
+        value: m.valor,
+        display: formatBRL(m.valor),
+      }))}
+    />
+  </div>
+  <Fragment slot="limites">
+    <li>
+      O teto é diferente em cada estado por causa do preço das passagens até Brasília; comparar o
+      valor gasto entre deputados de estados diferentes não é justo.
+    </li>
+    <li>Gastar menos não significa trabalhar menos, nem gastar mais significa trabalhar mais.</li>
+    <li>
+      As notas podem ser apresentadas até 90 dias depois, e reembolsos ou glosas podem mudar os
+      valores mais recentes.
+    </li>
+    <li>
+      Não inclui a <Term slug="verba-de-gabinete">verba de gabinete</Term> (salários da equipe), que
+      é outra verba.
+    </li>
+  </Fragment>
+</Metric>

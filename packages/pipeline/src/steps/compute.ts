@@ -7,10 +7,11 @@ import {
   type MetricsIndex,
   type MetricValue,
 } from "@extrapolar/shared";
-import { okValue, participationValue, ratioValue } from "@extrapolar/metrics";
+import { noData, okValue, participationValue, ratioValue } from "@extrapolar/metrics";
 import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
 import { computeComissoes } from "./metrics/comissoes";
+import { computeDinheiro } from "./metrics/dinheiro";
 import { computePlenario } from "./metrics/plenario";
 import { computeFiscalizacao } from "./metrics/fiscalizacao";
 import { computeProjetos } from "./metrics/projetos";
@@ -181,6 +182,63 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     methodologyAnchor: "discursos",
     pick: (d) => okValue(d.voz.total),
   },
+  {
+    key: "cota-total",
+    caderno: "dinheiro",
+    label: "Cota parlamentar gasta na legislatura (valor líquido)",
+    unit: "reais",
+    methodologyAnchor: "cota",
+    pick: (d) => okValue(d.dinheiro.cota.total),
+  },
+  {
+    key: "cota-teto",
+    caderno: "dinheiro",
+    label: "Cota gasta em relação ao teto oficial (meses com tabela oficial)",
+    unit: "proporcao",
+    methodologyAnchor: "cota",
+    pick: (d) => {
+      const last = d.dinheiro.cota.teto.at(-1);
+      return last ? okValue(last.proporcao, last.gasto, last.limite) : noData("sem-teto-oficial");
+    },
+  },
+  {
+    key: "equipe-secretarios",
+    caderno: "dinheiro",
+    label: "Secretários parlamentares no gabinete",
+    unit: "contagem",
+    methodologyAnchor: "equipe",
+    pick: (d) =>
+      d.dinheiro.equipe.secretarios === null
+        ? noData("sem-equipe-no-arquivo")
+        : okValue(d.dinheiro.equipe.secretarios),
+  },
+  {
+    key: "emendas-empenhado",
+    caderno: "dinheiro",
+    label: "Emendas individuais empenhadas (orçamentos de 2024 em diante)",
+    unit: "reais",
+    methodologyAnchor: "emendas",
+    pick: (d) =>
+      d.dinheiro.emendas.autor === null
+        ? noData("autor-nao-identificado")
+        : okValue(d.dinheiro.emendas.total.empenhado),
+  },
+  {
+    key: "emendas-execucao",
+    caderno: "dinheiro",
+    label: "Execução das emendas: (pago + restos a pagar pagos) ÷ empenhado",
+    unit: "proporcao",
+    methodologyAnchor: "emendas",
+    pick: (d) => {
+      const e = d.dinheiro.emendas;
+      if (e.autor === null) return noData("autor-nao-identificado");
+      return ratioValue(
+        e.total.pago + e.total.restosPagos,
+        e.total.empenhado,
+        "sem-emenda-empenhada",
+      );
+    },
+  },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
@@ -194,6 +252,8 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
   const fiscalizacao = computeFiscalizacao(context, data);
   log.step("Calculando o Caderno 5 — Voz");
   const voz = computeVoz(context, data);
+  log.step("Calculando o Caderno 6 — Dinheiro público");
+  const dinheiro = computeDinheiro(context, data);
 
   const details: DeputyDetail[] = data.deputies.map((deputy) => {
     const of = <T>(map: Map<number, T>, caderno: string): T => {
@@ -211,6 +271,7 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
       projetos: of(projetos, "projetos"),
       fiscalizacao: of(fiscalizacao, "fiscalizacao"),
       voz: of(voz, "voz"),
+      dinheiro: of(dinheiro, "dinheiro"),
     };
   });
 

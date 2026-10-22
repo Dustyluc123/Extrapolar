@@ -1,0 +1,44 @@
+---
+// Métrica: equipe do gabinete (secretários parlamentares) — Caderno 6.
+import type { Dinheiro } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
+import { formatInteger, formatLongDate } from "../../lib/format";
+
+interface Props {
+  equipe: Dinheiro["equipe"];
+  updatedAt: string;
+}
+const { equipe: e, updatedAt } = Astro.props;
+---
+
+<Metric
+  id="equipe"
+  title="Equipe do gabinete"
+  whatIs="Cada deputado contrata uma equipe de secretários parlamentares, que trabalham no gabinete em Brasília ou no estado. Pelas regras da Câmara, cada gabinete tem de 5 a 25 pessoas."
+  updatedAt={updatedAt}
+  methodologyAnchor="equipe"
+>
+  {e.secretarios !== null ? (
+    <BigNumber
+      value={formatInteger(e.secretarios)}
+      label="Secretários parlamentares hoje"
+      caption={`Pessoas lotadas no gabinete${e.dataArquivo ? ` no retrato de ${formatLongDate(e.dataArquivo)}` : ""}. O limite é de 5 a 25 por gabinete (Ato da Mesa nº 72/1997).`}
+    />
+  ) : (
+    <NoData reason="sem-equipe-no-arquivo" label="Secretários parlamentares hoje" />
+  )}
+  <Fragment slot="limites">
+    <li>
+      Não mostra quanto o gabinete gasta com salários: a Câmara não publica esse valor por gabinete
+      em formato de dados abertos (só em páginas da web).
+    </li>
+    <li>É um retrato de um dia: a equipe muda ao longo do mandato.</li>
+    <li>
+      Não diz o que cada pessoa faz nem onde trabalha (Brasília ou estado).{" "}
+      <Term slug="secretario-parlamentar">Saiba o que é um secretário parlamentar</Term>.
+    </li>
+  </Fragment>
+</Metric>

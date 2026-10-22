@@ -47,6 +47,10 @@ export class FileCache {
     await writeFile(`${this.pathFor(key)}.meta.json`, JSON.stringify(meta, null, 2));
   }
 
+  async readBytes(file: CachedFile): Promise<Uint8Array> {
+    return new Uint8Array(await readFile(file.path));
+  }
+
   async readJson(file: CachedFile): Promise<unknown> {
     return JSON.parse(await readFile(file.path, "utf8"));
   }

@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@extrapolar/metrics": "workspace:*",
-    "@extrapolar/shared": "workspace:*"
+    "@extrapolar/shared": "workspace:*",
+    "fflate": "0.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

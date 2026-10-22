@@ -414,3 +414,73 @@ Quantos discursos o deputado fez na legislatura, segundo o registro da Câmara, 
 - O conteúdo ou a qualidade das falas.
 - Falas em comissões.
 - Quem preside a sessão tem muitas falas do tipo "fala do presidente", que fazem parte da condução dos trabalhos.
+
+<a id="cota"></a>
+
+## Cota parlamentar (CEAP)
+
+### O que é
+
+A Cota para o Exercício da Atividade Parlamentar é uma verba mensal de cada deputado para despesas do mandato (passagens, combustível, escritório no estado, divulgação...), paga por reembolso com nota fiscal. O teto mensal varia por estado por causa do preço das passagens aéreas até Brasília, e o saldo não usado num mês acumula para os meses seguintes do mesmo ano (não passa de um ano para outro).
+
+### Como é calculado
+
+- **Fonte:** arquivos `https://www.camara.leg.br/cotas/Ano-{ano}.csv.zip` (um por ano, atualização diária), com o significado de cada campo explicado pela Câmara em [Dados abertos — CEAP](https://dadosabertos.camara.leg.br/howtouse/2023-12-26-dados-ceap.html).
+- **Valor gasto** = soma de `vlrLiquido` (valor efetivamente debitado da cota: valor do documento menos a glosa). Valores negativos (compensação de passagens) entram na soma, como na fonte.
+- **Mês** = mês de competência (`numAno`/`numMes`), que é o mês em que a despesa conta na cota; vai de fevereiro de 2023 até o mês da atualização.
+- **Por categoria:** `txtDescricao` (categoria oficial da despesa).
+- **Restituições** (`vlrRestituicao`, valor devolvido pelo deputado) são mostradas à parte e **não** descontadas do total, porque a Câmara informa que costumam gerar outro registro associado e descontar poderia contar duas vezes. (Em 22/10/2026 nenhum registro da legislatura tinha restituição.)
+- Registros de lideranças (sem `ideCadastro`) não entram.
+
+### Comparação com o teto
+
+- O teto oficial por UF fica em `packages/shared/src/config/ceap-tetos.ts`, com fonte e vigência (ADR 0017).
+- **Só há tabela oficial a partir de março de 2026** (Ato da Mesa nº 244/2026, valores da página oficial "Cota Parlamentar" da Câmara). De fevereiro de 2023 a fevereiro de 2026 a tabela oficial não foi encontrada: o valor fica **sem dado** e a ficha mostra só o valor gasto.
+- **Proporção do teto** = gasto ÷ soma dos tetos mensais, somando só os meses que (1) têm teto oficial, (2) em que o deputado esteve em exercício pelo menos um dia e (3) já terminaram (o mês corrente fica fora porque as notas podem chegar até 90 dias depois). Como o saldo acumula ao longo do ano, a proporção de alguns meses pode passar de 100%.
+
+### Limitações obrigatórias
+
+- O teto é por estado; comparar valores gastos entre estados diferentes não é justo.
+- Gastar menos não significa trabalhar menos (nem o contrário).
+- Notas podem ser apresentadas até 90 dias depois, e reembolsos e glosas podem alterar valores depois.
+
+<a id="equipe"></a>
+
+## Equipe do gabinete
+
+### O que é
+
+Quantos **secretários parlamentares** estão lotados no gabinete do deputado, segundo o retrato do dia anterior publicado pela Câmara. Pelo Ato da Mesa nº 72/1997 (art. 7º, com redação da Resolução nº 39/2006), cada gabinete tem de 5 a 25 servidores remunerados.
+
+### Como é calculado
+
+- Fonte: `https://dadosabertos.camara.leg.br/arquivos/funcionarios/json/funcionarios.json` (sem histórico; só o retrato do dia anterior).
+- Conta as pessoas do grupo "Secretário Parlamentar" cuja lotação (`uriLotacao`) é o deputado.
+- Quando o arquivo não traz nenhum secretário lotado no gabinete (3 casos em 22/10/2026, abaixo do mínimo de 5, provavelmente posse recente), a ficha mostra "sem dado", não zero.
+
+### Fora do escopo
+
+- **Gasto mensal com a equipe por gabinete:** a Câmara não publica esse valor em formato estruturado (CSV, JSON ou API); só em páginas da web. Pelos critérios do projeto (sem raspagem de HTML), fica de fora nesta fase.
+
+<a id="emendas"></a>
+
+## Emendas parlamentares
+
+### O que é
+
+As **emendas individuais** são a parte do Orçamento federal que cada deputado pode indicar onde será gasta. A ficha mostra as emendas dos **orçamentos de 2024 em diante** (apresentadas durante este mandato; o orçamento de 2023 foi emendado em 2022, no mandato anterior).
+
+### Como é calculado
+
+- **Fonte:** download em lote do Portal da Transparência da CGU (`EmendasParlamentares.zip` → `EmendasParlamentares.csv`), sem necessidade de chave de acesso.
+- **Ligação autor → deputado (ADR 0018):** o autor vem com nome e código do sistema de orçamento, não com o id da Câmara. A ligação é feita pelo **nome normalizado** (sem acento, pontuação, caixa e prefixo "Dep."), exigindo nome **único** dos dois lados, considerando autores de todos os anos da base. Casos ambíguos ficam sem ligação ("sem dado") até serem conferidos à mão no arquivo `packages/shared/src/config/emendas-autores.ts`. **Nunca por semelhança.**
+- **Valores por ano do orçamento** (`Ano da Emenda`): empenhado, liquidado, pago e restos a pagar pagos.
+- **Execução** = (pago + restos a pagar pagos) ÷ empenhado. Os restos a pagar pagos são pagamentos feitos nos anos seguintes ao do orçamento.
+- **Por tipo:** "Transferências com Finalidade Definida" e "Transferências Especiais" (popularmente "emendas Pix").
+- **Principais destinos:** os cinco locais (`Localidade de aplicação do recurso`) com maior valor empenhado.
+
+### Limitações obrigatórias
+
+- **Quem decide o ritmo de pagamento é o Poder Executivo, não o deputado.** A execução não é "eficiência do gabinete".
+- Emendas de bancada, de comissão e de relator não entram (não pertencem a um único deputado).
+- Em 22/10/2026, 19 deputados ficaram sem ligação: 12 têm o mesmo nome com dois códigos na base (de mandatos diferentes, aguardando conferência manual) e 7 não têm autor com o mesmo nome (posse recente ou licença, por exemplo).
