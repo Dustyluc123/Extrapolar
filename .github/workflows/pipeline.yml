@@ -1,0 +1,99 @@
+# Atualização diária dos dados da Câmara.
+# Roda o pipeline, confere se o site builda com os dados novos e commita data/generated no main.
+# O commit dispara o deploy na Vercel pela integração Git (ADR 0004).
+name: Atualização dos dados
+
+on:
+  schedule:
+    # 09:00 UTC = 06:00 em Brasília, depois da atualização diária dos arquivos da Câmara.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      baixar_tudo:
+        description: "Ignorar o cache e baixar tudo de novo"
+        type: boolean
+        default: false
+      forcar_deploy:
+        description: "Disparar o deploy hook da Vercel mesmo sem mudança nos dados"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Cache dos downloads (data/raw) entre execuções. A chave muda a cada execução para
+      # sempre salvar a versão mais nova; a restauração pega a mais recente.
+      - name: Restaurar cache dos downloads
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw
+          key: dados-camara-${{ github.run_id }}
+          restore-keys: dados-camara-
+
+      - name: Rodar o pipeline
+        run: |
+          if [ "${{ inputs.baixar_tudo }}" = "true" ]; then
+            pnpm pipeline -- --refresh
+          else
+            pnpm pipeline
+          fi
+
+      - name: Salvar cache dos downloads
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw
+          key: dados-camara-${{ github.run_id }}
+
+      # Só publica se o site continuar buildando e os testes passarem com os dados novos.
+      - name: Conferir o site com os dados novos
+        run: |
+          pnpm --filter @extrapolar/web test
+          pnpm --filter @extrapolar/web build
+
+      - name: Commitar os dados
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated
+          if git diff --cached --quiet; then
+            echo "Nada mudou em data/generated."
+            echo "mudou=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Atualiza dados da Câmara ($(TZ=America/Sao_Paulo date +%d/%m/%Y))"
+            git push
+            echo "mudou=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Disparar deploy na Vercel (opcional)
+        if: inputs.forcar_deploy && steps.commit.outputs.mudou != 'true'
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "::warning::Secret VERCEL_DEPLOY_HOOK_URL não configurado; deploy não disparado."
+          else
+            curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL" > /dev/null
+            echo "Deploy disparado."
+          fi

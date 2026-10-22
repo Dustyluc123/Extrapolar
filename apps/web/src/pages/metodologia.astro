@@ -1,0 +1,32 @@
+---
+// Metodologia: gerada a partir de docs/METODOLOGIA.md, a mesma fonte usada pela documentação.
+import { getEntry, render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const entry = await getEntry("docs", "metodologia");
+if (!entry) throw new Error("docs/METODOLOGIA.md não encontrado.");
+const { Content, headings } = await render(entry);
+const sections = headings.filter((heading) => heading.depth === 2);
+---
+
+<BaseLayout title={entry.data.title} description={entry.data.description} current="metodologia">
+  <div class="grid gap-10 lg:grid-cols-[1fr_16rem]">
+    <article class="article min-w-0">
+      <Content />
+    </article>
+    <aside class="hidden lg:block" aria-label="Seções da metodologia">
+      <nav class="sticky top-6 border-l border-rule pl-4">
+        <p class="kicker m-0">Nesta página</p>
+        <ul class="mt-2 list-none space-y-2 p-0 font-sans text-sm">
+          {sections.map((heading) => (
+            <li>
+              <a href={`#${heading.slug}`} class="no-underline hover:underline">
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+  </div>
+</BaseLayout>

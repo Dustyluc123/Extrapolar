@@ -1,0 +1,64 @@
+---
+// Sobre o projeto: o que é, princípios e de onde vêm os dados.
+import { CAMARA_PORTAL_URL } from "@extrapolar/shared";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Sobre"
+  description="O que é o Extrapolar, como ele funciona e os princípios que seguimos."
+  current="sobre"
+>
+  <article class="article">
+    <h1>Sobre o Extrapolar</h1>
+    <p>
+      O Extrapolar mostra, de forma simples, o que os deputados federais estão fazendo na Câmara. É
+      feito para quem <span class="marker">não acompanha política</span> e quer entender em poucos
+      minutos.
+    </p>
+
+    <h2>Como funciona</h2>
+    <p>
+      Todo dia, um programa baixa os dados abertos publicados pela própria Câmara dos Deputados,
+      confere se estão no formato esperado e calcula os números que aparecem aqui. Se algo vier
+      diferente, a atualização para e o site continua mostrando a última versão conferida.
+    </p>
+
+    <h2>O que seguimos</h2>
+    <ul>
+      <li>
+        <strong>Fatos, não julgamentos.</strong> Mostramos o dado e o contexto. Quem tira conclusões
+        é você.
+      </li>
+      <li>
+        <strong>Sem ranking.</strong> Os deputados aparecem em ordem alfabética. Nenhum indicador
+        sozinho resume um mandato.
+      </li>
+      <li>
+        <strong>Todo número tem fonte.</strong> Cada indicador mostra de onde veio, quando foi
+        atualizado e como foi calculado.
+      </li>
+      <li>
+        <strong>Nada inventado.</strong> Se um dado não existe na fonte oficial, ele aparece como
+        "sem dado", nunca como zero.
+      </li>
+      <li>
+        <strong>Limites às claras.</strong> Cada indicador explica também o que ele não mede.
+      </li>
+    </ul>
+
+    <h2>De onde vêm os dados</h2>
+    <p>
+      De <a href={CAMARA_PORTAL_URL}>Dados Abertos da Câmara dos Deputados</a>: a lista de deputados
+      em exercício, o histórico de cada mandato e o registro de cada votação nominal no plenário. As
+      fotos são as oficiais da Câmara. Os detalhes estão na <a href="/metodologia">metodologia</a>.
+    </p>
+
+    <h2>Encontrou um erro?</h2>
+    <p>
+      Os números seguem exatamente o que a Câmara publica. Se algo parecer errado, confira a
+      <a href="/metodologia">metodologia</a> e a página oficial do deputado no site da Câmara.
+      <!-- TODO (Lucas): definir um canal de contato (e-mail ou formulário) e colocar aqui. -->
+    </p>
+  </article>
+</BaseLayout>

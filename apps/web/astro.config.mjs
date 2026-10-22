@@ -7,6 +7,8 @@ export default defineConfig({
   // Endereço público do site, usado em links absolutos. TODO (Lucas): definir SITE_URL na Vercel.
   site: process.env.SITE_URL || undefined,
   trailingSlash: "ignore",
+  // Sem realce de sintaxe: os blocos de código da metodologia usam as cores do site.
+  markdown: { syntaxHighlight: false },
   vite: {
     plugins: [tailwindcss()],
   },

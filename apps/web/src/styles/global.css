@@ -152,3 +152,79 @@
     }
   }
 }
+
+@layer components {
+  /* Texto longo renderizado de Markdown (metodologia), com cara de matéria de jornal. */
+  .article {
+    max-width: 42rem;
+    font-size: 1.125rem;
+    line-height: 1.65;
+  }
+  .article > :first-child {
+    margin-top: 0;
+  }
+  .article h1 {
+    font-size: clamp(2.5rem, 7vw, 4.25rem);
+    font-weight: 780;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem;
+  }
+  .article h2 {
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
+    font-weight: 700;
+    margin: 2.75rem 0 0.75rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--color-ink);
+  }
+  .article h3 {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 2rem 0 0.5rem;
+    color: var(--color-ink-soft);
+  }
+  .article p,
+  .article ul,
+  .article ol {
+    margin: 0.85rem 0;
+  }
+  .article ul,
+  .article ol {
+    padding-left: 1.25rem;
+  }
+  .article li + li {
+    margin-top: 0.35rem;
+  }
+  .article li::marker {
+    color: var(--color-accent-ink);
+  }
+  .article strong {
+    font-weight: 650;
+  }
+  .article code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85em;
+    background: var(--color-card);
+    border-radius: 0.25rem;
+    padding: 0.1em 0.3em;
+    overflow-wrap: anywhere;
+  }
+  .article pre {
+    background: var(--color-card);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-card);
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.95rem;
+  }
+  .article pre code {
+    background: none;
+    padding: 0;
+  }
+  .article :target,
+  .article [id]:target + h2 {
+    scroll-margin-top: 1rem;
+  }
+}
