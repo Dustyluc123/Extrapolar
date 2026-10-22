@@ -1,0 +1,77 @@
+---
+// Cabeçalho no estilo "masthead" de jornal: nome do site, data da edição e navegação.
+// A data da edição é a da última atualização dos dados, não a do build.
+import { PROJECT_NAME } from "@extrapolar/shared";
+import { formatEditionDate } from "../../lib/format";
+import Rule from "../ui/Rule.astro";
+import EditionToggle from "./EditionToggle.astro";
+
+interface Props {
+  editionDateTime: string;
+  legislatureId: number;
+  current?: "deputados" | "metodologia" | "sobre";
+}
+const { editionDateTime, legislatureId, current } = Astro.props;
+
+const links = [
+  { href: "/", label: "Deputados", id: "deputados" },
+  { href: "/metodologia", label: "Metodologia", id: "metodologia" },
+  { href: "/sobre", label: "Sobre", id: "sobre" },
+] as const;
+---
+
+<header class="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
+  <div class="flex items-center justify-between gap-3">
+    <p class="kicker m-0">
+      <span class="hidden sm:inline">Câmara dos Deputados · </span>
+      {legislatureId}ª legislatura
+    </p>
+    <EditionToggle />
+  </div>
+
+  <Rule class="mt-3" />
+
+  <a
+    href="/"
+    class="block py-3 text-center no-underline sm:py-5"
+    aria-label={`${PROJECT_NAME}, página inicial`}
+  >
+    <span
+      class="block font-display text-[3.25rem] leading-[0.9] font-[860] tracking-[-0.035em] text-ink sm:text-8xl lg:text-[8.5rem]"
+      style="font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 1;"
+    >
+      {PROJECT_NAME}
+    </span>
+    <span class="caption mt-3 block text-base not-italic sm:mt-6 sm:text-lg lg:mt-8">
+      <em>O que os deputados federais estão fazendo, em números e fatos.</em>
+    </span>
+  </a>
+
+  <Rule variant="double" />
+
+  <div class="flex flex-col items-center gap-2 py-2 text-center sm:flex-row sm:justify-between sm:text-left">
+    <p class="m-0 font-serif text-sm italic text-ink-soft">
+      <time datetime={editionDateTime.slice(0, 10)}>{formatEditionDate(editionDateTime)}</time>
+    </p>
+    <nav aria-label="Principal">
+      <ul class="m-0 flex list-none gap-5 p-0">
+        {links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              aria-current={current === link.id ? "page" : undefined}
+              class:list={[
+                "kicker no-underline transition-colors duration-150 hover:text-ink",
+                current === link.id && "text-ink! marker",
+              ]}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+
+  <Rule />
+</header>

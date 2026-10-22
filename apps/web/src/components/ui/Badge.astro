@@ -1,0 +1,17 @@
+---
+// Selo arredondado para partido e UF. Sempre neutro: tinta sobre papel, nunca cor de partido.
+interface Props {
+  label: string;
+  /** Texto completo para leitores de tela (ex.: "Partido: PT"). */
+  title?: string;
+}
+const { label, title } = Astro.props;
+---
+
+<span
+  class="inline-flex items-center rounded-full border border-ink/70 px-2.5 py-0.5 font-sans text-[0.72rem] leading-5 font-semibold tracking-[0.08em] text-ink uppercase"
+  title={title}
+>
+  {title ? <span class="sr-only">{title}</span> : null}
+  <span aria-hidden={title ? "true" : undefined}>{label}</span>
+</span>

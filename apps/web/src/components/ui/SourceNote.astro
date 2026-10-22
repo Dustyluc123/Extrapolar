@@ -1,0 +1,24 @@
+---
+// Linha de verificação que acompanha todo número: fonte, data de atualização e metodologia.
+import { SOURCE_NAME, CAMARA_PORTAL_URL } from "@extrapolar/shared";
+import { formatDateTime } from "../../lib/format";
+
+interface Props {
+  updatedAt: string;
+  methodologyAnchor: string;
+}
+const { updatedAt, methodologyAnchor } = Astro.props;
+---
+
+<p class="font-sans text-xs leading-relaxed text-ink-soft">
+  Fonte:{" "}
+  <a href={CAMARA_PORTAL_URL} class="underline">
+    {SOURCE_NAME}
+  </a>
+  <span aria-hidden="true"> · </span>
+  Atualizado em {formatDateTime(updatedAt)}
+  <span aria-hidden="true"> · </span>
+  <a href={`/metodologia#${methodologyAnchor}`} class="font-semibold text-accent-ink underline">
+    Como calculamos
+  </a>
+</p>

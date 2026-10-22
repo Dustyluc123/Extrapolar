@@ -27,15 +27,15 @@ Definidos em `apps/web/src/styles/tokens.css` como variáveis CSS e expostos ao 
 
 ### Cores — edição noturna (escuro)
 
-| Token                                   | Valor                         | Contraste                       |
-| --------------------------------------- | ----------------------------- | ------------------------------- |
-| `--color-paper`                         | `#161512`                     | —                               |
-| `--color-card`                          | `#22201B`                     | —                               |
-| `--color-ink`                           | `#EEE7D7`                     | 14,8:1                          |
-| `--color-ink-soft`                      | `#B5AD9B`                     | 8,2:1 no papel; 7,3:1 no cartão |
-| `--color-rule`                          | `#6E6759`                     | 3,3:1                           |
-| `--color-accent` / `--color-accent-ink` | `#FF6B4F`                     | 6,5:1 no papel; 5,8:1 no cartão |
-| `--color-marker`                        | `#FF9A85` (com texto `paper`) | 8,9:1                           |
+| Token                                   | Valor                             | Contraste                                   |
+| --------------------------------------- | --------------------------------- | ------------------------------------------- |
+| `--color-paper`                         | `#161512`                         | —                                           |
+| `--color-card`                          | `#22201B`                         | —                                           |
+| `--color-ink`                           | `#EEE7D7`                         | 14,8:1                                      |
+| `--color-ink-soft`                      | `#B5AD9B`                         | 8,2:1 no papel; 7,3:1 no cartão             |
+| `--color-rule`                          | `#6E6759`                         | 3,3:1                                       |
+| `--color-accent` / `--color-accent-ink` | `#FF6B4F`                         | 6,5:1 no papel; 5,8:1 no cartão             |
+| `--color-marker`                        | `#9A3A28` (com texto `ink` claro) | 5,7:1 com o texto; sem texto, só decorativo |
 
 Contrastes calculados com a fórmula do WCAG 2.x. Qualquer cor nova precisa passar AA (4,5:1 para texto normal, 3:1 para texto grande e elementos de interface).
 

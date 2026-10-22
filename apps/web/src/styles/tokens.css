@@ -1,0 +1,63 @@
+/*
+ * Tokens de design do Extrapolar. Valores e contrastes documentados em docs/DESIGN.md.
+ * "Edição do dia" (claro) é o padrão; "edição noturna" (escuro) vem do sistema
+ * ou da escolha no cabeçalho (data-edition="noite" | "dia" no <html>).
+ */
+
+@theme {
+  --color-paper: #f4efe3;
+  --color-card: #ece5d4;
+  --color-ink: #1b1a17;
+  --color-ink-soft: #57524a;
+  --color-rule: #8c8473;
+  --color-accent: #e4432a;
+  --color-accent-ink: #b5321c;
+  --color-accent-strong: #c4361e;
+  --color-on-accent: #f4efe3;
+  --color-marker: #ffb8a6;
+  --color-on-marker: #1b1a17;
+
+  --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 0.5rem;
+  --ease-ink: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@layer base {
+  /* Edição noturna escolhida no cabeçalho */
+  :root[data-edition="noite"] {
+    --color-paper: #161512;
+    --color-card: #22201b;
+    --color-ink: #eee7d7;
+    --color-ink-soft: #b5ad9b;
+    --color-rule: #6e6759;
+    --color-accent: #ff6b4f;
+    --color-accent-ink: #ff6b4f;
+    --color-accent-strong: #ff6b4f;
+    --color-on-accent: #161512;
+    --color-marker: #9a3a28;
+    --color-on-marker: #eee7d7;
+    color-scheme: dark;
+  }
+
+  /* Edição noturna pelo sistema, quando o leitor não escolheu outra */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-edition="dia"]) {
+      --color-paper: #161512;
+      --color-card: #22201b;
+      --color-ink: #eee7d7;
+      --color-ink-soft: #b5ad9b;
+      --color-rule: #6e6759;
+      --color-accent: #ff6b4f;
+      --color-accent-ink: #ff6b4f;
+      --color-accent-strong: #ff6b4f;
+      --color-on-accent: #161512;
+      --color-marker: #9a3a28;
+      --color-on-marker: #eee7d7;
+      color-scheme: dark;
+    }
+  }
+}

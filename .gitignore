@@ -24,3 +24,7 @@ coverage/
 .DS_Store
 Thumbs.db
 *.log
+
+# capturas de tela: perfil temporário do Chrome
+.chrome-profile/
+docs/screenshots/

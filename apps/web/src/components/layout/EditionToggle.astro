@@ -1,0 +1,54 @@
+---
+// Alterna entre "edição do dia" (claro) e "edição noturna" (escuro).
+// A escolha fica no localStorage (extrapolar:edicao); sem escolha, segue o sistema.
+---
+
+<button
+  type="button"
+  data-edition-toggle
+  class="group inline-flex shrink-0 items-center whitespace-nowrap gap-2 rounded-full border border-ink/60 px-3 py-1 font-sans text-[0.7rem] font-semibold tracking-[0.1em] text-ink uppercase transition-colors duration-200 hover:bg-ink hover:text-paper"
+  aria-pressed="false"
+>
+  <span aria-hidden="true" class="inline-block size-2.5 rounded-full bg-accent"></span>
+  <span data-edition-label>Edição noturna</span>
+</button>
+
+<script>
+  const STORAGE_KEY = "extrapolar:edicao";
+  const root = document.documentElement;
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+  function isNight(): boolean {
+    const chosen = root.dataset.edition;
+    if (chosen === "noite") return true;
+    if (chosen === "dia") return false;
+    return media.matches;
+  }
+
+  function render(): void {
+    const night = isNight();
+    for (const button of document.querySelectorAll<HTMLButtonElement>("[data-edition-toggle]")) {
+      button.setAttribute("aria-pressed", String(night));
+      const label = button.querySelector("[data-edition-label]");
+      if (label) label.textContent = night ? "Edição do dia" : "Edição noturna";
+      button.title = night
+        ? "Mudar para a edição do dia (claro)"
+        : "Mudar para a edição noturna (escuro)";
+    }
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-edition-toggle]")) {
+    button.addEventListener("click", () => {
+      const next = isNight() ? "dia" : "noite";
+      root.dataset.edition = next;
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // Sem localStorage (modo privado): a escolha vale só nesta página.
+      }
+      render();
+    });
+  }
+  media.addEventListener("change", render);
+  render();
+</script>

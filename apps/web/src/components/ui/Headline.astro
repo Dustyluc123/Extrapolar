@@ -1,0 +1,19 @@
+---
+// Manchete em Fraunces. `size` controla a escala (mobile → desktop).
+interface Props {
+  as?: "h1" | "h2" | "h3";
+  size?: "xl" | "lg" | "md";
+  id?: string;
+  class?: string;
+}
+const { as: Tag = "h2", size = "lg", id, class: className = "" } = Astro.props;
+const sizes = {
+  xl: "text-[2.5rem] sm:text-6xl lg:text-7xl font-[750] tracking-[-0.02em]",
+  lg: "text-2xl sm:text-[2rem] font-[680] tracking-[-0.01em]",
+  md: "text-xl sm:text-2xl font-[650]",
+};
+---
+
+<Tag id={id} class:list={["font-display text-ink", sizes[size], className]}>
+  <slot />
+</Tag>

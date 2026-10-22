@@ -1,0 +1,15 @@
+---
+// Régua de jornal: simples (fina), dupla (abaixo do cabeçalho) ou grossa (abre seção).
+interface Props {
+  variant?: "single" | "double" | "thick";
+  class?: string;
+}
+const { variant = "single", class: className = "" } = Astro.props;
+const styles = {
+  single: "border-t border-rule",
+  double: "border-t-[3px] border-double border-ink",
+  thick: "border-t-2 border-ink",
+};
+---
+
+<hr class:list={[styles[variant], "m-0 border-x-0 border-b-0", className]} />

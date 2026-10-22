@@ -1,0 +1,67 @@
+---
+// Layout de todas as páginas: cabeçalho de jornal, conteúdo e rodapé.
+import "../styles/global.css";
+import { PROJECT_NAME } from "@extrapolar/shared";
+import Footer from "../components/layout/Footer.astro";
+import Masthead from "../components/layout/Masthead.astro";
+import { repository } from "../lib/data";
+
+interface Props {
+  title?: string;
+  description?: string;
+  current?: "deputados" | "metodologia" | "sobre";
+}
+const {
+  title,
+  description = "O que os deputados federais estão fazendo na Câmara, em números e fatos, com fonte oficial e sem julgamento.",
+  current,
+} = Astro.props;
+const meta = await repository.getMeta();
+const pageTitle = title
+  ? `${title} · ${PROJECT_NAME}`
+  : `${PROJECT_NAME} · Câmara dos Deputados em números`;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4efe3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161512" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="pt_BR" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // Aplica a edição escolhida antes da primeira pintura, para a página não piscar.
+      try {
+        const edicao = localStorage.getItem("extrapolar:edicao");
+        if (edicao === "dia" || edicao === "noite")
+          document.documentElement.dataset.edition = edicao;
+      } catch {
+        // Sem localStorage: segue a preferência do sistema.
+      }
+    </script>
+  </head>
+  <body class="flex flex-col">
+    <a
+      href="#conteudo"
+      class="sr-only z-50 rounded bg-ink px-3 py-2 font-sans text-sm text-paper focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+    >
+      Pular para o conteúdo
+    </a>
+    <Masthead
+      editionDateTime={meta.referenceDateTime}
+      legislatureId={meta.legislature.id}
+      current={current}
+    />
+    <main id="conteudo" class="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 sm:px-6" tabindex="-1">
+      <slot />
+    </main>
+    <Footer updatedAt={meta.referenceDateTime} />
+  </body>
+</html>

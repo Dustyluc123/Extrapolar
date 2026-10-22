@@ -1,0 +1,40 @@
+---
+// Rodapé: de onde vêm os dados e o compromisso de neutralidade.
+import { CAMARA_PORTAL_URL, PROJECT_NAME } from "@extrapolar/shared";
+import { formatDateTime } from "../../lib/format";
+import Rule from "../ui/Rule.astro";
+
+interface Props {
+  updatedAt: string;
+}
+const { updatedAt } = Astro.props;
+---
+
+<footer class="mx-auto mt-16 w-full max-w-6xl px-4 pb-10 sm:px-6">
+  <Rule variant="thick" />
+  <div class="grid gap-6 pt-5 sm:grid-cols-3">
+    <div>
+      <p class="font-display m-0 text-2xl font-[800] tracking-tight">{PROJECT_NAME}</p>
+      <p class="caption mt-1">Mostramos o dado e o contexto. Quem tira conclusões é você.</p>
+    </div>
+    <div class="font-sans text-sm text-ink-soft">
+      <p class="kicker m-0 mb-1">Dados</p>
+      <p class="m-0">
+        Todos os números vêm dos{" "}
+        <a href={CAMARA_PORTAL_URL}>Dados Abertos da Câmara dos Deputados</a>. Última atualização:{" "}
+        {formatDateTime(updatedAt)}.
+      </p>
+    </div>
+    <div class="font-sans text-sm text-ink-soft">
+      <p class="kicker m-0 mb-1">Saiba mais</p>
+      <ul class="m-0 list-none space-y-1 p-0">
+        <li>
+          <a href="/metodologia">Metodologia: como cada número é calculado</a>
+        </li>
+        <li>
+          <a href="/sobre">Sobre o Extrapolar</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</footer>

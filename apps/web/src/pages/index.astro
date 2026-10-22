@@ -1,16 +1,39 @@
 ---
-// Página inicial provisória. A capa de jornal entra na Etapa 7.
-import { PROJECT_NAME } from "@extrapolar/shared";
+// Capa provisória (Etapa 6): mostra a identidade visual com um dado real.
+// A lista de deputados com busca e filtros entra na Etapa 7.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import BigNumber from "../components/ui/BigNumber.astro";
+import Headline from "../components/ui/Headline.astro";
+import Rule from "../components/ui/Rule.astro";
+import { repository } from "../lib/data";
+import { formatInteger, formatLongDate } from "../lib/format";
+
+const summary = await repository.getParticipationSummary();
+const deputies = await repository.listDeputies();
 ---
 
-<html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{PROJECT_NAME}</title>
-  </head>
-  <body>
-    <h1>{PROJECT_NAME}</h1>
-    <p>O que os deputados federais estão fazendo na Câmara. Em construção.</p>
-  </body>
-</html>
+<BaseLayout current="deputados">
+  <section class="grid gap-8 lg:grid-cols-[2fr_1fr] lg:gap-0">
+    <div class="lg:border-r lg:border-rule lg:pr-8">
+      <p class="kicker m-0">Câmara dos Deputados</p>
+      <Headline as="h1" size="xl" class="mt-2">
+        {formatInteger(deputies.length)} deputados em exercício.{" "}
+        <span class="marker">Veja o que cada um</span> fez no plenário.
+      </Headline>
+      <p class="mt-4 max-w-prose text-lg">
+        Números oficiais, explicados em poucas linhas. Sem ranking e sem adjetivo: você olha o dado
+        e tira suas conclusões.
+      </p>
+    </div>
+    <div class="lg:pl-8">
+      <BigNumber
+        value={formatInteger(summary.nominalPlenaryVotes)}
+        label="Votações nominais no plenário"
+        caption={`Desde o início da legislatura, em 1º de fevereiro de 2023, até ${summary.lastVoteDate ? formatLongDate(summary.lastVoteDate) : "hoje"}.`}
+        updatedAt={summary.referenceDateTime}
+        methodologyAnchor="participacao"
+      />
+    </div>
+  </section>
+  <Rule class="my-8" />
+</BaseLayout>
