@@ -75,6 +75,8 @@ export const ballotBreakdownSchema = z.object({
   abstention: z.number().int().nonnegative(),
   obstruction: z.number().int().nonnegative(),
   article17: z.number().int().nonnegative(),
+  /** Voto registrado em votação secreta (conteúdo sigiloso). */
+  secret: z.number().int().nonnegative(),
 });
 export type BallotBreakdown = z.infer<typeof ballotBreakdownSchema>;
 
@@ -102,7 +104,8 @@ export const participationSchema = z
         p.breakdown.no +
         p.breakdown.abstention +
         p.breakdown.obstruction +
-        p.breakdown.article17 ===
+        p.breakdown.article17 +
+        p.breakdown.secret ===
       p.ballotsCast,
     { message: "a soma dos tipos de voto deve ser igual a ballotsCast", path: ["breakdown"] },
   );

@@ -5,6 +5,7 @@ import {
   PROJECT_NAME,
   datasetMetaSchema,
   deputiesFileSchema,
+  participationFileSchema,
   getLegislature,
   type DatasetMeta,
   type DeputiesFile,
@@ -49,7 +50,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
   );
   const fetched = await fetchSources(context);
   const data = normalize(context, fetched);
-  compute(context, data);
+  const metrics = compute(context, data);
 
   const quality = context.quality.list();
   for (const issue of quality) log.warn(`${issue.message} (${issue.count}x)`);
@@ -70,6 +71,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
 
   await publish(GENERATED_DIR, [
     { name: "deputados.json", schema: deputiesFileSchema, data: deputiesFile },
+    { name: "participacao.json", schema: participationFileSchema, data: metrics.participation },
     { name: "meta.json", schema: datasetMetaSchema, data: meta },
   ]);
   log.step("Pronto");

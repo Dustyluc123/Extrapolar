@@ -61,14 +61,26 @@ export const camaraVoteSchema = z.object({
   votosNao: z.number().int().nonnegative(),
   votosOutros: z.number().int().nonnegative(),
   descricao: z.string(),
+  /** Usado para reconhecer votação secreta ("Votação secreta em turno único."). */
+  ultimaAberturaVotacao: z.object({ descricao: z.string() }).optional(),
 });
 export type CamaraVote = z.infer<typeof camaraVoteSchema>;
 export const camaraVotesFileSchema = z.object({ dados: z.array(camaraVoteSchema) });
 
 // ---- Arquivo: votacoesVotos-{ano}.json ----
 
-/** Valores de voto encontrados nos arquivos. Um valor novo faz o pipeline falhar (de propósito). */
-export const CAMARA_BALLOT_VALUES = ["Sim", "Não", "Abstenção", "Obstrução", "Artigo 17"] as const;
+/**
+ * Valores de voto encontrados nos arquivos. Um valor novo faz o pipeline falhar (de propósito).
+ * "" aparece em votações secretas: o voto foi registrado, mas o conteúdo é sigiloso (ADR 0008).
+ */
+export const CAMARA_BALLOT_VALUES = [
+  "Sim",
+  "Não",
+  "Abstenção",
+  "Obstrução",
+  "Artigo 17",
+  "",
+] as const;
 
 export const camaraBallotSchema = z.object({
   idVotacao: z.string().min(1),

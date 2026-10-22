@@ -41,8 +41,8 @@ participação = votações em que o deputado registrou voto
 ```
 
 1. **Votações elegíveis:** todas as votações nominais de plenário da legislatura que aconteceram (data e hora do registro da votação) dentro de um período em que o deputado estava em exercício.
-2. **Períodos em exercício:** montados a partir do histórico oficial de cada deputado (`/deputados/{id}/historico`). Um período começa num evento com situação "Exercício" e termina no próximo evento com outra situação (por exemplo "Licença", "Suplência", "Fim de Mandato"). Eventos sem situação (troca de nome ou de partido) não mudam o período. Se um período ainda está aberto, ele vai até a data da atualização.
-3. **Votou:** conta como participação **qualquer voto registrado**: "Sim", "Não", "Abstenção", "Obstrução" e "Artigo 17". A ficha mostra separadamente quantos foram "Obstrução" e "Artigo 17".
+2. **Períodos em exercício:** montados a partir do histórico oficial de cada deputado (`/deputados/{id}/historico`). Um período começa num evento com situação "Exercício" e termina no próximo evento com outra situação (por exemplo "Licença", "Suplência", "Fim de Mandato"). Eventos sem situação (troca de nome ou de partido) não mudam o período. Eventos datados antes do início da legislatura são ignorados, mesmo que a Câmara os marque com a legislatura atual (acontece em alguns históricos). Se um período ainda está aberto, ele vai até a data da atualização.
+3. **Votou:** conta como participação **qualquer voto registrado**: "Sim", "Não", "Abstenção", "Obstrução", "Artigo 17" e voto secreto. A ficha mostra separadamente quantos foram "Obstrução", "Artigo 17" e secretos.
 4. **Voto fora do período:** se o deputado tem voto registrado numa votação que caiu fora dos períodos montados pelo histórico, essa votação também entra no total (se ele votou, estava em exercício). Isso costuma acontecer em minutos de diferença entre o horário da posse e o horário da votação.
 5. **Sem votações elegíveis:** se não houve nenhuma votação nominal enquanto o deputado estava em exercício (por exemplo, um suplente que assumiu ontem), a participação aparece como "sem dado", não como 0%.
 
@@ -51,6 +51,7 @@ participação = votações em que o deputado registrou voto
 - **Sim / Não:** a favor ou contra a proposta votada.
 - **Abstenção:** o deputado registrou presença na votação, mas não votou nem a favor nem contra.
 - **Obstrução:** o deputado registrou que está em obstrução, um instrumento usado para tentar impedir que a votação alcance o número mínimo de presentes. É uma escolha política registrada, por isso conta como participação.
+- **Voto secreto:** em votações secretas (por exemplo, eleição de membros de conselhos ou aprovação de indicações a tribunais), a Câmara registra que o deputado votou, mas não o conteúdo do voto. Conta como participação.
 - **Artigo 17:** registrado para quem estava presidindo a sessão naquele momento. Nos dados da Câmara, aparece na maior parte das vezes para o Presidente da Câmara e, nas demais, para deputados que o substituíam na presidência. Quem preside normalmente não vota, então conta como participação. <!-- TODO: conferir na fonte oficial o dispositivo do Regimento Interno: https://www2.camara.leg.br/atividade-legislativa/legislacao/regimento-interno-da-camara-dos-deputados -->
 
 ### O que este número **não** mede

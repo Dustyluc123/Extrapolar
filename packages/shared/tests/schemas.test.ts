@@ -116,7 +116,7 @@ describe("esquemas de saída", () => {
           eligibleVotes: 10,
           ballotsCast: 11,
           rate: 1.1,
-          breakdown: { yes: 11, no: 0, abstention: 0, obstruction: 0, article17: 0 },
+          breakdown: { yes: 11, no: 0, abstention: 0, obstruction: 0, article17: 0, secret: 0 },
           ballotsOutsideServicePeriods: 0,
           servicePeriods: [{ start: "2023-02-01T12:05:00", end: null }],
         },

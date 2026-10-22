@@ -22,7 +22,9 @@ Formato conferido em 22/10/2026 (amostra de 2023):
 - `votacoes-{ano}.json`: `{ "dados": [ { "id": "2351332-7", "data": "2023-03-14", "dataHoraRegistro": "2023-03-14T19:20:56", "idOrgao": 180, "siglaOrgao": "PLEN", "votosSim": 366, "votosNao": 41, "votosOutros": 2, "descricao": "…", … } ] }`. O arquivo de um ano inclui as votações de janeiro, que pertencem à legislatura anterior quando o ano é de troca de legislatura.
 - `votacoesVotos-{ano}.json`: `{ "dados": [ { "idVotacao": "1197773-90", "dataHoraVoto": "2023-08-09T19:27:16", "voto": "Sim", "deputado_": { "id": "220714", "nome": "…", "siglaPartido": "…", "siglaUf": "AM", "idLegislatura": "57", … } } ] }`.
   - Atenção: `deputado_.id` e `deputado_.idLegislatura` vêm como **texto**.
-  - Valores de `voto` encontrados: `Sim`, `Não`, `Abstenção`, `Obstrução`, `Artigo 17`.
+  - Valores de `voto` encontrados: `Sim`, `Não`, `Abstenção`, `Obstrução`, `Artigo 17` e `""` (vazio). O vazio aparece só em votações secretas (em 2025, votação `2576389-4`, eleição para o CNJ; em 2026, `2645346-18`, indicação ao TCU), com todos os votos vazios e o total igual à contagem oficial. Ver ADR 0008.
+  - Votação secreta é reconhecida por `ultimaAberturaVotacao.descricao` ("Votação secreta em turno único.").
+  - Conferência feita em 22/10/2026: nas 1.128 votações nominais de plenário da 57ª legislatura, o número de votos individuais no arquivo é igual a `votosSim + votosNao + votosOutros` do arquivo de votações.
   - Só traz votações **nominais** (de plenário e de comissões). Em 2023: 447 votações com votos individuais, 300 delas de plenário (de 1.090 votações de plenário no total; as demais são simbólicas).
 - Horários sem fuso: são horário de Brasília.
 
@@ -38,6 +40,7 @@ Formato conferido em 22/10/2026:
 - `/deputados`: `{ "dados": [ { "id": 204379, "nome": "…", "siglaPartido": "MDB", "siglaUf": "AP", "idLegislatura": 57, "urlFoto": "https://www.camara.leg.br/internet/deputado/bandep/204379.jpg", "email": "…" | null } ], "links": [ … ] }`. Com `idLegislatura=57`, a lista traz todos que tiveram mandato na legislatura (~882), inclusive quem já saiu.
 - `/deputados/{id}/historico`: `{ "dados": [ { "dataHora": "2023-09-13T14:53", "situacao": "Licença", "condicaoEleitoral": "Titular", "descricaoStatus": "Saída - Afastamento sem prazo determinado - Ministro de Estado", "idLegislatura": 57, "siglaPartido": "…", … } ] }`. A lista **não vem ordenada** e traz outras legislaturas.
   - Valores de `situacao` encontrados: `Exercício`, `Licença`, `CONVOCADO`, `SUPLENCIA`, `SUSPENSO`, `FIM_MANDATO`, `null`. A tabela oficial `/referencias/situacoesDeputado` lista: Afastado, Convocado, Exercício, Fim de Mandato, Licença, Suplência, Suspenso, Vacância. O histórico usa grafias diferentes da tabela (caixa alta, sem acento), então o pipeline normaliza antes de comparar.
+  - Alguns históricos trazem eventos marcados com a 57ª legislatura, mas datados antes de 01/02/2023 (8 casos em 22/10/2026; ex.: uma troca de partido de 31/03/2022). O pipeline ignora esses eventos e registra o número em `meta.json`.
   - `CONVOCADO` é o passo anterior à posse do suplente (ainda não está em exercício). `SUPLENCIA` é o suplente voltando à reserva quando o titular reassume.
   - Valores de `condicaoEleitoral` encontrados: `Titular`, `Suplente`, `EFETIVADO`, `null`.
 

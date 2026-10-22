@@ -9,9 +9,9 @@ O briefing pede participação em votações nominais de plenário na legislatur
 ## Decisão
 
 - **Votação nominal de plenário:** votação com `siglaOrgao = "PLEN"` que tem ao menos um voto individual no arquivo `votacoesVotos-{ano}.json`. (Conferido em 2023: o arquivo de votos só traz votações nominais; as 300 de plenário com votos são exatamente as que têm contagem maior que zero.)
-- **Participou** (decidido pelo Lucas): qualquer voto registrado — Sim, Não, Abstenção, Obstrução e Artigo 17. Obstrução e Artigo 17 aparecem separados na ficha.
+- **Participou** (decidido pelo Lucas): qualquer voto registrado — Sim, Não, Abstenção, Obstrução e Artigo 17 (e voto secreto, ver ADR 0008). Obstrução e Artigo 17 aparecem separados na ficha.
 - **Denominador** (decidido pelo Lucas): só as votações em que o deputado estava em exercício, segundo o histórico oficial (`/deputados/{id}/historico`).
-- **Períodos em exercício:** eventos da legislatura em ordem de `dataHora`; situação "Exercício" abre um período; qualquer outra situação (Licença, Suplência, Convocado, Suspenso, Fim de Mandato…) fecha; situação vazia (troca de nome ou partido) é ignorada. Situações são comparadas sem acento e sem diferença de maiúsculas. Em empate de horário, eventos que fecham vêm antes dos que abrem. Período aberto vai até a data de referência (data da geração), limitada ao fim da legislatura.
+- **Períodos em exercício:** eventos da legislatura (datados a partir do início dela, ver ADR 0009) em ordem de `dataHora`; situação "Exercício" abre um período; qualquer outra situação (Licença, Suplência, Convocado, Suspenso, Fim de Mandato…) fecha; situação vazia (troca de nome ou partido) é ignorada. Situações são comparadas sem acento e sem diferença de maiúsculas. Em empate de horário, eventos que fecham vêm antes dos que abrem. Período aberto vai até a data de referência (data da geração), limitada ao fim da legislatura.
 - **Voto fora do período:** se o deputado votou numa votação fora dos períodos montados, ela entra no denominador e no numerador (se votou, estava em exercício). O pipeline registra quantos casos assim aconteceram.
 - **Sem votações elegíveis:** taxa `null` ("sem dado"), nunca 0%.
 - **Comparação de horários:** todos os horários da Câmara são de Brasília e sem fuso; são comparados como texto ISO (`AAAA-MM-DDTHH:mm:ss`), sem conversão de fuso.

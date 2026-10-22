@@ -1,10 +1,14 @@
-import { camaraHistoryResponseSchema } from "@extrapolar/shared";
+import { camaraHistoryResponseSchema, getLegislature } from "@extrapolar/shared";
 import { describe, expect, it } from "vitest";
-import { buildServicePeriods } from "../src/normalize/service-periods";
+import {
+  buildServicePeriods,
+  countEventsBeforeLegislature,
+} from "../src/normalize/service-periods";
 import history from "./fixtures/historico-178882.json";
 import { event } from "./helpers";
 
 const REF = "2026-10-22T00:00:00";
+const L57 = getLegislature(57);
 
 describe("buildServicePeriods", () => {
   it("titular sem licença tem um período aberto desde a posse", () => {
@@ -14,7 +18,7 @@ describe("buildServicePeriods", () => {
         event("2023-02-01T12:05", "Exercício"),
         event("2024-05-01T10:00", "Exercício", { descricaoStatus: "Alteração de partido" }),
       ],
-      57,
+      L57,
       REF,
     );
     expect(periods).toEqual([{ start: "2023-02-01T12:05:00", end: null }]);
@@ -27,7 +31,7 @@ describe("buildServicePeriods", () => {
         event("2023-09-13T14:53", "Licença"),
         event("2024-12-03T10:11", "Exercício"),
       ],
-      57,
+      L57,
       REF,
     );
     expect(periods).toEqual([
@@ -44,7 +48,7 @@ describe("buildServicePeriods", () => {
         event("2023-02-08T12:30", "CONVOCADO"),
         event("2023-12-06T17:20", "EXERCICIO"),
       ],
-      57,
+      L57,
       REF,
     );
     expect(periods).toEqual([
@@ -60,7 +64,7 @@ describe("buildServicePeriods", () => {
         event("2023-12-06T17:20", "Exercício"),
         event("2023-12-06T17:20", "CONVOCADO"),
       ],
-      57,
+      L57,
       REF,
     );
     expect(periods).toEqual([
@@ -77,19 +81,32 @@ describe("buildServicePeriods", () => {
         event("2023-02-01T12:05", "Exercício"),
         event("2026-11-01T10:00", "Licença"),
       ],
-      57,
+      L57,
       REF,
     );
     expect(periods).toEqual([{ start: "2023-02-01T12:05:00", end: null }]);
   });
 
+  it("ignora evento antigo marcado com a legislatura atual (caso real: troca de partido em 2022)", () => {
+    const events = [
+      event("2022-03-31T00:00", "Exercício", { condicaoEleitoral: "Suplente" }),
+      event("2023-02-01T00:00", null),
+      event("2026-06-26T16:10", "CONVOCADO"),
+      event("2026-06-30T15:25", "Exercício"),
+    ];
+    expect(buildServicePeriods(events, L57, REF)).toEqual([
+      { start: "2026-06-30T15:25:00", end: null },
+    ]);
+    expect(countEventsBeforeLegislature(events, L57)).toBe(1);
+  });
+
   it("sem evento de exercício não há período", () => {
-    expect(buildServicePeriods([event("2023-02-03T09:34", "CONVOCADO")], 57, REF)).toEqual([]);
+    expect(buildServicePeriods([event("2023-02-03T09:34", "CONVOCADO")], L57, REF)).toEqual([]);
   });
 
   it("monta os períodos de um ministro licenciado (histórico real)", () => {
     const events = camaraHistoryResponseSchema.parse(history).dados;
-    const periods = buildServicePeriods(events, 57, REF);
+    const periods = buildServicePeriods(events, L57, REF);
     expect(periods[0]).toEqual({ start: "2023-02-01T12:05:00", end: "2023-09-13T14:53:00" });
     expect(periods.at(-1)?.end).toBeNull();
     expect(periods.length).toBeGreaterThan(3);

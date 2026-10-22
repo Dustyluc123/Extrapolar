@@ -5,9 +5,10 @@ import {
   type CamaraDeputyListItem,
   type CamaraHistoryEvent,
   type Deputy,
+  type Legislature,
 } from "@extrapolar/shared";
 import type { QualityLog } from "./quality";
-import { buildServicePeriods } from "./service-periods";
+import { buildServicePeriods, countEventsBeforeLegislature } from "./service-periods";
 import { withSeconds } from "../lib/time";
 
 const ELECTORAL_CONDITION_LABELS: Record<string, Deputy["electoralCondition"]> = {
@@ -45,10 +46,11 @@ export function latestElectoralCondition(
 
 export function normalizeDeputies(
   entries: readonly DeputyWithHistory[],
-  legislatureId: number,
+  legislature: Legislature,
   referenceDateTime: string,
   quality: QualityLog,
 ): Deputy[] {
+  const legislatureId = legislature.id;
   const seen = new Set<number>();
   const deputies: Deputy[] = [];
   for (const { item, history } of entries) {
@@ -66,7 +68,15 @@ export function normalizeDeputies(
           "Confira CURRENT_LEGISLATURE_ID em packages/shared/src/legislature.ts.",
       );
     }
-    const periods = buildServicePeriods(history, legislatureId, referenceDateTime);
+    const early = countEventsBeforeLegislature(history, legislature);
+    if (early > 0) {
+      quality.add(
+        "evento-antes-da-legislatura",
+        "Evento do histórico marcado com a legislatura atual, mas datado antes do início dela (ignorado).",
+        early,
+      );
+    }
+    const periods = buildServicePeriods(history, legislature, referenceDateTime);
     const current = periods.at(-1);
     const inServiceSince = current && current.end === null ? current.start : null;
     if (inServiceSince === null) {

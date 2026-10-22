@@ -1,10 +1,11 @@
-import type { CamaraDeputyListItem } from "@extrapolar/shared";
+import { getLegislature, type CamaraDeputyListItem } from "@extrapolar/shared";
 import { describe, expect, it } from "vitest";
 import { latestElectoralCondition, normalizeDeputies } from "../src/normalize/deputies";
 import { QualityLog } from "../src/normalize/quality";
 import { event } from "./helpers";
 
 const REF = "2026-10-22T00:00:00";
+const L57 = getLegislature(57);
 
 function item(id: number, nome: string, extra: Partial<CamaraDeputyListItem> = {}) {
   return {
@@ -28,7 +29,7 @@ describe("normalizeDeputies", () => {
         { item: item(1, "Átila"), history: [event("2023-02-01T12:05", "Exercício")] },
         { item: item(3, "Bruno"), history: [event("2023-02-01T12:05", "Exercício")] },
       ],
-      57,
+      L57,
       REF,
       quality,
     );
@@ -51,7 +52,7 @@ describe("normalizeDeputies", () => {
     const quality = new QualityLog();
     const [deputy] = normalizeDeputies(
       [{ item: item(1, "Ana"), history: [event("2023-02-01T12:05", "CONVOCADO")] }],
-      57,
+      L57,
       REF,
       quality,
     );
@@ -63,7 +64,7 @@ describe("normalizeDeputies", () => {
     expect(() =>
       normalizeDeputies(
         [{ item: item(1, "Ana", { idLegislatura: 58 }), history: [] }],
-        57,
+        L57,
         REF,
         new QualityLog(),
       ),
