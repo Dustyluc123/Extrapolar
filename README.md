@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>O que os deputados federais estão fazendo, em números e fatos.</strong><br />
-  Dados oficiais da Câmara, explicados em poucas linhas, para quem não acompanha política. Sem ranking e sem adjetivo.
+  Dados oficiais da Câmara e da CGU, explicados em poucas linhas, para quem não acompanha política. Sem ranking e sem adjetivo.
 </p>
 
 <p align="center">
@@ -11,7 +11,7 @@
   <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-4-06b6d4?logo=tailwindcss&logoColor=white" />
   <img alt="Zod" src="https://img.shields.io/badge/Zod-4-3e67b1?logo=zod&logoColor=white" />
   <a href="https://github.com/Dustyluc123/Extrapolar/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Dustyluc123/Extrapolar/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Testes" src="https://img.shields.io/badge/testes-72_passando-12a85f" />
+  <img alt="Testes" src="https://img.shields.io/badge/testes-144_passando-12a85f" />
 </p>
 
 <p align="center">
@@ -55,22 +55,29 @@ O site **nunca define um ranking**: a lista de deputados é sempre em ordem alfa
 ## Funcionalidades
 
 - [x] Capa com os **513 deputados em exercício**, busca por nome (ignora acentos) e filtros por estado e partido, com o filtro salvo na URL para compartilhar
-- [x] Ficha de cada deputado (`/deputados/[id]`): partido, estado, situação, condição (titular ou suplente) e link para a página oficial
-- [x] Primeira métrica: **participação em votações nominais de plenário**, com detalhamento por tipo de voto, períodos em exercício e o que o número não mostra
-- [x] Licenciados (por exemplo, ministros) e suplentes só são cobrados pelas votações em que estavam em exercício
-- [x] Página de **metodologia** gerada a partir de [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md), a mesma fonte da documentação
-- [x] Cabeçalho de jornal com a **data da edição** (a da última atualização dos dados)
-- [x] **Edição noturna** (modo escuro) pelo sistema ou pelo botão, sem piscar ao carregar
-- [x] Fotos oficiais com tratamento de **meio-tom de jornal só em CSS**, sem alterar o arquivo original
+- [x] Ficha de cada deputado (`/deputados/[id]`) com **resumo em números** (6 números fixos, os mesmos para todos) e **7 cadernos**, como um jornal:
+  - **Plenário:** participação em votações nominais, presença em sessões deliberativas, alinhamento com a orientação do partido e do Governo
+  - **Comissões:** comissões e cargos (linha do tempo), presença nas reuniões em que é titular, audiências e eventos realizados a pedido
+  - **Projetos e leis:** projetos por tipo (autor principal × coautoria), o que aconteceu com eles (taxa de conversão em norma), temas oficiais, pareceres como relator
+  - **Fiscalização:** requerimentos de informação, propostas de fiscalização, convocações de ministros (tipo oficial) e indicações ("sugestões ao governo")
+  - **Voz:** discursos por ano e por fase da sessão (atualização semanal)
+  - **Dinheiro público:** cota parlamentar (por mês, categoria e, onde há tabela oficial, em relação ao teto), equipe do gabinete e emendas individuais (CGU)
+  - **Articulação e perfil:** frentes parlamentares, cargos (Mesa, comissões, lideranças), profissões e ocupações declaradas
+- [x] Toda métrica com número, gráfico, **"Traduzindo:"**, **"O que é isso?"**, **"O que este número não mostra"**, fonte, data e link para a metodologia
+- [x] **"Sem dado" com motivo**, nunca zero no lugar de dado ausente
+- [x] Gráficos gerados no build (SVG e HTML), sem JavaScript, com tabela dos mesmos dados
+- [x] **Glossário** (`/glossario`) com 42 termos, no estilo "Classificados", linkado a partir das fichas
+- [x] Página de **metodologia** gerada a partir de [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md), com o que ficou de fora e por quê
+- [x] Cabeçalho de jornal com a **data da edição**, **edição noturna** (modo escuro), fotos em **meio-tom** só em CSS
+- [x] Valores brutos de todas as métricas guardados (`metricas.json`) para o futuro "monte seu ranking" — sem ranking, média ou comparação no site
 - [x] Acessível: contraste AA nos dois temas, navegação por teclado, textos alternativos, verificação automática com axe-core
 - [x] Pipeline diário no GitHub Actions: baixa, valida com Zod, calcula e publica; se algo vier diferente do esperado, **para sem publicar**
-- [x] Funciona sem JavaScript (a busca é uma melhoria progressiva)
 
 ## Telas
 
-| Capa no celular                                   | Ficha do deputado                                    | Edição noturna                                                     |
-| ------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ |
-| ![Capa no celular](docs/imagens/capa-celular.jpg) | ![Ficha do deputado](docs/imagens/ficha-celular.jpg) | ![Ficha na edição noturna](docs/imagens/ficha-celular-noturna.jpg) |
+| Capa no celular                                   | Resumo em números da ficha                                    | Caderno de dinheiro, edição noturna                                              |
+| ------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| ![Capa no celular](docs/imagens/capa-celular.jpg) | ![Resumo em números da ficha](docs/imagens/ficha-celular.jpg) | ![Caderno de dinheiro na edição noturna](docs/imagens/ficha-celular-noturna.jpg) |
 
 ## Arquitetura
 
@@ -112,7 +119,8 @@ Mais detalhes em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) e nas decisões em
 | Linguagem   | TypeScript (tudo)                        | Tipos e esquemas compartilhados entre pipeline e site                  |
 | Site        | Astro 6, HTML estático                   | Site quase todo conteúdo: rápido, barato, sem JavaScript desnecessário |
 | Estilo      | Tailwind CSS 4, Fraunces e Newsreader    | Tokens próprios de papel e tinta; fontes variáveis servidas pelo site  |
-| Validação   | Zod 4                                    | Tudo que vem da Câmara é validado antes de entrar no projeto           |
+| Validação   | Zod 4                                    | Tudo que vem da Câmara e da CGU é validado antes de entrar no projeto  |
+| Gráficos    | Componentes Astro (SVG e HTML) no build  | Zero JavaScript no navegador; leve no celular                          |
 | Dados       | JSON gerado no Git (sem banco na Fase 0) | Zero infraestrutura; histórico dos dados no próprio repositório        |
 | Agendamento | GitHub Actions (cron diário)             | Atualização dos dados sem servidor ligado                              |
 | Hospedagem  | Vercel                                   | Deploy automático a cada commit de dados                               |
@@ -128,6 +136,8 @@ Extrapolar/
 │       └── src/
 │           ├── pages/              # index, deputados/[id], metodologia, sobre
 │           ├── components/
+│           │   ├── ficha/          # Caderno, bloco de métrica, resumo em números, "sem dado"
+│           │   ├── charts/         # Barras, colunas e linha do tempo (gerados no build)
 │           │   ├── ui/             # Manchete, régua, selo, número-manchete, linha de fonte
 │           │   ├── deputado/       # Linha da lista, filtros, foto em meio-tom, seção de participação
 │           │   └── layout/         # Cabeçalho (masthead), seletor de edição, rodapé
@@ -145,7 +155,7 @@ Extrapolar/
 │           └── lib/                # HTTP com novas tentativas, cache, horário de Brasília
 ├── data/
 │   ├── raw/                        # Cache dos downloads (fora do Git)
-│   └── generated/                  # deputados.json, deputados/{id}.json, metricas.json, meta.json
+│   └── generated/                  # deputados.json, deputados/{id}.json, metricas.json, frentes.json, meta.json
 ├── docs/
 │   ├── ARQUITETURA.md  METODOLOGIA.md  DESIGN.md  FONTES.md  DEPLOY.md
 │   ├── decisoes/                   # ADRs (0001-astro.md ...)
@@ -201,15 +211,16 @@ pnpm pipeline -- --refresh # ignora o cache e baixa tudo de novo (~300 MB, 2 a 3
 
 ## Dados e metodologia
 
-Todos os números vêm dos [Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/). Cada fonte, com link, formato conferido e condições de uso, está em [`docs/FONTES.md`](docs/FONTES.md).
+Quase todos os números vêm dos [Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/) (arquivos estáticos diários e, quando não há arquivo, a API). As emendas vêm do [Portal da Transparência](https://portaldatransparencia.gov.br/emendas) da CGU. Cada fonte, com link, formato conferido e condições de uso, está em [`docs/FONTES.md`](docs/FONTES.md).
 
-**Participação em votações nominais de plenário** = votações em que o deputado registrou voto ÷ votações nominais do plenário que aconteceram enquanto ele estava em exercício.
+Algumas regras que valem para tudo:
 
-- Só votações **nominais** (as únicas em que o voto de cada um fica registrado) e só do **plenário** (onde todos podem votar).
-- Qualquer voto registrado conta: Sim, Não, Abstenção, Obstrução, Artigo 17 (quem preside a sessão) e voto secreto.
-- Os períodos em exercício vêm do histórico oficial de cada mandato.
+- Só a legislatura atual (57ª) e só os períodos em que cada deputado esteve em exercício (licenças e suplências respeitadas).
+- Votações: só as **nominais** do **plenário** (as únicas com voto de cada deputado registrado).
+- Projetos: **autor principal** (primeiro signatário) separado de coautoria e de assinaturas de apoio.
+- Dinheiro: teto da cota só onde há tabela oficial; emendas ligadas ao deputado só por nome exato e único (ou conferência manual).
 
-A explicação completa, com o que o número não mede, está em [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md) e na página `/metodologia` do site.
+A explicação completa de cada métrica, com o que ela não mede e o que ficou de fora, está em [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md) e na página `/metodologia`.
 
 ## Testes e verificações
 
@@ -217,12 +228,12 @@ A explicação completa, com o que o número não mede, está em [`docs/METODOLO
 pnpm test
 ```
 
-| Pacote                 | Testes | O que cobrem                                                                                                                          |
-| ---------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `@extrapolar/shared`   |     16 | Legislatura configurável, esquemas Zod com amostras reais da Câmara e com dados alterados (campo faltando, tipo trocado, voto novo)   |
-| `@extrapolar/metrics`  |     13 | Participação: presença total, ausências, suplente com período parcial, licença, voto fora do período, sem dado (`null`, nunca 0%)     |
-| `@extrapolar/pipeline` |     31 | Novas tentativas e limite de requisições, cache, períodos em exercício (inclusive casos reais), votações secretas, publicação atômica |
-| `@extrapolar/web`      |     12 | Formatação de datas e números em pt-BR e leitura validada dos dados gerados                                                           |
+| Pacote                 | Testes | O que cobrem                                                                                                                                                 |
+| ---------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@extrapolar/shared`   |     18 | Legislatura, esquemas Zod com amostras reais e dados alterados, valor de métrica padronizado ("sem dado" com motivo conhecido)                               |
+| `@extrapolar/metrics`  |     51 | Participação, presença, alinhamento, comissões, projetos (situação, temas, pareceres), fiscalização, discursos, cota e teto, emendas, frentes                |
+| `@extrapolar/pipeline` |     59 | HTTP com novas tentativas, cache (inclusive download interrompido e cache calculado), CSV, períodos em exercício, orientações, sessões, proposições, emendas |
+| `@extrapolar/web`      |     16 | Formatação de datas, porcentagens e reais em pt-BR e leitura validada dos dados gerados                                                                      |
 
 O CI (`.github/workflows/ci.yml`) roda formatação, lint, neutralidade, tipos, testes e build a cada push.
 
@@ -238,7 +249,7 @@ O passo a passo está em [`docs/DEPLOY.md`](docs/DEPLOY.md). Resumo:
 ## Roadmap
 
 - [x] **Fase 0** — Monorepo, documentação, pipeline de deputados, participação em votações nominais, capa, ficha e metodologia
-- [ ] **Fase 1** — Outras métricas (gastos da cota parlamentar, proposições), cada uma com o que mede e o que não mede
+- [x] **Fase 1** — Todas as métricas com dado oficial (7 cadernos), gráficos, glossário e design mais leve
 - [ ] **Fase 2** — "Quem é meu deputado?" por estado e "Monte seu ranking" (o usuário escolhe os pesos; o site nunca define um ranking oficial)
 - [ ] **Fase 3** — "Vote você também": votar nos mesmos projetos que a Câmara e ver quais deputados votam parecido
 - [ ] **Fase 4** — Resumo semanal do que foi votado, gerado com IA a partir do texto oficial e revisado por humano

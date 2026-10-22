@@ -30,16 +30,20 @@ Pacotes internos não têm etapa de build: exportam `src/index.ts` e são consum
 
 `packages/pipeline/src/index.ts` roda as etapas em ordem:
 
-1. **fetch** (`steps/fetch.ts`): baixa as fontes para `data/raw/` (com cache) e valida cada resposta com o esquema Zod de entrada.
-   - `sources/camara-api.ts`: lista de deputados em exercício (`/deputados`) e histórico de cada um (`/deputados/{id}/historico`).
-   - `sources/camara-arquivos.ts`: `votacoes-{ano}.json` e `votacoesVotos-{ano}.json` para cada ano da legislatura.
-2. **normalize** (`steps/normalize.ts`): converte o formato da Câmara para os tipos internos (nomes em inglês, ids numéricos, períodos em exercício).
-3. **compute** (`steps/compute.ts`): chama as funções de `packages/metrics`.
-4. **publish** (`steps/publish.ts`): valida a saída com os esquemas de saída e grava `data/generated/` de forma atômica (pasta temporária + rename). Se qualquer validação falhar, nada é gravado.
+1. **fetch** (`steps/fetch.ts`): baixa as fontes para `data/raw/` (com cache) e valida cada resposta com o esquema Zod de entrada. Arquivos anuais grandes são **reduzidos logo depois de validados**, um ano por vez, para os brutos de todos os anos nunca ficarem juntos na memória.
+   - `sources/camara-api.ts`: deputados em exercício, histórico de cada um, federações (`/blocos`), temas oficiais, discursos (cache semanal, coleta tolerante a erro 500 da API) e a função `splitDateRange`.
+   - `sources/camara-arquivos.ts`: catálogo de arquivos por ano (votações, votos, orientações, eventos, órgãos dos eventos, presenças, requerimentos de eventos, proposições, autores, temas) e arquivos sem ano (órgãos, membros dos órgãos da legislatura).
+   - `sources/dinheiro.ts` + `sources/zipped-csv.ts`: cota parlamentar (`camara.leg.br/cotas/Ano-{ano}.csv.zip`), funcionários e emendas da CGU (zip com CSV em Latin-1).
+   - `sources/articulacao.ts`: frentes, membros das frentes, Mesa, profissões, ocupações e lideranças (API).
+2. **normalize** (`steps/normalize.ts` + `normalize/`): converte para os tipos internos — períodos em exercício, votações e votos, sessões e reuniões, orientações (partido → federação; bloco não), cargos em órgãos, autoria compacta, proposições reduzidas, cota por mês e categoria, ligação autor de emenda → deputado.
+3. **compute** (`steps/compute.ts` + `steps/metrics/<caderno>.ts`): chama as funções puras de `packages/metrics`, monta o detalhe de cada deputado por caderno e o índice `metricas.json` (lista `METRIC_DEFINITIONS`).
+4. **publish** (`steps/publish.ts`): valida a saída com os esquemas de saída e grava `data/generated/` de forma atômica (pasta temporária + rename); remove arquivos de deputados que saíram de exercício. Se qualquer validação falhar, nada é gravado.
+
+Avisos de qualidade dos dados (inconsistências que não impedem a publicação) vão para `meta.json` e para o log.
 
 ### Cache (`data/raw/`)
 
-- Respostas da API e arquivos estáticos ficam em `data/raw/`, com um `.meta.json` ao lado (data do download e `Last-Modified`).
+- Respostas da API e arquivos estáticos (inclusive zips) ficam em `data/raw/`, com um `.meta.json` ao lado (data do download e `Last-Modified`). Discursos e lideranças guardam só o resultado reduzido (`cachedComputed`), com validade própria (discursos: 7 dias).
 - Validade padrão: 20 horas. Arquivos estáticos vencidos são conferidos com `HEAD`: se o `Last-Modified` não mudou, o arquivo em cache é reaproveitado.
 - `--refresh` ignora o cache.
 - No GitHub Actions, `data/raw/` é guardado com `actions/cache` entre execuções.

@@ -1,8 +1,33 @@
-# Relatório — Fase 1 (rascunho em andamento)
+# Relatório — Fase 1 (todas as métricas + design mais leve)
 
-> Rascunho atualizado a cada etapa; a versão final substitui este cabeçalho.
+Execução de 22 de outubro de 2026, sem perguntas durante o caminho, com um commit por etapa. Nada foi enviado ao GitHub (sem `git push`).
 
-## Etapas
+## Resumo
+
+**A Fase 1 está pronta localmente.** A ficha de cada um dos 513 deputados em exercício tem agora um **resumo em números** e **7 cadernos** com 22 itens do briefing: todos os itens viáveis foram implementados, cada um com função pura testada, validação Zod da fonte, seção na metodologia e exibição na ficha (número, gráfico quando ajuda, "Traduzindo:", "O que é isso?", "O que este número não mostra", fonte e data). `/glossario` tem 42 termos. Formatação, lint, neutralidade, tipos, 144 testes e build passam; a verificação de acessibilidade não acha violações nas páginas novas; as capturas de celular não têm rolagem horizontal.
+
+O que mais merece seu olhar, nesta ordem:
+
+1. **Alinhamento com o partido** fica com poucas votações para quem orienta pelo bloco (União, PP, MDB, Republicanos, Podemos) e "sem dado" para 37 deputados — efeito direto da regra aprovada (ADR 0014).
+2. **Teto da cota**: só há tabela oficial confirmada para 2026 (março em diante), tirada da página oficial da Câmara e ainda **não conferida no Diário** (ADR 0017).
+3. **Emendas**: 19 deputados sem ligação; 12 deles têm dois códigos para o mesmo nome e só precisam da sua confirmação (lista abaixo) (ADR 0018).
+4. **Discursos**: não reproduzo o conteúdo nem os resumos oficiais (ADR 0016) — decidi isso sozinho depois de ver resumos com acusações contra terceiros.
+5. **Crescimento do repositório**: o commit diário de dados ficou maior do que na Fase 0 (ver Medidas).
+
+| Commit    | Etapa                                                                          |
+| --------- | ------------------------------------------------------------------------------ |
+| `ecc6894` | 1 — Base: dados por deputado, `metricas.json`, "sem dado", gráficos, glossário |
+| `fd90745` | 2 — Caderno 1: Plenário                                                        |
+| `9806530` | 3 — Caderno 2: Comissões                                                       |
+| `b65d205` | 4 — Caderno 3: Projetos e leis                                                 |
+| `3b3d03c` | 5 — Caderno 4: Fiscalização                                                    |
+| `66482a9` | 6 — Caderno 5: Voz                                                             |
+| `3b1f58a` | 7 — Caderno 6: Dinheiro público                                                |
+| `2529f49` | 8 — Caderno 7: Articulação e perfil                                            |
+| `7218fca` | 9 — Ficha completa e design mais leve                                          |
+| (este)    | 10 — Fechamento: workflow, medidas, README, CLAUDE.md, este relatório          |
+
+## O que foi feito em cada etapa
 
 ### Etapa 1 — Base (`ecc6894`)
 
@@ -72,7 +97,16 @@
 - Animações ligadas à rolagem, sem JS, com ponto de partida nunca invisível; desligadas em reduced-motion. Scripts de captura e acessibilidade emulam reduced-motion.
 - Ficha: ~24 KB comprimida; CSS 7,6 KB; site com 518 páginas.
 
-## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
+### Etapa 10 — Fechamento
+
+- Workflow diário com limite de 60 min e comentário sobre o que é diário e o que é semanal (discursos, pelo cache de 7 dias).
+- Pipeline medido com e sem cache; crescimento do repositório medido (ver Medidas).
+- README, CLAUDE.md, ARQUITETURA atualizados; imagens do README refeitas com a ficha nova.
+- Pasta de exploração apagada (929 MB em `data/raw/explore-f1`, criada por mim).
+
+## Decisões que tomei sozinho
+
+As marcadas com ⚠ mudam números ou o que o leitor vê. Todas estão nos ADRs 0012 a 0018 ou na metodologia.
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
 - ⚠ Partido considerado no alinhamento = partido na data da votação (registrado no voto), não o atual.
@@ -95,13 +129,49 @@
 - ⚠ Emendas: só individuais; orçamentos 2024+; ligação estrita por nome único (todos os anos); execução inclui restos a pagar pagos (ADR 0018).
 - ⚠ Frentes: linhas sem id do deputado ignoradas; "Coordernador" = coordenador.
 - ⚠ Resumo em números fixo (decidido no plano); "Traduzindo:" com tom leve, sem humor sobre deputados ou partidos.
+
+Outras:
+
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
-
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.
+- Discursos: um mês que a API não devolve (erro 500 persistente da Câmara) aparece na ficha como indisponível, em vez de derrubar a atualização (ADR 0015).
+- Cache de discursos e lideranças guarda só o resultado reduzido; resumos de discursos apagados também do cache local.
+- Pipeline com 6 GB de memória (arquivos de proposições e frentes passam de 150 MB).
 
-## Fora do escopo / não viável
+## O que ficou de fora (e por quê)
 
-## TODOs para o Lucas
+Critérios da seção 5 do briefing: (1) fonte oficial estruturada, (2) atualização automática, (3) custo quase zero, (4) mesmo método para todos, (5) explicável sem juízo de valor.
+
+| Item                                               | Situação                                                             | Critério                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Gasto mensal com a equipe do gabinete              | Fora: só existe em páginas HTML do portal da Câmara                  | 1 (sem raspagem) — entra se a Câmara publicar em CSV/JSON/API |
+| "Eficiência" da verba de gabinete                  | Fora: mesma razão                                                    | 1                                                             |
+| "Relevância" ou "qualidade" dos projetos           | Fora: substituído pelos temas oficiais                               | 5                                                             |
+| "Representar a sociedade e ouvir a base"           | Sem medida direta; aproximações: eventos a pedido e discursos        | 1                                                             |
+| Orientação de bloco no alinhamento                 | Fora: composição histórica dos blocos não é publicada (ADR 0014)     | 1, 4                                                          |
+| Conteúdo dos discursos                             | Fora por decisão de neutralidade (ADR 0016)                          | 5                                                             |
+| Teto da cota de fev/2023 a fev/2026                | `null`: tabela oficial não encontrada (ADR 0017)                     | 1 — basta preencher a config quando achar                     |
+| Convites a ministros (sem obrigação de comparecer) | Não contam como convocação; aparecem como requerimentos de audiência | 5 (convocação tem tipo oficial; convite não)                  |
+| API do Portal da Transparência com token           | Não foi necessária: há download em lote sem chave                    | —                                                             |
+
+Todos os 22 itens do briefing foram implementados (o item 14, convocações, por tipo oficial do requerimento, sem busca na ementa; o item 11, pareceres, porque PRL/PRLP/PRLE têm sempre um único autor, o relator).
+
+## TODOs que dependem de você
+
+**Conferir em fonte oficial**
+
+- [ ] **Teto da cota (2026):** conferir os valores de `packages/shared/src/config/ceap-tetos.ts` no Diário da Câmara de 20/02/2026, p. 2216.
+- [ ] **Teto da cota (fev/2023 a fev/2026):** achar a tabela oficial e preencher o período que está `null`.
+- [ ] **Emendas:** confirmar os autores dos deputados sem ligação (lista abaixo) e preencher `packages/shared/src/config/emendas-autores.ts`.
+- [ ] **Licença dos dados do Portal da Transparência** (CGU), para citar em `docs/FONTES.md`.
+- [ ] Os TODOs da Fase 0 continuam: licença formal dos dados da Câmara, uso das fotos, dispositivo do "Artigo 17", Vercel, secrets e push (ver `docs/RELATORIO-NOITE.md`).
+
+**Decidir**
+
+- [ ] Revisar os ADRs 0014 a 0018 e as decisões ⚠ acima.
+- [ ] Crescimento do repositório (ver Medidas): aceitar como está ou adotar uma das alternativas.
+- [ ] Canal de contato da página "Sobre" (agora na seção "Errata").
+- [ ] A varredura de neutralidade não olha `docs/METODOLOGIA.md`, que aparece no site e cresceu muito nesta fase.
 
 ### Emendas: deputados sem ligação (conferir e, se for o caso, preencher `packages/shared/src/config/emendas-autores.ts`)
 
@@ -278,4 +348,59 @@ Senadores, ex-deputados e os casos ambíguos acima. Gerado com `EXTRAPOLAR_LIST_
 
 ## Medidas
 
-- Pipeline (Fase 0, com cache): ~7 s; sem cache: ~2 min 20 s.
+Medidas de 22/10/2026, no Mac do Lucas, com a Fase 1 completa (fechamento concluído na sessão da Fase 2, depois que o limite de uso interrompeu a etapa 10).
+
+**Tempo do pipeline**
+
+| Execução                                                                                                 | Fase 1               | Fase 0      |
+| -------------------------------------------------------------------------------------------------------- | -------------------- | ----------- |
+| Com cache (`pnpm pipeline`, `data/raw` preenchido, discursos dentro dos 7 dias)                          | **58 s**             | ~7 s        |
+| Sem cache (`pnpm pipeline -- --refresh`: ~1,3 GB de arquivos, CGU e discursos de 513 deputados pela API) | **19 min** (1.140 s) | ~2 min 20 s |
+
+Quase todo o tempo sem cache vai nos discursos: só há API, com concorrência 2, e nesta medição a API devolveu muitos erros HTTP 500 (cada um com novas tentativas e divisão do período em anos e meses — ADR 0015). No dia a dia o cache de discursos vale 7 dias, então a execução diária fica perto de 1 minuto mais o tempo de baixar os arquivos que mudaram; uma vez por semana ela refaz os discursos. O limite do workflow é 60 minutos.
+
+**Crescimento do repositório por execução** (o commit diário de `data/generated`, ~12 MB sem compressão)
+
+- **Dia comum** (fontes sem mudança e cache de discursos válido): só `meta.json` muda — **~2 KB** comprimido. Quando a Câmara publica dados novos, mudam só os arquivos dos deputados afetados.
+- **Uma vez por semana** (quando o cache de discursos vence): os 513 arquivos `deputados/{id}.json` mudam, porque cada um guarda a data da consulta (`voz.consultadoEm`). Estimativa do `pnpm repo-growth`: ~2,7 MB comprimido; no pacote do Git, com compactação por diferença (medido com `git pack-objects --thin`), **~540 KB**.
+- Ordem de grandeza: **~30 MB por ano** só pela data da consulta (52 × ~0,55 MB), mais as mudanças reais de dados. A Fase 0 crescia ~300 KB por dia no total.
+
+Alternativas, se o crescimento incomodar (decisão sua; nada foi mudado):
+
+1. Aceitar como está (o GitHub aguenta repositórios de alguns GB; o clone fica mais lento com o tempo).
+2. Tirar `consultadoEm` de cada deputado e guardar uma data única de consulta em `meta.json`; o arquivo do deputado só mudaria quando os discursos mudassem.
+3. Guardar `data/generated` fora do histórico principal (branch própria recriada a cada execução, ou artefato de release) e o build da Vercel baixar de lá.
+
+## Como testar
+
+```bash
+cd ~/Documents/Extrapolar
+pnpm install
+
+# Qualidade (o mesmo que o CI roda)
+pnpm format:check && pnpm lint && pnpm check:neutralidade && pnpm typecheck && pnpm test && pnpm build
+
+# Site com os dados já gerados
+pnpm dev                       # http://localhost:4321
+
+# Pipeline
+pnpm pipeline                  # com cache: ~1 min
+pnpm pipeline -- --refresh     # sem cache (ver tempo em Medidas)
+EXTRAPOLAR_LIST_UNLINKED=1 pnpm pipeline   # lista os autores de emendas não ligados
+pnpm repo-growth               # quanto o commit de data/generated vai acrescentar
+
+# Acessibilidade e capturas (precisam do build rodando e do Google Chrome)
+pnpm build && pnpm --filter @extrapolar/web preview    # deixe rodando em outro terminal
+pnpm check:a11y / /deputados/204379 /glossario /metodologia
+SCREENSHOT_MAX_HEIGHT=3500 pnpm screenshots "/deputados/204379#caderno-dinheiro"   # docs/screenshots/
+```
+
+**O que olhar no navegador**
+
+- `/deputados/204379`: resumo em números, os 7 cadernos e a navegação entre eles; "Traduzindo:" em cada métrica; gráficos com "Ver os dados em tabela".
+- `/deputados/178882` (ministro licenciado várias vezes): períodos em exercício, cota com teto de 2026, emendas.
+- `/deputados/220643` (Sônia Guajajara): "Sem dado" nas emendas, com o motivo.
+- Um deputado do PP (ex.: `/deputados/178831`): alinhamento com o partido com poucas votações e a tabela do que ficou de fora.
+- `/deputados/204528`: aviso de meses de discursos indisponíveis na API.
+- `/glossario` ("Classificados"), `/metodologia` (seção "O que ficou de fora"), `/sobre` ("Errata"), `/qualquer-coisa` (404).
+- Edição noturna e celular (390 px); com "reduzir movimento" ligado no sistema, nada anima.

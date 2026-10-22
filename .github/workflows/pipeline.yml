@@ -1,6 +1,12 @@
-# Atualização diária dos dados da Câmara.
+# Atualização diária dos dados (Câmara e CGU).
 # Roda o pipeline, confere se o site builda com os dados novos e commita data/generated no main.
 # O commit dispara o deploy na Vercel pela integração Git (ADR 0004).
+#
+# Frequência por fonte:
+# - diária: arquivos estáticos da Câmara (votações, eventos, proposições, comissões, frentes,
+#   cota, funcionários), API de deputados/histórico/lideranças e emendas da CGU;
+# - semanal: discursos (só há API, mais lenta). O cache de cada deputado vale 7 dias e é
+#   guardado entre execuções em data/raw (ADR 0015).
 name: Atualização dos dados
 
 on:
@@ -28,7 +34,8 @@ concurrency:
 jobs:
   atualizar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Sem cache (primeira execução ou cache perdido), a carga dos discursos leva ~12 min.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 

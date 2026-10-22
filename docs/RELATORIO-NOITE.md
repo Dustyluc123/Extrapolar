@@ -144,7 +144,7 @@ Todas registradas em `docs/decisoes/`. As marcadas com ⚠ mudam números ou o q
 ## Como testar tudo
 
 ```bash
-cd ~/Downloads/Extrapolar
+cd ~/Documents/Extrapolar
 pnpm install
 
 # Qualidade (o mesmo que o CI roda)
