@@ -601,3 +601,19 @@ Uma votação elegível por dia, sorteada entre as dos **últimos 12 meses** (AD
 A pergunta "foi aprovada ou rejeitada?" ficou de fora porque quase sempre a resposta é "aprovada" (2 rejeitadas em 216). O resultado oficial aparece na revelação, com o carimbo e, para PEC e projeto de lei complementar, o número de votos Sim exigido (308 e 257).
 
 **Limitações:** o voto de quem deixou o exercício não entra na maioria do estado; uma votação é um momento da tramitação, não a história inteira da proposta.
+
+<a id="jogo-vote-voce"></a>
+
+## Jogo 3 — Vote você também
+
+**Rodada semanal** (troca na segunda-feira): as **10 votações elegíveis mais recentes registradas antes da segunda-feira**, **uma por proposição** (a mais recente de cada) e **sem as quase unânimes** — aquelas em que o lado menor teve menos de 10% dos votos Sim + Não, que dão a mesma resposta para quase todos os deputados e não ajudam a comparar (decidido no planejamento). Em 22/10/2026, 91 das 216 elegíveis eram quase unânimes.
+
+O jogador vota Sim ou Não em cada uma (ou pula). No fim:
+
+- **Concordância** com cada deputado em exercício = votos iguais ÷ votações em que os dois votaram **Sim ou Não**. Pulos do jogador não contam; abstenção, obstrução e Art. 17 do deputado aparecem à parte, sem contar a favor nem contra.
+- Apresentado como "concordou em X de Y votações", nunca como "deputado ideal" ou recomendação. Primeiro os deputados do estado do jogador, depois a lista geral (ordenada pela própria conta do jogador; é a única lista do site ordenada por um número, e o número é do jogador).
+- **Base pequena:** menos de 5 votações comparadas; esses deputados (e partidos) aparecem com o aviso e no fim da lista, para "2 de 2" não ficar acima de "7 de 9".
+- **Partidos:** a mesma conta com a orientação de bancada, com a regra do alinhamento (ADR 0014): orientação do próprio partido; se não houver, da federação; orientação de bloco não entra. "Liberado", sem orientação, abstenção e obstrução não contam.
+- Nada é enviado: as escolhas ficam no navegador.
+
+**Limitação:** 10 votações são uma fatia pequena de um mandato; duas pessoas podem concordar em todas e discordar em quase tudo o mais.

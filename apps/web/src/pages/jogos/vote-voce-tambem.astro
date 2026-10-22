@@ -1,0 +1,32 @@
+---
+// Jogo 3 — Vote você também.
+import "../../styles/games.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import GameHeader from "../../components/games/GameHeader.astro";
+import VoteRoundGame from "../../components/games/VoteRoundGame";
+import { voteRound } from "../../lib/games/rounds";
+import { gameDeputies } from "../../lib/games/data";
+import { STATE_NAMES } from "../../lib/states";
+
+const states = [...new Set(gameDeputies.deputies.map((d) => d.state))]
+  .sort()
+  .map((code) => ({ code, name: STATE_NAMES[code] ?? code }));
+---
+
+<BaseLayout
+  title="Vote você também"
+  description="Vote em 10 votações recentes do plenário da Câmara e veja com quais deputados você votou igual. Seus votos ficam só no seu aparelho."
+  current="jogos"
+>
+  <GameHeader slug="vote-voce-tambem" />
+  <section class="mt-6" aria-label="Jogo">
+    <VoteRoundGame client:load round={voteRound} deputies={gameDeputies.deputies} states={states} />
+  </section>
+  <section class="mt-10 max-w-prose">
+    <p class="caption">
+      As 10 votações de mérito mais recentes antes desta semana, uma por proposta, sem as quase
+      unânimes (em que o lado menor teve menos de 10% dos votos Sim e Não). Deputados em exercício
+      hoje. Detalhes na <a href="/metodologia#jogo-vote-voce">metodologia</a>.
+    </p>
+  </section>
+</BaseLayout>

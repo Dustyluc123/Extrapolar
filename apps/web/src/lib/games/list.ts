@@ -54,7 +54,7 @@ export const GAMES: GameInfo[] = [
       "No fim, veja com quais deputados você votou igual mais vezes.",
       "É só uma conta de votos iguais, não uma recomendação: cada votação é uma de muitas.",
     ],
-    ready: false,
+    ready: true,
   },
   {
     slug: "seja-deputado",

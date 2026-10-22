@@ -155,3 +155,44 @@ export const placarFileSchema = z.object({
   days: z.array(drawnDaySchema),
 });
 export type PlacarFile = z.infer<typeof placarFileSchema>;
+
+// ---- Jogos 3 e 4: votações com o voto de cada deputado e a orientação de cada partido ----
+
+/**
+ * Orientação de um partido numa votação, um caractere: S = Sim, N = Não, A = Abstenção,
+ * O = Obstrução, L = liberou a bancada, B = só o bloco orientou (não usada — ADR 0014),
+ * "-" = sem orientação. Partido → federação quando o partido não orientou sozinho.
+ */
+export const ORIENTATION_STRING = /^[SNAOLB-]*$/;
+
+export const partyOrientationSchema = z.object({
+  party: z.string().min(1),
+  /** Um caractere por votação, na ordem de `votes`. */
+  orientations: z.string().regex(ORIENTATION_STRING),
+  /** Votações em que valeu a orientação da federação (mesma ordem; "1" = sim). */
+  viaFederation: z.string().regex(/^[01]*$/),
+});
+export type PartyOrientation = z.infer<typeof partyOrientationSchema>;
+
+/** Jogo 3 — Vote você também: a rodada da semana (jogos/vote-voce.json). */
+export const voteRoundFileSchema = z.object({
+  schemaVersion: z.literal(GAMES_SCHEMA_VERSION),
+  /** Segunda-feira da semana da rodada. */
+  week: localDate,
+  votes: z.array(gameVoteSchema).max(10),
+  /** Votos compactos de cada votação (ordem de jogos/deputados.json). */
+  ballots: z.array(ballotStringSchema),
+  parties: z.array(partyOrientationSchema),
+});
+export type VoteRoundFile = z.infer<typeof voteRoundFileSchema>;
+
+/** Jogo 4 — Seja deputado: a votação elegível mais recente (jogos/seja-deputado.json). */
+export const latestVoteFileSchema = z.object({
+  schemaVersion: z.literal(GAMES_SCHEMA_VERSION),
+  vote: gameVoteSchema,
+  ballots: ballotStringSchema,
+  /** Partido de cada deputado na data da votação (mesma ordem; "" = sem voto registrado). */
+  partiesAtVote: z.array(z.string()),
+  parties: z.array(partyOrientationSchema),
+});
+export type LatestVoteFile = z.infer<typeof latestVoteFileSchema>;
