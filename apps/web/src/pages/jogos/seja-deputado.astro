@@ -1,0 +1,43 @@
+---
+// Jogo 4 — Seja deputado: a votação de mérito mais recente.
+import "../../styles/games.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import GameHeader from "../../components/games/GameHeader.astro";
+import BeDeputyGame from "../../components/games/BeDeputyGame";
+import { latestVote } from "../../lib/games/rounds";
+import { gameDeputies } from "../../lib/games/data";
+import { repository } from "../../lib/data";
+import { STATE_NAMES } from "../../lib/states";
+
+const meta = await repository.getMeta();
+const states = [...new Set(gameDeputies.deputies.map((d) => d.state))]
+  .sort()
+  .map((code) => ({ code, name: STATE_NAMES[code] ?? code }));
+---
+
+<BaseLayout
+  title="Seja deputado"
+  description="A votação mais recente do plenário da Câmara: vote você e confira o resultado e o voto de cada deputado."
+  current="jogos"
+>
+  <GameHeader slug="seja-deputado" />
+  <section class="mt-6" aria-label="Jogo">
+    {latestVote ? (
+      <BeDeputyGame
+        client:load
+        latest={latestVote}
+        deputies={gameDeputies.deputies}
+        states={states}
+        editionDate={meta.referenceDateTime}
+      />
+    ) : (
+      <p class="clipping">Ainda não há votação de mérito nesta legislatura.</p>
+    )}
+  </section>
+  <section class="mt-10 max-w-prose">
+    <p class="caption">
+      A votação nominal de mérito mais recente que o site tem (a da última atualização dos dados).
+      Detalhes na <a href="/metodologia#jogo-seja-deputado">metodologia</a>.
+    </p>
+  </section>
+</BaseLayout>

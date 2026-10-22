@@ -67,7 +67,7 @@ export const GAMES: GameInfo[] = [
       "Vote Sim ou Não.",
       "Veja o resultado, o placar e o voto de cada deputado, com filtro por estado e partido.",
     ],
-    ready: false,
+    ready: true,
   },
 ];
 

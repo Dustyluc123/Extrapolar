@@ -617,3 +617,13 @@ O jogador vota Sim ou Não em cada uma (ou pula). No fim:
 - Nada é enviado: as escolhas ficam no navegador.
 
 **Limitação:** 10 votações são uma fatia pequena de um mandato; duas pessoas podem concordar em todas e discordar em quase tudo o mais.
+
+<a id="jogo-seja-deputado"></a>
+
+## Jogo 4 — Seja deputado
+
+A **votação elegível mais recente** (pelo horário de registro) até a última atualização dos dados, com a data sempre em destaque: quando não há votação nova, continua a mesma. O jogador vota Sim ou Não e depois vê o resultado oficial, o placar, a orientação de cada partido (regra do ADR 0014) e **quem votou o quê**, com filtros por estado e partido, link para a ficha de cada deputado e o voto dos deputados do seu estado ao escolher o estado.
+
+- Só deputados em exercício hoje; quem não votou aparece como "sem voto registrado". O placar mostrado é sempre o oficial (todos os que votaram).
+- Partido atual, com o partido da época entre parênteses quando era outro (registrado no voto).
+- A única comparação do jogador é com a maioria do plenário ("como a maioria" ou "como a minoria"), sem dizer qual lado está certo.
