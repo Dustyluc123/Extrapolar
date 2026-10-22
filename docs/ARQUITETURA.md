@@ -50,18 +50,20 @@ Pacotes internos não têm etapa de build: exportam `src/index.ts` e são consum
 
 ## Dados gerados (`data/generated/`)
 
-| Arquivo             | Conteúdo                                                                                        |
-| ------------------- | ----------------------------------------------------------------------------------------------- |
-| `meta.json`         | Data/hora da geração, legislatura, fontes usadas com URL e `Last-Modified`                      |
-| `deputados.json`    | Deputados em exercício: id, nome, partido, UF, foto oficial (URL), situação, condição eleitoral |
-| `participacao.json` | Participação em votações nominais de plenário por deputado                                      |
+| Arquivo               | Conteúdo                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `meta.json`           | Data/hora da geração, legislatura, fontes usadas com URL e `Last-Modified`, avisos de qualidade dos dados e totais da legislatura     |
+| `deputados.json`      | Índice dos deputados em exercício: id, nome, partido, UF, foto oficial (URL), situação, condição eleitoral                            |
+| `deputados/{id}.json` | Detalhe de cada deputado, por caderno (Plenário, Comissões...). Sem a data da edição, para só mudar quando os dados mudam (ADR 0012)  |
+| `metricas.json`       | Valor bruto, numerador, denominador ou "sem dado" de cada métrica para cada deputado, para a futura ordenação da Fase 2 (sem ranking) |
 
-Os formatos estão definidos (e validados) em `packages/shared/src/schemas/generated.ts`.
+Os formatos estão definidos (e validados) em `packages/shared/src/schemas/generated.ts`. `pnpm repo-growth` mede quanto o commit de dados acrescenta ao repositório.
 
 ## Site (`apps/web`)
 
 - Astro com `output: "static"`. Todas as páginas são geradas no build.
-- `src/lib/data.ts` implementa `DeputyRepository` lendo os JSON gerados (validação Zod no build: dado quebrado quebra o build, não a página).
+- `src/lib/data.ts` implementa `DeputyRepository` lendo os JSON gerados, inclusive os 513 detalhes por `import.meta.glob` (validação Zod no build: dado quebrado quebra o build, não a página).
+- Ficha organizada em cadernos (`components/ficha/`): cada métrica é um `Metric.astro` com número, gráfico, "O que é isso?", "O que este número não mostra" e fonte. Gráficos em `components/charts/`, estáticos (ADR 0013). Glossário em `src/lib/glossary.ts` → `/glossario`; termos linkados com `Term.astro`.
 - Interatividade da capa (busca e filtros) em `<script>` do Astro, sem framework.
 - Tailwind CSS 4 com tokens próprios em `src/styles/tokens.css` (ver `docs/DESIGN.md`).
 - `/metodologia` é gerada a partir de `docs/METODOLOGIA.md` (content collection com loader `glob`).

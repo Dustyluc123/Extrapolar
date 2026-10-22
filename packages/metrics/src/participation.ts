@@ -1,7 +1,13 @@
 // Participação em votações nominais de plenário (docs/METODOLOGIA.md, ADR 0007).
 // Função pura: recebe tudo pronto (votações já filtradas, votos e períodos) e só conta.
-import type { BallotBreakdown, Participation, ServicePeriod } from "@extrapolar/shared";
+import type {
+  BallotBreakdown,
+  MetricValue,
+  Participation,
+  ServicePeriod,
+} from "@extrapolar/shared";
 import { safeRatio } from "./ratio";
+import { ratioValue } from "./value";
 
 export type BallotValue = keyof BallotBreakdown;
 
@@ -105,4 +111,9 @@ export function computeParticipationForAll(input: {
       referenceDateTime: input.referenceDateTime,
     }),
   );
+}
+
+/** Valor padronizado da participação (para metricas.json e o resumo em números). */
+export function participationValue(participation: Participation): MetricValue {
+  return ratioValue(participation.ballotsCast, participation.eligibleVotes, "sem-votacao-elegivel");
 }

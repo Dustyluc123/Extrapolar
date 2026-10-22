@@ -1,55 +1,52 @@
 ---
-// Seção da métrica de participação na ficha do deputado: número, contexto, detalhamento
-// e limitações. Mesma apresentação para todos os deputados (sem cor de "bom" ou "ruim").
+// Métrica: participação em votações nominais de plenário (Caderno 1 — Plenário).
+// Mesma apresentação para todos os deputados (sem cor de "bom" ou "ruim").
 import type { Participation } from "@extrapolar/shared";
 import BigNumber from "../ui/BigNumber.astro";
-import Headline from "../ui/Headline.astro";
+import Term from "../ui/Term.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
 import { formatDateTime, formatInteger, formatPercent, plural } from "../../lib/format";
 
 interface Props {
-  participation: Participation | null;
+  participation: Participation;
   updatedAt: string;
 }
-const { participation, updatedAt } = Astro.props;
+const { participation: p, updatedAt } = Astro.props;
 
 /** Abaixo disso, a ficha avisa que a porcentagem pode mudar muito (docs/METODOLOGIA.md). */
 const FEW_VOTES = 30;
 
-const p = participation;
-const missing = p ? p.eligibleVotes - p.ballotsCast : 0;
-const rows = p
-  ? [
-      { label: "Sim", value: p.breakdown.yes },
-      { label: "Não", value: p.breakdown.no },
-      { label: "Abstenção", value: p.breakdown.abstention },
-      { label: "Obstrução", value: p.breakdown.obstruction },
-      { label: "Artigo 17 (presidindo a sessão)", value: p.breakdown.article17 },
-      { label: "Voto secreto", value: p.breakdown.secret },
-    ]
-  : [];
-const castShare = p && p.eligibleVotes > 0 ? (p.ballotsCast / p.eligibleVotes) * 100 : 0;
+const missing = p.eligibleVotes - p.ballotsCast;
+const rows = [
+  { label: "Sim", value: p.breakdown.yes },
+  { label: "Não", value: p.breakdown.no },
+  { label: "Abstenção", value: p.breakdown.abstention },
+  { label: "Obstrução", value: p.breakdown.obstruction },
+  { label: "Artigo 17 (presidindo a sessão)", value: p.breakdown.article17 },
+  { label: "Voto secreto", value: p.breakdown.secret },
+];
+const castShare = p.eligibleVotes > 0 ? (p.ballotsCast / p.eligibleVotes) * 100 : 0;
 ---
 
-<section aria-labelledby="participacao" class="pt-2">
-  <p class="kicker m-0">Plenário</p>
-  <Headline as="h2" size="lg" id="participacao" class="mt-1">
-    Participação em votações nominais
-  </Headline>
-
-  {p && p.rate !== null ? (
-    <div class="mt-5 grid gap-8 lg:grid-cols-[1fr_1fr]">
+<Metric
+  id="participacao"
+  title="Participação em votações nominais"
+  whatIs="Mostra em quantas votações do plenário com voto registrado no nome o deputado votou, contando só os dias em que estava no cargo."
+  updatedAt={updatedAt}
+  methodologyAnchor="participacao"
+>
+  {p.rate !== null ? (
+    <div class="grid gap-8 lg:grid-cols-2">
       <div>
         <BigNumber
           value={formatPercent(p.rate)}
           label="Votou em"
           caption={`Registrou voto em ${formatInteger(p.ballotsCast)} das ${plural(p.eligibleVotes, "votação nominal", "votações nominais")} do plenário que aconteceram enquanto estava em exercício na legislatura.`}
-          updatedAt={updatedAt}
-          methodologyAnchor="participacao"
         />
-
         <div class="mt-6" aria-hidden="true">
           <div class="flex h-3 overflow-hidden rounded-full border border-ink/70">
-            <div class="h-full bg-ink" style={`width: ${castShare.toFixed(2)}%`} />
+            <div class="bar-grow h-full bg-ink" style={`width: ${castShare.toFixed(2)}%`} />
             <div
               class="h-full flex-1"
               style="background-image: repeating-linear-gradient(135deg, var(--color-rule) 0 1px, transparent 1px 6px);"
@@ -60,7 +57,6 @@ const castShare = p && p.eligibleVotes > 0 ? (p.ballotsCast / p.eligibleVotes) *
             <span>Sem voto registrado</span>
           </div>
         </div>
-
         {p.eligibleVotes < FEW_VOTES ? (
           <p class="mt-4 rounded-card border border-rule bg-card p-3 font-sans text-sm">
             Poucas votações na conta ({formatInteger(p.eligibleVotes)}): com tão poucas, a
@@ -104,41 +100,21 @@ const castShare = p && p.eligibleVotes > 0 ? (p.ballotsCast / p.eligibleVotes) *
           </tbody>
         </table>
         <p class="caption mt-3">
-          Obstrução e voto secreto contam como participação: o deputado registrou presença na
-          votação. "Artigo 17" é registrado para quem está presidindo a sessão.
+          <Term slug="obstrucao" /> e voto secreto contam como participação: o deputado registrou
+          presença na votação. "<Term slug="artigo-17" />" é registrado para quem está presidindo a
+          sessão.
         </p>
       </div>
     </div>
   ) : (
-    <div class="mt-5">
-      <p class="m-0 font-display text-5xl font-[800]">Sem dado</p>
-      <p class="caption mt-2 max-w-prose">
-        Não houve votação nominal no plenário enquanto este deputado estava em exercício nesta
-        legislatura, então não há o que calcular. Isso não é o mesmo que 0%.
-      </p>
-    </div>
+    <NoData reason="sem-votacao-elegivel" label="Votou em" />
   )}
 
-  <details class="mt-8 rounded-card border border-rule bg-card p-4">
-    <summary class="cursor-pointer font-sans text-sm font-semibold">
-      O que este número não mostra
-    </summary>
-    <ul class="mt-3 mb-0 space-y-1.5 pl-5 text-base">
-      <li>Trabalho em comissões, relatorias, projetos apresentados e atuação no estado.</li>
-      <li>Votações simbólicas, em que ninguém tem voto individual registrado.</li>
-      <li>Como o deputado votou em cada tema, só se registrou voto.</li>
-      <li>O motivo de uma ausência (missão oficial, doença, compromisso no estado).</li>
-    </ul>
-    <p class="mt-3 mb-0 font-sans text-sm">
-      <a href="/metodologia#participacao" class="font-semibold text-accent-ink">
-        Leia a metodologia completa
-      </a>
-    </p>
-  </details>
-
-  {p && p.servicePeriods.length > 0 ? (
-    <div class="mt-8">
-      <p class="kicker m-0">Períodos em exercício nesta legislatura</p>
+  {p.servicePeriods.length > 0 ? (
+    <div class="mt-6">
+      <p class="kicker m-0">
+        Períodos <Term slug="em-exercicio" /> nesta legislatura
+      </p>
       <ul class="mt-2 mb-0 list-none space-y-1 p-0 font-sans text-sm text-ink-soft">
         {p.servicePeriods.map((period) => (
           <li>
@@ -156,4 +132,13 @@ const castShare = p && p.eligibleVotes > 0 ? (p.ballotsCast / p.eligibleVotes) *
       ) : null}
     </div>
   ) : null}
-</section>
+
+  <Fragment slot="limites">
+    <li>Trabalho em comissões, relatorias, projetos apresentados e atuação no estado.</li>
+    <li>
+      <Term slug="votacao-simbolica">Votações simbólicas</Term>, em que ninguém tem voto registrado.
+    </li>
+    <li>Como o deputado votou em cada tema, só se registrou voto.</li>
+    <li>O motivo de uma ausência (missão oficial, doença, compromisso no estado).</li>
+  </Fragment>
+</Metric>

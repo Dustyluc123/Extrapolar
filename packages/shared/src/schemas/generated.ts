@@ -1,12 +1,33 @@
 // Esquemas Zod dos JSON gerados em data/generated (saída do pipeline, entrada do site).
 // O pipeline valida antes de gravar; o site valida de novo no build.
 import { z } from "zod";
+import { NO_DATA_REASON_CODES } from "../no-data";
 import { LOCAL_DATE, LOCAL_DATE_TIME } from "./camara";
 
 const localDateTime = z.string().regex(LOCAL_DATE_TIME, "esperado AAAA-MM-DDTHH:mm:ss");
 const localDate = z.string().regex(LOCAL_DATE, "esperado AAAA-MM-DD");
 
-export const GENERATED_SCHEMA_VERSION = 1;
+export const GENERATED_SCHEMA_VERSION = 2;
+
+export const localDateTimeSchema = localDateTime;
+export const localDateSchema = localDate;
+
+// ---- valor de métrica (padrão para todas) ----
+
+/**
+ * Valor de uma métrica para um deputado: calculado (com numerador e denominador quando for razão)
+ * ou "sem dado" com motivo padronizado (ver no-data.ts). Nunca zero no lugar de sem dado.
+ */
+export const metricValueSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("ok"),
+    value: z.number(),
+    numerator: z.number().nullable(),
+    denominator: z.number().nullable(),
+  }),
+  z.object({ status: z.literal("sem-dado"), reason: z.enum(NO_DATA_REASON_CODES) }),
+]);
+export type MetricValue = z.infer<typeof metricValueSchema>;
 
 // ---- meta.json ----
 
@@ -31,6 +52,13 @@ export const datasetMetaSchema = z.object({
   dataQuality: z.array(
     z.object({ code: z.string(), message: z.string(), count: z.number().int() }),
   ),
+  /** Totais da legislatura usados na capa e nos textos de contexto. */
+  totals: z.object({
+    /** Votações nominais de plenário na legislatura até a data de referência. */
+    nominalPlenaryVotes: z.number().int().nonnegative(),
+    /** Data da última votação nominal de plenário considerada. */
+    lastNominalVoteDate: localDate.nullable(),
+  }),
 });
 export type DatasetMeta = z.infer<typeof datasetMetaSchema>;
 
@@ -111,14 +139,37 @@ export const participationSchema = z
   );
 export type Participation = z.infer<typeof participationSchema>;
 
-export const participationFileSchema = z.object({
+// ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
+// Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
+
+export const deputyDetailSchema = z.object({
+  schemaVersion: z.literal(GENERATED_SCHEMA_VERSION),
+  deputyId: z.number().int().positive(),
+  plenario: z.object({
+    participacao: participationSchema,
+  }),
+});
+export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
+
+// ---- metricas.json (valores brutos para a futura ordenação da Fase 2; sem ranking) ----
+
+export const METRIC_UNITS = ["proporcao", "contagem", "reais"] as const;
+
+export const metricIndexEntrySchema = z.object({
+  key: z.string(),
+  caderno: z.string(),
+  label: z.string(),
+  unit: z.enum(METRIC_UNITS),
+  /** Âncora da seção na metodologia. */
+  methodologyAnchor: z.string(),
+  /** Valor por id do deputado. */
+  values: z.record(z.string().regex(/^\d+$/), metricValueSchema),
+});
+export type MetricIndexEntry = z.infer<typeof metricIndexEntrySchema>;
+
+export const metricsIndexSchema = z.object({
   schemaVersion: z.literal(GENERATED_SCHEMA_VERSION),
   legislatureId: z.number().int(),
-  referenceDateTime: localDateTime,
-  /** Total de votações nominais de plenário na legislatura até a data de referência. */
-  nominalPlenaryVotes: z.number().int().nonnegative(),
-  /** Data da última votação nominal de plenário considerada. */
-  lastVoteDate: localDate.nullable(),
-  deputies: z.array(participationSchema),
+  metrics: z.array(metricIndexEntrySchema),
 });
-export type ParticipationFile = z.infer<typeof participationFileSchema>;
+export type MetricsIndex = z.infer<typeof metricsIndexSchema>;

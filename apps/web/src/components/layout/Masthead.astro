@@ -9,13 +9,14 @@ import EditionToggle from "./EditionToggle.astro";
 interface Props {
   editionDateTime: string;
   legislatureId: number;
-  current?: "deputados" | "metodologia" | "sobre";
+  current?: "deputados" | "metodologia" | "glossario" | "sobre";
 }
 const { editionDateTime, legislatureId, current } = Astro.props;
 
 const links = [
   { href: "/", label: "Deputados", id: "deputados" },
   { href: "/metodologia", label: "Metodologia", id: "metodologia" },
+  { href: "/glossario", label: "Glossário", id: "glossario" },
   { href: "/sobre", label: "Sobre", id: "sobre" },
 ] as const;
 ---
@@ -52,7 +53,7 @@ const links = [
       <time datetime={editionDateTime.slice(0, 10)}>{formatEditionDate(editionDateTime)}</time>
     </p>
     <nav aria-label="Principal">
-      <ul class="m-0 flex list-none gap-5 p-0">
+      <ul class="m-0 flex list-none flex-wrap justify-center gap-x-4 gap-y-1 p-0">
         {links.map((link) => (
           <li>
             <a

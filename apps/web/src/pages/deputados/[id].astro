@@ -1,12 +1,15 @@
 ---
-// Ficha do deputado: dados básicos e participação em votações nominais de plenário,
-// sempre com fonte, data de atualização e link para a metodologia.
+// Ficha do deputado: identidade e os cadernos de métricas (Plenário, Comissões, ...),
+// cada métrica com fonte, data de atualização e link para a metodologia.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Badge from "../../components/ui/Badge.astro";
 import Headline from "../../components/ui/Headline.astro";
 import Rule from "../../components/ui/Rule.astro";
+import Term from "../../components/ui/Term.astro";
 import DeputyPhoto from "../../components/deputado/DeputyPhoto.astro";
 import ParticipationSection from "../../components/deputado/ParticipationSection.astro";
+import Caderno from "../../components/ficha/Caderno.astro";
+import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
 import { formatDateTime } from "../../lib/format";
 import { stateName } from "../../lib/states";
@@ -19,8 +22,17 @@ export async function getStaticPaths() {
 const id = Number(Astro.params.id);
 const profile = await repository.getDeputy(id);
 if (!profile) throw new Error(`Deputado ${id} não encontrado nos dados gerados.`);
-const { deputy, participation } = profile;
+const { deputy, detail } = profile;
 const meta = await repository.getMeta();
+const updatedAt = meta.referenceDateTime;
+
+const cadernos = [{ id: "plenario", label: "Plenário" }];
+const conditionSlug =
+  deputy.electoralCondition === "Titular"
+    ? "titular"
+    : deputy.electoralCondition
+      ? "suplente"
+      : null;
 ---
 
 <BaseLayout
@@ -55,13 +67,19 @@ const meta = await repository.getMeta();
       <div>
         <dt class="kicker">Situação</dt>
         <dd class="m-0 mt-0.5">
-          {deputy.status}
+          <Term slug="em-exercicio">{deputy.status}</Term>
           {deputy.inServiceSince ? ` desde ${formatDateTime(deputy.inServiceSince)}` : null}
         </dd>
       </div>
       <div>
         <dt class="kicker">Condição</dt>
-        <dd class="m-0 mt-0.5">{deputy.electoralCondition ?? "Sem dado"}</dd>
+        <dd class="m-0 mt-0.5">
+          {conditionSlug ? (
+            <Term slug={conditionSlug}>{deputy.electoralCondition}</Term>
+          ) : (
+            "Sem dado"
+          )}
+        </dd>
       </div>
       <div>
         <dt class="kicker">Página oficial</dt>
@@ -73,9 +91,16 @@ const meta = await repository.getMeta();
       </div>
     </dl>
 
-    <Rule variant="thick" class="mb-6" />
+    <CadernoNav items={cadernos} />
 
-    <ParticipationSection participation={participation} updatedAt={meta.referenceDateTime} />
+    <Caderno
+      id="plenario"
+      number={1}
+      title="Plenário"
+      intro="O que acontece na sala onde todos os 513 deputados votam."
+    >
+      <ParticipationSection participation={detail.plenario.participacao} updatedAt={updatedAt} />
+    </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>
   </article>

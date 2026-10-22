@@ -72,3 +72,27 @@ export function formatPercent(value: number | null): string {
 export function plural(count: number, singular: string, pluralForm: string): string {
   return `${formatInteger(count)} ${count === 1 ? singular : pluralForm}`;
 }
+
+const brl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** "R$ 1.234,56" (sem espaço especial entre R$ e o número). */
+export function formatBRL(value: number): string {
+  return brl.format(value).replace(/\s/g, " ");
+}
+
+const compact1 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+
+/** Valor compacto para gráficos e manchetes: "R$ 1,2 mi", "R$ 52,3 mil", "R$ 950". */
+export function formatBRLCompact(value: number): string {
+  const sign = value < 0 ? "−" : "";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) return `${sign}R$ ${compact1.format(abs / 1_000_000_000)} bi`;
+  if (abs >= 1_000_000) return `${sign}R$ ${compact1.format(abs / 1_000_000)} mi`;
+  if (abs >= 1_000) return `${sign}R$ ${compact1.format(abs / 1_000)} mil`;
+  return `${sign}R$ ${integer.format(Math.round(abs))}`;
+}

@@ -5,11 +5,14 @@ import {
   PROJECT_NAME,
   datasetMetaSchema,
   deputiesFileSchema,
-  participationFileSchema,
+  deputyDetailSchema,
   getLegislature,
+  metricsIndexSchema,
   type DatasetMeta,
   type DeputiesFile,
 } from "@extrapolar/shared";
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { FileCache } from "./lib/cache";
 import { HttpClient } from "./lib/http";
 import { log } from "./lib/log";
@@ -50,7 +53,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
   );
   const fetched = await fetchSources(context);
   const data = normalize(context, fetched);
-  const metrics = compute(context, data);
+  const computed = compute(context, data);
 
   const quality = context.quality.list();
   for (const issue of quality) log.warn(`${issue.message} (${issue.count}x)`);
@@ -62,6 +65,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
     legislature: { id: legislature.id, start: legislature.start, end: legislature.end },
     sources: fetched.sources,
     dataQuality: quality,
+    totals: computed.totals,
   };
   const deputiesFile: DeputiesFile = {
     schemaVersion: GENERATED_SCHEMA_VERSION,
@@ -69,11 +73,22 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
     deputies: data.deputies,
   };
 
-  await publish(GENERATED_DIR, [
-    { name: "deputados.json", schema: deputiesFileSchema, data: deputiesFile },
-    { name: "participacao.json", schema: participationFileSchema, data: metrics.participation },
-    { name: "meta.json", schema: datasetMetaSchema, data: meta },
-  ]);
+  await publish(
+    GENERATED_DIR,
+    [
+      { name: "deputados.json", schema: deputiesFileSchema, data: deputiesFile },
+      ...computed.details.map((detail) => ({
+        name: `deputados/${detail.deputyId}.json`,
+        schema: deputyDetailSchema,
+        data: detail,
+      })),
+      { name: "metricas.json", schema: metricsIndexSchema, data: computed.metricsIndex },
+      { name: "meta.json", schema: datasetMetaSchema, data: meta },
+    ],
+    { ownedDirs: ["deputados"] },
+  );
+  // participacao.json (Fase 0) foi substituído pelos arquivos por deputado (ADR 0012).
+  await rm(join(GENERATED_DIR, "participacao.json"), { force: true });
   log.step("Pronto");
 }
 

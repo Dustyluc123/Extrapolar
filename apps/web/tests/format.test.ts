@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatBRL,
+  formatBRLCompact,
   formatDateTime,
   formatEditionDate,
   formatInteger,
@@ -47,5 +49,19 @@ describe("números", () => {
   it("concorda singular e plural", () => {
     expect(plural(1, "votação", "votações")).toBe("1 votação");
     expect(plural(1128, "votação", "votações")).toBe("1.128 votações");
+  });
+});
+
+describe("dinheiro", () => {
+  it("formata reais com centavos", () => {
+    expect(formatBRL(1234.5)).toBe("R$ 1.234,50");
+  });
+
+  it("compacta valores grandes", () => {
+    expect(formatBRLCompact(1_234_567)).toBe("R$ 1,2 mi");
+    expect(formatBRLCompact(52_340)).toBe("R$ 52,3 mil");
+    expect(formatBRLCompact(950.4)).toBe("R$ 950");
+    expect(formatBRLCompact(2_500_000_000)).toBe("R$ 2,5 bi");
+    expect(formatBRLCompact(-1_500)).toBe("−R$ 1,5 mil");
   });
 });

@@ -6,8 +6,10 @@ import {
   camaraHistoryResponseSchema,
   camaraVotesFileSchema,
   deputiesFileSchema,
+  deputyDetailSchema,
+  metricValueSchema,
+  metricsIndexSchema,
   parseOrThrow,
-  participationFileSchema,
 } from "../src/index";
 import deputiesPage from "./fixtures/deputados-pagina.json";
 import history from "./fixtures/historico-178882.json";
@@ -84,7 +86,7 @@ describe("esquemas de entrada rejeitam dado diferente do esperado", () => {
 describe("esquemas de saída", () => {
   it("aceitam um deputados.json válido", () => {
     const file = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       legislatureId: 57,
       deputies: [
         {
@@ -103,27 +105,60 @@ describe("esquemas de saída", () => {
     expect(() => parseOrThrow(deputiesFileSchema, file, "deputados.json")).not.toThrow();
   });
 
-  it("rejeitam taxa de participação fora de 0 a 1", () => {
-    const file = {
-      schemaVersion: 1,
-      legislatureId: 57,
-      referenceDateTime: "2026-10-22T03:00:00",
-      nominalPlenaryVotes: 10,
-      lastVoteDate: "2026-10-21",
-      deputies: [
-        {
+  it("rejeitam taxa de participação fora de 0 a 1 no detalhe do deputado", () => {
+    const detail = {
+      schemaVersion: 2,
+      deputyId: 1,
+      plenario: {
+        participacao: {
           deputyId: 1,
           eligibleVotes: 10,
-          ballotsCast: 11,
+          ballotsCast: 10,
           rate: 1.1,
-          breakdown: { yes: 11, no: 0, abstention: 0, obstruction: 0, article17: 0, secret: 0 },
+          breakdown: { yes: 10, no: 0, abstention: 0, obstruction: 0, article17: 0, secret: 0 },
           ballotsOutsideServicePeriods: 0,
           servicePeriods: [{ start: "2023-02-01T12:05:00", end: null }],
         },
+      },
+    };
+    expect(() => parseOrThrow(deputyDetailSchema, detail, "deputados/1.json")).toThrowError(
+      /plenario\.participacao\.rate/,
+    );
+  });
+
+  it("valor de métrica é calculado ou sem dado com motivo conhecido", () => {
+    expect(
+      metricValueSchema.safeParse({ status: "ok", value: 0.5, numerator: 1, denominator: 2 })
+        .success,
+    ).toBe(true);
+    expect(
+      metricValueSchema.safeParse({ status: "sem-dado", reason: "sem-votacao-elegivel" }).success,
+    ).toBe(true);
+    expect(metricValueSchema.safeParse({ status: "sem-dado", reason: "inventado" }).success).toBe(
+      false,
+    );
+    // "sem dado" não pode carregar valor
+    expect(
+      metricValueSchema.safeParse({ status: "sem-dado", reason: "sem-votacao-elegivel", value: 0 })
+        .data,
+    ).toEqual({ status: "sem-dado", reason: "sem-votacao-elegivel" });
+  });
+
+  it("índice de métricas exige ids numéricos", () => {
+    const index = {
+      schemaVersion: 2,
+      legislatureId: 57,
+      metrics: [
+        {
+          key: "participacao",
+          caderno: "plenario",
+          label: "Participação",
+          unit: "proporcao",
+          methodologyAnchor: "participacao",
+          values: { abc: { status: "ok", value: 1, numerator: 1, denominator: 1 } },
+        },
       ],
     };
-    expect(() => parseOrThrow(participationFileSchema, file, "participacao.json")).toThrowError(
-      /deputies\[0\]\.rate/,
-    );
+    expect(() => parseOrThrow(metricsIndexSchema, index, "metricas.json")).toThrow(/values/);
   });
 });

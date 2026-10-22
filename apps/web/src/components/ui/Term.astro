@@ -1,0 +1,18 @@
+---
+// Termo técnico com link para o glossário. Falha no build se o termo não existir.
+import { glossaryEntry } from "../../lib/glossary";
+
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+const entry = glossaryEntry(slug);
+---
+
+<a
+  href={`/glossario#${slug}`}
+  class="decoration-accent decoration-dotted decoration-2 underline-offset-4"
+  title={entry.definition}
+>
+  <slot>{entry.term}</slot>
+</a>

@@ -1,18 +1,47 @@
-// Etapa 3: calcula as métricas com as funções puras de @extrapolar/metrics.
-import type { ParticipationFile } from "@extrapolar/shared";
-import { GENERATED_SCHEMA_VERSION } from "@extrapolar/shared";
-import { computeParticipationForAll } from "@extrapolar/metrics";
+// Etapa 3: calcula as métricas com as funções puras de @extrapolar/metrics e monta
+// o detalhe de cada deputado (por caderno) e o índice de métricas para a Fase 2.
+import {
+  GENERATED_SCHEMA_VERSION,
+  type DeputyDetail,
+  type MetricIndexEntry,
+  type MetricsIndex,
+  type MetricValue,
+} from "@extrapolar/shared";
+import { computeParticipationForAll, participationValue } from "@extrapolar/metrics";
 import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
 import type { NormalizedData } from "./normalize";
 
-export interface ComputedMetrics {
-  participation: ParticipationFile;
+export interface ComputedData {
+  details: DeputyDetail[];
+  metricsIndex: MetricsIndex;
+  totals: { nominalPlenaryVotes: number; lastNominalVoteDate: string | null };
 }
 
-export function compute(context: PipelineContext, data: NormalizedData): ComputedMetrics {
+/** Descrição de uma métrica no índice; `pick` tira o valor do detalhe de cada deputado. */
+interface MetricDefinition {
+  key: string;
+  caderno: string;
+  label: string;
+  unit: MetricIndexEntry["unit"];
+  methodologyAnchor: string;
+  pick: (detail: DeputyDetail) => MetricValue;
+}
+
+export const METRIC_DEFINITIONS: MetricDefinition[] = [
+  {
+    key: "participacao",
+    caderno: "plenario",
+    label: "Participação em votações nominais de plenário",
+    unit: "proporcao",
+    methodologyAnchor: "participacao",
+    pick: (detail) => participationValue(detail.plenario.participacao),
+  },
+];
+
+export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
   log.step("Calculando participação em votações nominais de plenário");
-  const deputies = computeParticipationForAll({
+  const participation = computeParticipationForAll({
     deputies: data.deputies.map((deputy) => ({
       deputyId: deputy.id,
       servicePeriods: data.servicePeriods.get(deputy.id) ?? [],
@@ -22,7 +51,7 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
     referenceDateTime: context.referenceDateTime,
   });
 
-  const outside = deputies.reduce((sum, p) => sum + p.ballotsOutsideServicePeriods, 0);
+  const outside = participation.reduce((sum, p) => sum + p.ballotsOutsideServicePeriods, 0);
   if (outside > 0) {
     context.quality.add(
       "voto-fora-do-periodo",
@@ -30,18 +59,31 @@ export function compute(context: PipelineContext, data: NormalizedData): Compute
       outside,
     );
   }
-  const withoutData = deputies.filter((p) => p.rate === null).length;
-  log.info(`${deputies.length} deputados calculados; ${withoutData} sem votação elegível`);
+
+  const details: DeputyDetail[] = participation.map((entry) => ({
+    schemaVersion: GENERATED_SCHEMA_VERSION,
+    deputyId: entry.deputyId,
+    plenario: { participacao: entry },
+  }));
 
   const lastVote = data.plenary.votes.at(-1);
   return {
-    participation: {
-      schemaVersion: GENERATED_SCHEMA_VERSION,
-      legislatureId: context.legislature.id,
-      referenceDateTime: context.referenceDateTime,
+    details,
+    metricsIndex: buildMetricsIndex(context.legislature.id, details),
+    totals: {
       nominalPlenaryVotes: data.plenary.votes.length,
-      lastVoteDate: lastVote ? lastVote.dateTime.slice(0, 10) : null,
-      deputies,
+      lastNominalVoteDate: lastVote ? lastVote.dateTime.slice(0, 10) : null,
     },
+  };
+}
+
+export function buildMetricsIndex(legislatureId: number, details: DeputyDetail[]): MetricsIndex {
+  return {
+    schemaVersion: GENERATED_SCHEMA_VERSION,
+    legislatureId,
+    metrics: METRIC_DEFINITIONS.map(({ pick, ...definition }) => ({
+      ...definition,
+      values: Object.fromEntries(details.map((detail) => [String(detail.deputyId), pick(detail)])),
+    })),
   };
 }

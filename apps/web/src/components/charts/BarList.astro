@@ -1,0 +1,53 @@
+---
+// Barras horizontais com rótulo direto (nome acima, valor ao lado da barra).
+// HTML + CSS: rótulos longos quebram linha no celular (ADR 0013).
+import ChartFigure from "./ChartFigure.astro";
+
+export interface BarItem {
+  label: string;
+  value: number;
+  /** Valor já formatado para exibição (ex.: "R$ 1,2 mi"). */
+  display: string;
+  /** Destaque em vermelho-tomate (usar só para o valor principal). */
+  highlight?: boolean;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  items: BarItem[];
+  valueHeader?: string;
+  labelHeader?: string;
+}
+const { title, description, items, valueHeader = "Valor", labelHeader = "Item" } = Astro.props;
+const max = Math.max(0, ...items.map((item) => item.value));
+const width = (value: number) => (max > 0 ? Math.max(0, (value / max) * 100) : 0);
+---
+
+<ChartFigure
+  title={title}
+  description={description}
+  table={{
+    headers: [labelHeader, valueHeader],
+    rows: items.map((item) => [item.label, item.display]),
+  }}
+>
+  <ul class="m-0 list-none space-y-2.5 p-0" aria-hidden="true">
+    {items.map((item) => (
+      <li>
+        <span class="block font-sans text-sm leading-snug">{item.label}</span>
+        <span class="mt-1 flex items-center gap-2">
+          <span
+            class:list={[
+              "bar-grow block h-3.5 rounded-r-sm",
+              item.highlight ? "bg-accent" : "bg-ink",
+              item.value > 0 && "min-w-0.5",
+            ]}
+            style={`width: ${width(item.value).toFixed(2)}%`}
+          />
+          <span class="shrink-0 font-sans text-sm font-semibold tabular-nums">{item.display}</span>
+        </span>
+      </li>
+    ))}
+  </ul>
+</ChartFigure>

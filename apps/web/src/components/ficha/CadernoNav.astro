@@ -1,0 +1,24 @@
+---
+// Navegação rápida entre os cadernos da ficha (âncoras). Quebra linha no celular.
+interface Props {
+  items: { id: string; label: string }[];
+}
+const { items } = Astro.props;
+---
+
+<nav aria-label="Cadernos desta ficha" class="mt-6">
+  <p class="kicker m-0 mb-2">Nesta ficha</p>
+  <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+    {items.map((item, index) => (
+      <li>
+        <a
+          href={`#${item.id}`}
+          class="inline-flex items-center gap-1.5 rounded-full border border-ink/60 px-3 py-1 font-sans text-sm no-underline transition-colors duration-150 hover:bg-ink hover:text-paper"
+        >
+          <span class="text-xs text-ink-soft tabular-nums">{index + 1}</span>
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>

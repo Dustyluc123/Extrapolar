@@ -6,14 +6,21 @@ import { formatDateTime } from "../../lib/format";
 interface Props {
   updatedAt: string;
   methodologyAnchor: string;
+  sourceName?: string;
+  sourceUrl?: string;
 }
-const { updatedAt, methodologyAnchor } = Astro.props;
+const {
+  updatedAt,
+  methodologyAnchor,
+  sourceName = SOURCE_NAME,
+  sourceUrl = CAMARA_PORTAL_URL,
+} = Astro.props;
 ---
 
-<p class="font-sans text-xs leading-relaxed text-ink-soft">
+<p class="m-0 font-sans text-xs leading-relaxed text-ink-soft">
   Fonte:{" "}
-  <a href={CAMARA_PORTAL_URL} class="underline">
-    {SOURCE_NAME}
+  <a href={sourceUrl} class="underline">
+    {sourceName}
   </a>
   <span aria-hidden="true"> · </span>
   Atualizado em {formatDateTime(updatedAt)}

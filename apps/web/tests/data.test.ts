@@ -10,10 +10,19 @@ describe("JsonDeputyRepository com os dados gerados", () => {
     expect(names).toEqual(sorted);
   });
 
-  it("toda ficha tem participação calculada", async () => {
+  it("toda ficha tem detalhe válido com a participação do próprio deputado", async () => {
     for (const deputy of await repository.listDeputies()) {
       const profile = await repository.getDeputy(deputy.id);
-      expect(profile?.participation?.deputyId).toBe(deputy.id);
+      expect(profile?.detail.deputyId).toBe(deputy.id);
+      expect(profile?.detail.plenario.participacao.deputyId).toBe(deputy.id);
+    }
+  });
+
+  it("o índice de métricas tem valor para todos os deputados", async () => {
+    const index = await repository.getMetricsIndex();
+    const ids = (await repository.listDeputies()).map((d) => String(d.id)).sort();
+    for (const metric of index.metrics) {
+      expect(Object.keys(metric.values).sort()).toEqual(ids);
     }
   });
 
@@ -27,9 +36,10 @@ describe("JsonDeputyRepository com dado quebrado", () => {
     expect(
       () =>
         new JsonDeputyRepository({
-          deputies: { schemaVersion: 1, legislatureId: 57, deputies: [{ id: "x" }] },
-          participation: {},
+          deputies: { schemaVersion: 2, legislatureId: 57, deputies: [{ id: "x" }] },
+          details: {},
           meta: {},
+          metrics: {},
         }),
     ).toThrow(/Dados inválidos em data\/generated\/deputados\.json/);
   });

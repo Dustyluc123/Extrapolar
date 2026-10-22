@@ -145,7 +145,7 @@ Extrapolar/
 │           └── lib/                # HTTP com novas tentativas, cache, horário de Brasília
 ├── data/
 │   ├── raw/                        # Cache dos downloads (fora do Git)
-│   └── generated/                  # deputados.json, participacao.json, meta.json
+│   └── generated/                  # deputados.json, deputados/{id}.json, metricas.json, meta.json
 ├── docs/
 │   ├── ARQUITETURA.md  METODOLOGIA.md  DESIGN.md  FONTES.md  DEPLOY.md
 │   ├── decisoes/                   # ADRs (0001-astro.md ...)

@@ -1,0 +1,30 @@
+---
+// Caderno da ficha (como os cadernos de um jornal): Plenário, Comissões, Projetos...
+import Rule from "../ui/Rule.astro";
+
+interface Props {
+  id: string;
+  number: number;
+  title: string;
+  /** Uma frase sobre o que o caderno reúne. */
+  intro: string;
+}
+const { id, number, title, intro } = Astro.props;
+---
+
+<section id={id} aria-labelledby={`${id}-titulo`} class="scroll-mt-4 pt-10">
+  <Rule variant="thick" />
+  <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-3">
+    <p class="kicker m-0">Caderno {number}</p>
+    <h2
+      id={`${id}-titulo`}
+      class="m-0 font-display text-3xl font-[780] tracking-[-0.015em] sm:text-4xl"
+    >
+      {title}
+    </h2>
+  </div>
+  <p class="caption mt-1 mb-0 max-w-prose">{intro}</p>
+  <div class="mt-2 divide-y divide-rule/70">
+    <slot />
+  </div>
+</section>

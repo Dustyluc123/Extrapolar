@@ -4,47 +4,66 @@
 import {
   datasetMetaSchema,
   deputiesFileSchema,
+  deputyDetailSchema,
+  metricsIndexSchema,
   parseOrThrow,
-  participationFileSchema,
   type DatasetMeta,
   type Deputy,
+  type DeputyDetail,
   type DeputyProfile,
   type DeputyRepository,
-  type Participation,
-  type ParticipationFile,
+  type MetricsIndex,
 } from "@extrapolar/shared";
 import rawDeputies from "../../../../data/generated/deputados.json";
 import rawMeta from "../../../../data/generated/meta.json";
-import rawParticipation from "../../../../data/generated/participacao.json";
+import rawMetrics from "../../../../data/generated/metricas.json";
+
+// Um arquivo por deputado (ADR 0012), carregados no build.
+const rawDetails = import.meta.glob("../../../../data/generated/deputados/*.json", {
+  eager: true,
+  import: "default",
+});
+
+export interface RawData {
+  deputies: unknown;
+  details: Record<string, unknown>;
+  meta: unknown;
+  metrics: unknown;
+}
 
 export class JsonDeputyRepository implements DeputyRepository {
   private readonly deputies: Deputy[];
   private readonly byId: Map<number, Deputy>;
-  private readonly participation: Map<number, Participation>;
-  private readonly participationFile: ParticipationFile;
+  private readonly details = new Map<number, DeputyDetail>();
+  private readonly rawDetails: Map<number, { path: string; data: unknown }>;
   private readonly meta: DatasetMeta;
+  private readonly metrics: MetricsIndex;
 
-  constructor(raw: { deputies: unknown; participation: unknown; meta: unknown }) {
+  constructor(raw: RawData) {
     const deputiesFile = parseOrThrow(
       deputiesFileSchema,
       raw.deputies,
       "data/generated/deputados.json",
     );
-    this.participationFile = parseOrThrow(
-      participationFileSchema,
-      raw.participation,
-      "data/generated/participacao.json",
-    );
     this.meta = parseOrThrow(datasetMetaSchema, raw.meta, "data/generated/meta.json");
+    this.metrics = parseOrThrow(metricsIndexSchema, raw.metrics, "data/generated/metricas.json");
 
     const collator = new Intl.Collator("pt-BR", { sensitivity: "base" });
     this.deputies = [...deputiesFile.deputies].sort(
       (a, b) => collator.compare(a.name, b.name) || a.id - b.id,
     );
     this.byId = new Map(this.deputies.map((deputy) => [deputy.id, deputy]));
-    this.participation = new Map(
-      this.participationFile.deputies.map((entry) => [entry.deputyId, entry]),
+    this.rawDetails = new Map(
+      Object.entries(raw.details).map(([path, data]) => {
+        const id = Number(/(\d+)\.json$/.exec(path)?.[1]);
+        return [id, { path, data }];
+      }),
     );
+    for (const deputy of this.deputies) {
+      if (!this.rawDetails.has(deputy.id)) {
+        throw new Error(`Falta data/generated/deputados/${deputy.id}.json para ${deputy.name}.`);
+      }
+    }
   }
 
   async listDeputies(): Promise<Deputy[]> {
@@ -54,22 +73,28 @@ export class JsonDeputyRepository implements DeputyRepository {
   async getDeputy(id: number): Promise<DeputyProfile | null> {
     const deputy = this.byId.get(id);
     if (!deputy) return null;
-    return { deputy, participation: this.participation.get(id) ?? null };
+    let detail = this.details.get(id);
+    if (!detail) {
+      const raw = this.rawDetails.get(id);
+      detail = parseOrThrow(deputyDetailSchema, raw?.data, `data/generated/deputados/${id}.json`);
+      this.details.set(id, detail);
+    }
+    return { deputy, detail };
   }
 
   async getMeta(): Promise<DatasetMeta> {
     return this.meta;
   }
 
-  async getParticipationSummary(): Promise<Omit<ParticipationFile, "deputies">> {
-    const { deputies: _deputies, ...summary } = this.participationFile;
-    return summary;
+  async getMetricsIndex(): Promise<MetricsIndex> {
+    return this.metrics;
   }
 }
 
 /** Repositório usado pelas páginas. Trocar por outra implementação não muda as páginas (ADR 0002). */
 export const repository: DeputyRepository = new JsonDeputyRepository({
   deputies: rawDeputies,
-  participation: rawParticipation,
+  details: rawDetails,
   meta: rawMeta,
+  metrics: rawMetrics,
 });

@@ -1,0 +1,83 @@
+---
+// Linha do tempo (ex.: comissões e cargos ao longo da legislatura). HTML + CSS com barras
+// posicionadas em %, para os nomes longos quebrarem linha no celular (ADR 0013).
+import ChartFigure from "./ChartFigure.astro";
+
+export interface TimelineItem {
+  label: string;
+  /** Detalhe curto (ex.: "Titular · Presidente"). */
+  detail?: string;
+  start: string;
+  /** null = ainda em andamento. */
+  end: string | null;
+  highlight?: boolean;
+  /** Período por extenso para a tabela (ex.: "01/03/2023 a hoje"). */
+  periodText: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  items: TimelineItem[];
+  /** Início e fim do eixo (AAAA-MM-DD...). */
+  from: string;
+  to: string;
+  /** Anos marcados no eixo. */
+  years: number[];
+}
+const { title, description, items, from, to, years } = Astro.props;
+const t0 = Date.parse(from.slice(0, 10));
+const t1 = Date.parse(to.slice(0, 10));
+const pos = (date: string | null) => {
+  const t = date ? Date.parse(date.slice(0, 10)) : t1;
+  return Math.min(100, Math.max(0, ((t - t0) / (t1 - t0)) * 100));
+};
+---
+
+<ChartFigure
+  title={title}
+  description={description}
+  table={{
+    headers: ["Item", "Período"],
+    rows: items.map((item) => [
+      item.detail ? `${item.label} (${item.detail})` : item.label,
+      item.periodText,
+    ]),
+  }}
+>
+  <div aria-hidden="true">
+    <ul class="m-0 list-none space-y-3 p-0">
+      {items.map((item) => {
+        const left = pos(item.start);
+        const width = Math.max(0.8, pos(item.end) - left);
+        return (
+          <li>
+            <span class="block font-sans text-sm leading-snug">
+              {item.label}
+              {item.detail ? <span class="text-ink-soft"> · {item.detail}</span> : null}
+            </span>
+            <span class="relative mt-1 block h-3 rounded-sm bg-card">
+              <span
+                class:list={[
+                  "absolute inset-y-0 rounded-sm",
+                  item.highlight ? "bg-accent" : "bg-ink",
+                ]}
+                style={`left: ${left.toFixed(2)}%; width: ${width.toFixed(2)}%`}
+              />
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+    <div class="relative mt-2 h-4 border-t border-ink font-sans text-[11px] text-ink-soft">
+      {years.map((year) => {
+        const left = pos(`${year}-01-01`);
+        return (
+          <span class="absolute top-0.5 -translate-x-1/2" style={`left: ${left.toFixed(2)}%`}>
+            {year}
+          </span>
+        );
+      })}
+    </div>
+  </div>
+</ChartFigure>

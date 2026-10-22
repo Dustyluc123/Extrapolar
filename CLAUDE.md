@@ -61,7 +61,8 @@ Detalhes em `docs/ARQUITETURA.md`. Resumo:
 - `packages/metrics` — funções **puras** que calculam indicadores. Sem rede, sem disco, sem `Date.now()` (a data de referência entra como argumento). Tudo aqui tem teste.
 - `packages/pipeline` — rede, disco e orquestração: `sources/` (uma fonte por arquivo) → `steps/` (`fetch → normalize → compute → publish`). Valida tudo com Zod; se algo vier diferente do esperado, **falha com mensagem clara e não publica**. A publicação é atômica (escreve em temporário e renomeia).
 - `apps/web` — Astro, HTML estático. Lê `data/generated/*.json` no build por meio de `JsonDeputyRepository` (`src/lib/data.ts`), que valida com os esquemas de saída. **Nunca** chama a API da Câmara. Interatividade mínima com `<script>` do Astro; ilhas React só quando houver interação de verdade (jogos, "monte seu ranking" — fases futuras).
-- `data/raw/` — cache de downloads (fora do Git). `data/generated/` — JSON final (no Git; ver ADR 0004): `deputados.json`, `participacao.json` e `meta.json` (fontes, data de referência e avisos de qualidade dos dados).
+- `data/raw/` — cache de downloads (fora do Git). `data/generated/` — JSON final (no Git; ADRs 0004 e 0012): `deputados.json` (índice), `deputados/{id}.json` (detalhe por caderno, sem a data da edição), `metricas.json` (valores brutos para a Fase 2, sem ranking) e `meta.json` (fontes, data de referência, avisos de qualidade, totais).
+- Valor de métrica padronizado: `MetricValue` = `ok` (valor, numerador, denominador) ou `sem-dado` com motivo de `packages/shared/src/no-data.ts`. Nunca 0 no lugar de sem dado.
 
 Pacotes internos não têm build: exportam `src/*.ts` direto (padrão do Chutaí).
 

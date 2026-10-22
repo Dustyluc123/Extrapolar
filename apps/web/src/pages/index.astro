@@ -10,7 +10,7 @@ import DeputyRow from "../components/deputado/DeputyRow.astro";
 import { repository } from "../lib/data";
 import { formatInteger, formatLongDate } from "../lib/format";
 
-const summary = await repository.getParticipationSummary();
+const meta = await repository.getMeta();
 const deputies = await repository.listDeputies();
 const collator = new Intl.Collator("pt-BR");
 const states = [...new Set(deputies.map((d) => d.state))].sort(collator.compare);
@@ -32,10 +32,10 @@ const parties = [...new Set(deputies.map((d) => d.party))].sort(collator.compare
     </div>
     <div class="lg:pl-8">
       <BigNumber
-        value={formatInteger(summary.nominalPlenaryVotes)}
+        value={formatInteger(meta.totals.nominalPlenaryVotes)}
         label="Votações nominais no plenário"
-        caption={`Votações em que cada voto fica registrado com o nome do deputado. Desde 1º de fevereiro de 2023 até ${summary.lastVoteDate ? formatLongDate(summary.lastVoteDate) : "hoje"}.`}
-        updatedAt={summary.referenceDateTime}
+        caption={`Votações em que cada voto fica registrado com o nome do deputado. Desde 1º de fevereiro de 2023 até ${meta.totals.lastNominalVoteDate ? formatLongDate(meta.totals.lastNominalVoteDate) : "hoje"}.`}
+        updatedAt={meta.referenceDateTime}
         methodologyAnchor="participacao"
       />
     </div>

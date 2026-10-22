@@ -1,0 +1,42 @@
+---
+// Glossário: os termos das fichas em linguagem simples.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Headline from "../components/ui/Headline.astro";
+import { GLOSSARY } from "../lib/glossary";
+
+const collator = new Intl.Collator("pt-BR", { sensitivity: "base" });
+const entries = [...GLOSSARY].sort((a, b) => collator.compare(a.term, b.term));
+---
+
+<BaseLayout
+  title="Glossário"
+  description="Os termos do Congresso usados no Extrapolar, explicados em linguagem simples."
+  current="glossario"
+>
+  <p class="kicker m-0">Para consultar</p>
+  <Headline as="h1" size="xl" class="mt-2">
+    Glossário
+  </Headline>
+  <p class="mt-3 max-w-prose text-lg">
+    As palavras do Congresso que aparecem nas fichas, explicadas sem juridiquês.
+  </p>
+
+  <dl class="mt-8 grid gap-x-10 sm:grid-cols-2">
+    {entries.map((entry) => (
+      <div id={entry.slug} class="scroll-mt-4 border-t border-rule py-4">
+        <dt class="font-display text-xl font-[700]">
+          {entry.term}
+          {entry.short ? <span class="kicker ml-2">{entry.short}</span> : null}
+        </dt>
+        <dd class="m-0 mt-1">
+          {entry.definition}
+          {entry.plain ? (
+            <p class="caption mt-2 mb-0">
+              <strong class="not-italic">Traduzindo:</strong> {entry.plain}
+            </p>
+          ) : null}
+        </dd>
+      </div>
+    ))}
+  </dl>
+</BaseLayout>

@@ -1,0 +1,55 @@
+# Plano — Fase 1: todas as métricas + design mais leve
+
+Base: `prompt-ct-fase1.md` (vai para `docs/briefing-fase1.md` na etapa 1), `CLAUDE.md`, `docs/` e `docs/RELATORIO-NOITE.md`.
+
+## O que já conferi (reconhecimento de 22/10/2026, só leitura)
+
+| Fonte                                                                     | Existe?       | Tamanho                               | Observação                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------- | ------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `eventos-{ano}`, `eventosOrgaos-{ano}`, `eventosPresencaDeputados-{ano}`  | sim           | 3 MB, 0,7 MB, 29 MB (2025)            | presença                                                                                                                                                                                                                                               |
+| `votacoesOrientacoes-{ano}`                                               | sim           | 1,8 MB                                | blocos aparecem com **nome truncado** (`Bl PlFdrPtUniPp...`); grafias variam (`Novo`/`NOVO`); 1.205 orientações vazias em 2025                                                                                                                         |
+| `orgaosDeputados-L57`, `orgaos`                                           | sim           | 7 MB, 3 MB                            | comissões, cargos                                                                                                                                                                                                                                      |
+| `eventosRequerimentos-{ano}`                                              | sim           | 0,6 MB                                | audiências                                                                                                                                                                                                                                             |
+| `proposicoes-{ano}`, `proposicoesAutores-{ano}`, `proposicoesTemas-{ano}` | sim           | **157 MB**, 79 MB, 10 MB (2025, JSON) | CSV menor (86 MB / 12 MB); processar um ano por vez                                                                                                                                                                                                    |
+| `funcionarios`                                                            | sim           | 7 MB                                  | secretários parlamentares têm `uriLotacao` com o id do deputado; 513 gabinetes, de 5 a 25 cada                                                                                                                                                         |
+| `frentes`, `frentesDeputados`                                             | sim           | 2 MB, **150 MB**                      |                                                                                                                                                                                                                                                        |
+| `legislaturasMesas`, `deputadosProfissoes`, `deputadosOcupacoes`          | sim           | pequenos                              |                                                                                                                                                                                                                                                        |
+| `discursos-{ano}`                                                         | **não** (404) | —                                     | só API `/deputados/{id}/discursos`; precisa de filtro de datas (sem ele a API devolveu só 47 itens)                                                                                                                                                    |
+| Cota: `camara.leg.br/cotas/Ano-{ano}.csv.zip`                             | sim           | 7 MB (2025)                           |                                                                                                                                                                                                                                                        |
+| Emendas: CGU `EmendasParlamentares.zip` (download em lote)                | sim           | 33 MB                                 | **sem chave**; a API com token fica desnecessária                                                                                                                                                                                                      |
+| Teto da cota: Ato da Mesa nº 244/2026                                     | ato existe    | —                                     | o texto HTML só corrige o Anexo do Ato 43/2009 pelo IPCA (vigência: publicação em 20/02/2026); **a tabela por UF não está no HTML**; está no Diário da Câmara de 20/02/2026, p. 2216, ou na página oficial "Cota parlamentar" do guia para jornalistas |
+
+## Decisões técnicas (vão para ADRs)
+
+- **Dados por deputado:** `data/generated/deputados/{id}.json` (um arquivo por deputado, só agregados) + `deputados.json` (índice leve para a capa e o resumo em números) + `metricas.json` (para a Fase 2: por métrica e por deputado, `valor`, `numerador`, `denominador`, `status`; sem ranking). Os arquivos por deputado **não** levam a data da edição, para só mudarem quando os dados mudam e o Git crescer pouco. Script `scripts/repo-growth.mjs` mede o crescimento por execução.
+- **Métricas como módulos:** cada métrica tem função pura em `packages/metrics/src/<métrica>.ts` com testes; o pipeline ganha um módulo por fonte (`sources/`) e por métrica (`steps/metrics/`), mantendo `fetch → normalize → compute → publish` e a publicação atômica.
+- **"Sem dado" padronizado:** todo valor é `{ status: "ok", ... } | { status: "sem-dado", motivo: "<código>" }`, com textos de motivo fixos (ex.: "assumiu há menos de 30 dias", "não é titular de nenhuma comissão").
+- **Arquivos grandes:** um ano por vez, reduzindo logo depois de validar (como na Fase 0). Se o JSON de proposições passar do limite de memória, usar o CSV oficial do mesmo arquivo.
+- **Gráficos:** SVG escrito à mão em componentes Astro, gerado no build, sem biblioteca no navegador (barras horizontais, colunas por mês/trimestre, linha do tempo, barra empilhada). Cada gráfico com título, descrição e tabela recolhível.
+- **Discursos:** API com cache; medir o custo. Se passar de ~5 min por dia, atualização semanal (regra no workflow e na metodologia).
+- **Alinhamento:** só votações em que o deputado votou e a bancada orientou Sim/Não/Obstrução/Abstenção (exclui "Liberado", vazio e Art. 17 do deputado). Partido do deputado **na data da votação** (vem no próprio voto).
+- **Proposições:** autor principal = primeiro signatário conforme o campo de ordem no arquivo de autores (a conferir na amostra); período = apresentadas na legislatura, dentro dos períodos em exercício.
+
+## Etapas (um commit por etapa, sem parar)
+
+1. **Fundação.** Move o briefing; ADRs (dados por deputado, gráficos SVG, módulos de métrica, "sem dado"); refatora o JSON gerado para arquivos por deputado + índice + `metricas.json`; componentes de gráfico; ficha em cadernos com navegação por âncoras; esqueleto do `/glossario`; script de crescimento do repositório.
+2. **Caderno 1 — Plenário.** Presença em sessões deliberativas; alinhamento com a orientação do partido; alinhamento com o Governo.
+3. **Caderno 2 — Comissões.** Comissões e cargos (linha do tempo); presença nas reuniões em que é titular; audiências e eventos a pedido do deputado.
+4. **Caderno 3 — Projetos e leis.** Proposições por tipo (principal × coautoria); o que aconteceu com elas e taxa de conversão; temas oficiais; pareceres de relator (se houver forma confiável).
+5. **Caderno 4 — Fiscalização.** RIC, PFC, convocações (só se tipo oficial ou precisão alta medida em amostra), indicações como "sugestões ao governo"; gráfico por trimestre.
+6. **Caderno 5 — Voz.** Discursos por ano e fase da sessão; medir custo; decidir diário ou semanal.
+7. **Caderno 6 — Dinheiro público.** Cota parlamentar (total, por ano, categoria, mês, % do teto); equipe do gabinete (contagem atual); emendas da CGU (empenhado, liquidado, pago, tipo, transferência especial × com finalidade definida, destinos, execução) com ligação autor → deputado por nome normalizado + arquivo de correspondências manuais e lista de não ligados.
+8. **Caderno 7 — Articulação e perfil.** Frentes; cargos (Mesa, presidências de comissão, liderança se houver fonte); profissões e ocupações.
+9. **Ficha completa e design mais leve.** Resumo em números fixo; "O que é isso?" e "Traduzindo:" em cada métrica; `/glossario` completo e linkado; carimbos e selos levemente rotacionados, números que "sobem" (respeitando `prefers-reduced-motion`), estados vazios simpáticos; nomes de seção de jornal; `docs/DESIGN.md` atualizado.
+10. **Fechamento.** Workflow diário (e semanal, se houver) atualizado; tempo do pipeline e crescimento do repositório medidos; verificação completa (format, lint, neutralidade, tipos, testes, build, a11y, capturas sem rolagem lateral); README, CLAUDE.md e `docs/RELATORIO-FASE1.md`.
+
+## Critérios de viabilidade (seção 5 do briefing)
+
+Cada métrica passa pelos 5 critérios antes de entrar; as que falharem vão para "o que ficou de fora" no relatório e na metodologia, com o critério que falhou.
+
+## Respostas às perguntas (22/10/2026)
+
+1. **Teto da cota:** transcrever uma vez, para `packages/shared/src/config/ceap-tetos.ts`, a partir de publicação oficial da Câmara (Diário da Câmara de 20/02/2026, p. 2216, ou a página oficial "Cota parlamentar" do guia para jornalistas, conferindo se batem), com link e vigência de cada período. Para 2023 até fevereiro de 2026, procurar o ato anterior; meses sem tabela oficial ficam `null`, sem % do teto.
+2. **Blocos:** orientação do próprio partido; se não houver, a da federação; a de bloco só se a composição puder ser confirmada pela API oficial de blocos na data da votação. Senão, a votação sai da conta, e a ficha mostra quantas ficaram de fora.
+3. **Resumo em números (fixo para todos):** participação em votações · presença em sessões · projetos como autor principal · pedidos de informação (RIC) · comissões como titular hoje · cota parlamentar gasta na legislatura.
+4. **Emendas:** as dos orçamentos de 2024 a 2027 (apresentadas durante este mandato), com os pagamentos por ano, inclusive restos a pagar.

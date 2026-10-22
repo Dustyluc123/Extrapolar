@@ -1,0 +1,51 @@
+---
+// Bloco de uma métrica na ficha: título, número e gráfico (slot), "O que é isso?",
+// "O que este número não mostra" (slot "limites") e a linha de fonte.
+import SourceNote from "../ui/SourceNote.astro";
+
+interface Props {
+  id: string;
+  title: string;
+  /** Uma ou duas frases em linguagem simples. */
+  whatIs: string;
+  updatedAt: string;
+  methodologyAnchor: string;
+  sourceName?: string;
+  sourceUrl?: string;
+}
+const { id, title, whatIs, updatedAt, methodologyAnchor, sourceName, sourceUrl } = Astro.props;
+---
+
+<article id={id} aria-labelledby={`${id}-titulo`} class="scroll-mt-4 py-8">
+  <h3 id={`${id}-titulo`} class="m-0 font-display text-2xl font-[700] sm:text-[1.75rem]">
+    {title}
+  </h3>
+
+  <div class="mt-4">
+    <slot />
+  </div>
+
+  <div class="mt-6 grid gap-3 lg:grid-cols-2">
+    <div class="rounded-card border border-rule bg-card p-4">
+      <p class="kicker m-0">O que é isso?</p>
+      <p class="mt-1 mb-0">{whatIs}</p>
+    </div>
+    <details class="rounded-card border border-rule bg-card p-4">
+      <summary class="cursor-pointer font-sans text-sm font-semibold">
+        O que este número não mostra
+      </summary>
+      <ul class="mt-3 mb-0 space-y-1.5 pl-5">
+        <slot name="limites" />
+      </ul>
+    </details>
+  </div>
+
+  <div class="mt-4">
+    <SourceNote
+      updatedAt={updatedAt}
+      methodologyAnchor={methodologyAnchor}
+      sourceName={sourceName}
+      sourceUrl={sourceUrl}
+    />
+  </div>
+</article>

@@ -1,0 +1,18 @@
+---
+// "Sem dado" com o motivo padronizado. Nunca mostrar zero no lugar (CLAUDE.md, princípio 3).
+import { NO_DATA_REASONS, type NoDataReason } from "@extrapolar/shared";
+
+interface Props {
+  reason: NoDataReason;
+  label?: string;
+}
+const { reason, label } = Astro.props;
+---
+
+<div>
+  {label ? <p class="kicker m-0">{label}</p> : null}
+  <p class="m-0 font-display text-5xl font-[800] text-ink-soft">Sem dado</p>
+  <p class="caption mt-2 mb-0 max-w-prose">
+    {NO_DATA_REASONS[reason]} Isso não é o mesmo que zero.
+  </p>
+</div>

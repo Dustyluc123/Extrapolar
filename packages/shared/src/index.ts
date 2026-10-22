@@ -5,6 +5,7 @@ export const PROJECT_NAME = "Extrapolar";
 
 export * from "./legislature";
 export * from "./text";
+export * from "./no-data";
 export * from "./sources";
 export * from "./validation";
 export * from "./schemas/camara";
