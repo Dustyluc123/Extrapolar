@@ -1,0 +1,57 @@
+---
+// Jogo 1 — Dle do seu estado.
+import "../../styles/games.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import GameHeader from "../../components/games/GameHeader.astro";
+import DleGame from "../../components/games/DleGame";
+import { dleStates } from "../../lib/games/dle";
+import { STATE_NAMES } from "../../lib/states";
+
+const states = dleStates.map((file) => ({
+  code: file.state,
+  name: STATE_NAMES[file.state] ?? file.state,
+  count: file.deputies.length,
+}));
+---
+
+<BaseLayout
+  title="Dle do seu estado"
+  description="Adivinhe o deputado do dia entre os que representam o seu estado. Um jogo diário com dados oficiais da Câmara."
+  current="jogos"
+>
+  <GameHeader slug="dle" />
+  <section class="mt-6" aria-label="Jogo">
+    <DleGame client:load states={states} />
+  </section>
+  <section class="mt-10 max-w-prose" aria-labelledby="dle-atributos">
+    <h2 id="dle-atributos" class="font-display text-xl font-[700]">
+      De onde vêm as pistas
+    </h2>
+    <ul class="pl-5">
+      <li>
+        <strong>Partido</strong> e <strong>condição</strong> (titular ou suplente): Câmara, hoje.
+        Amarelo no partido = mesma federação.
+      </li>
+      <li>
+        <strong>Na Câmara desde</strong>: ano em que começou a primeira legislatura do deputado na
+        Câmara.
+      </li>
+      <li>
+        <strong>Nasceu em</strong> (ano; amarelo até 5 anos de diferença) e{" "}
+        <strong>estado natal</strong>: cadastro oficial da Câmara.
+      </li>
+      <li>
+        <strong>Comissões</strong>: siglas das comissões em que é titular hoje (amarelo = alguma em
+        comum).
+      </li>
+      <li>
+        <strong>Projetos</strong>: apresentados como autor principal nesta legislatura (amarelo até
+        20% de diferença).
+      </li>
+    </ul>
+    <p class="caption">
+      Chutes: 6 em estados com até 10 deputados, 8 até 30 e 10 acima disso. Detalhes na
+      <a href="/metodologia#jogo-dle">metodologia</a>.
+    </p>
+  </section>
+</BaseLayout>

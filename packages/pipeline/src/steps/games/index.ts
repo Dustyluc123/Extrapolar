@@ -13,13 +13,14 @@ import type { NormalizedData } from "../normalize";
 import type { ComputedData } from "../compute";
 import type { OutputFile } from "../publish";
 import { buildCatalog, buildGameDeputies } from "./catalog";
-import { DrawState, loadDrawState } from "./draw";
+import { buildDle } from "./dle";
+import { DrawState, drawSecret, loadDrawState } from "./draw";
 import { readPlainSummaries } from "./summaries";
 
 export async function buildGames(
   context: PipelineContext,
   data: NormalizedData,
-  _computed: ComputedData,
+  computed: ComputedData,
 ): Promise<OutputFile[]> {
   log.step("Jogos: votações elegíveis e sorteio do dia");
   const today = context.referenceDateTime.slice(0, 10);
@@ -49,10 +50,33 @@ export async function buildGames(
   );
   const deputies = buildGameDeputies(data.deputies);
   const draw = new DrawState(await loadDrawState(GENERATED_DIR), today);
+  const secret = drawSecret();
+
+  const dle = buildDle({
+    deputies: data.deputies,
+    details: new Map(computed.details.map((d) => [d.deputyId, d])),
+    records: data.deputyRecords,
+    federations: data.federations,
+    today,
+    draw,
+    secret,
+    onMissingRecord: (id) => {
+      log.warn(
+        `Deputado ${id} sem registro no arquivo deputados.json (nascimento e estreia sem dado)`,
+      );
+      context.quality.add(
+        "jogos-deputado-sem-registro",
+        "Deputado em exercício sem registro no arquivo de todos os deputados (Dle mostra sem dado).",
+      );
+    },
+  });
+  log.info(`Dle: ${dle.length} estados`);
 
   return [
     { name: "jogos/votacoes.json", schema: gameVotesFileSchema, data: catalog.file },
     { name: "jogos/deputados.json", schema: gameDeputiesFileSchema, data: deputies },
+    ...dle,
+    // O estado do sorteio vai por último: só depois de todos os jogos sortearem.
     { name: "jogos/sorteio.json", schema: drawStateFileSchema, data: draw.toFile() },
   ];
 }

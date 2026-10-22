@@ -90,7 +90,7 @@ export async function runPipeline(options: RunOptions = {}): Promise<void> {
       { name: "meta.json", schema: datasetMetaSchema, data: meta },
       ...games,
     ],
-    { ownedDirs: ["deputados"] },
+    { ownedDirs: ["deputados", "jogos/dle"] },
   );
   // participacao.json (Fase 0) foi substituído pelos arquivos por deputado (ADR 0012).
   await rm(join(GENERATED_DIR, "participacao.json"), { force: true });

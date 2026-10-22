@@ -564,3 +564,27 @@ Na primeira versão da regra, 1 votação de mérito ficou de fora (PEC 45/2019,
 - Os jogos testam **conhecimento sobre o que aconteceu**, nunca opinião: nenhum texto diz que um voto é bom ou ruim.
 - Não há jogo que compare deputados entre si ("quem gastou mais").
 - **O voto do jogador é dele:** escolhas, sequência e estatísticas ficam só no navegador (`localStorage`). Nada é enviado.
+
+<a id="jogo-dle"></a>
+
+## Jogo 1 — Dle do seu estado
+
+Adivinhar o deputado do dia entre os deputados em exercício do estado escolhido. Cada estado tem o seu sorteio (ADR 0020).
+
+**Pistas** (só fatos que já estão no site ou no cadastro oficial; nenhuma soa como nota):
+
+| Pista               | De onde vem                                                                                     | Verde          | Amarelo                     | Setas |
+| ------------------- | ----------------------------------------------------------------------------------------------- | -------------- | --------------------------- | ----- |
+| Partido             | partido atual (Câmara)                                                                          | mesmo partido  | partidos da mesma federação | —     |
+| Condição            | titular, suplente ou suplente efetivado                                                         | igual          | —                           | —     |
+| Na Câmara desde     | ano de início da primeira legislatura (arquivo `deputados.json`; 1951 + 4 × (legislatura − 39)) | igual          | —                           | sim   |
+| Nasceu em           | ano de nascimento (`deputados.json`)                                                            | igual          | até 5 anos de diferença     | sim   |
+| Estado natal        | UF de nascimento (`deputados.json`)                                                             | igual          | —                           | —     |
+| Comissões (titular) | siglas das comissões em que é titular hoje (mesma regra da ficha)                               | mesmo conjunto | alguma em comum             | —     |
+| Projetos (autor)    | projetos apresentados como autor principal na legislatura (mesma métrica da ficha)              | igual          | até 20% de diferença        | sim   |
+
+**Fora de propósito:** gênero, gastos, presença, alinhamento e qualquer outra métrica que possa ser lida como "bom" ou "ruim". O número de mandatos não é usado porque não há contagem oficial (só a primeira e a última legislatura).
+
+**Chutes:** 6 em estados com até 10 deputados, 8 até 30 e 10 acima de 30 (o tamanho da bancada vai de 8 a 70). O autocompletar mostra só os deputados do estado e ignora acentos. A foto borrada é uma dica opcional; a nítida aparece na revelação, com o link para a ficha.
+
+**Limitação:** "na Câmara desde" conta a primeira legislatura, mesmo que a pessoa tenha ficado fora da Câmara depois.

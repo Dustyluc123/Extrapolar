@@ -25,9 +25,9 @@ export const GAMES: GameInfo[] = [
       "Escolha o seu estado e chute um deputado da bancada.",
       "Cada característica volta colorida: verde é igual, amarelo é perto ou tem algo em comum, vermelho é diferente.",
       "Setas dizem se o número do deputado do dia é maior ou menor.",
-      "Acertou? A ficha completa dele está a um clique.",
+      "Acertou? A ficha completa está a um clique.",
     ],
-    ready: false,
+    ready: true,
   },
   {
     slug: "placar",
