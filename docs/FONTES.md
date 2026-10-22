@@ -41,6 +41,19 @@ Formatos conferidos em 22/10/2026 (amostras de 2023 a 2026):
   - `orientacao`: `Sim`, `Não`, `Obstrução`, `Liberado` e `""` (sem orientação). `Abstenção` é aceito, mas não apareceu.
   - `siglaBancada` no plenário: lideranças (`Governo`, `Maioria`, `Minoria`, `Oposição`), partidos (às vezes abreviados: `Solidaried`, `Republican`; `Podemos` para o PODE), federações (`Fdr PT-PCdoB-PV`, `Fdr PSOL-REDE`, `Fdr PSDB-CIDADANIA`) e blocos com nome abreviado (`Bl UniPpFdrPsdbCid...`, `Bloco Parlamentar`). Ver ADR 0014.
 
+### Arquivos estáticos — Fase 1, Caderno 2 (Comissões)
+
+Formatos conferidos em 22/10/2026:
+
+- `orgaos/json/orgaos.json` (sem ano): `{ "uri": ".../orgaos/2003", "sigla": "CCJC", "nome": "…", "apelido": "…", "tipoOrgao": "Comissão Permanente", "codTipoOrgao": 2, … }`. Tipos encontrados: Comissão Permanente, Comissão Especial, Comissão Parlamentar de Inquérito, Subcomissão, Comissão Externa, Grupo de Trabalho, Conselho, Comissão Mista (Permanente/Especial), Comissão Medida Provisória, COORDENADORIA DA MULHER, entre outros.
+- `orgaosDeputados/json/orgaosDeputados-L57.json` (por legislatura): `{ "uriOrgao": ".../orgaos/4", "siglaOrgao": "MESA", "nomeOrgao": "…", "nomePublicacaoOrgao": "…", "uriDeputado": ".../deputados/178937", "cargo": "1º Vice-Presidente", "dataInicio": "2025-02-01", "dataFim": "" | "AAAA-MM-DD", … }`.
+  - `cargo`: Titular, Suplente, Presidente, 1º/2º/3º Vice-Presidente, Relator, Coordenador e outros (43 valores).
+  - Durante a presidência nem sempre há linha de "Titular"; há 4 linhas com data de fim anterior à de início (ignoradas). Alguns órgãos da lista não estão em `orgaos.json` (tipo "Não informado").
+- `eventosRequerimentos/json/eventosRequerimentos-{ano}.json`: `{ "idEvento": 75406, "tituloRequerimento": "REQ 338/2025", "uriRequerimento": ".../proposicoes/2483487" }`. Quase todos são REQ (também SUG, PL, REP); até 27 requerimentos por evento.
+- `proposicoesAutores/json/proposicoesAutores-{ano}.json` (~79 MB por ano): `{ "idProposicao": 2646600, "idDeputadoAutor": 204379 (só para deputados), "codTipoAutor": 10000, "tipoAutor": "Deputado(a)", "nomeAutor": "…", "ordemAssinatura": "1", "proponente": "1" | "0", … }`.
+  - `ordemAssinatura = "1"` é o primeiro signatário (único por proposição, conferido).
+  - `proponente = "0"` aparece só em assinaturas de deputados que não são o primeiro: são assinaturas de apoio.
+
 ### API (`https://dadosabertos.camara.leg.br/api/v2`)
 
 | Endpoint                                                 | Uso                                                                                                           |

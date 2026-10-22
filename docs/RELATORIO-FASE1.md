@@ -21,12 +21,22 @@
 - Conferido: todos os nomes de bancada de partido batem com exatamente um partido (abreviações "Solidaried", "Republican", "Podemos"=PODE).
 - Chrome 155 demorou para abrir no headless; espera do script de 10 s para 30 s.
 
+### Etapa 3 — Comissões
+
+- 5.538 reuniões de comissão; mediana de 2 comissões como titular hoje (53 deputados com zero); presença em comissões com mediana de 57%; 13 deputados nunca titulares (ministros licenciados, Mesa, suplentes recentes).
+- Eventos a pedido: mediana 8, máximo 204; 12 requerimentos sem autoria na legislatura.
+- Linha do tempo com vários trechos por comissão; comissões só de suplência numa lista recolhida.
+- Script de capturas aceita âncora (`/deputados/ID#caderno`) e passa por about:blank antes de navegar (navegação só de âncora travava).
+
 ## Decisões (marcar ⚠ as que mudam números ou o que o leitor vê)
 
 - ⚠ Orientação de bloco não usada (decidido no planejamento); efeito grande em partidos que orientam pelo bloco — ADR 0014.
 - ⚠ Partido considerado no alinhamento = partido na data da votação (registrado no voto), não o atual.
 - ⚠ Alinhamento conta só votações em que votou Sim/Não/Abstenção/Obstrução e a orientação foi uma dessas; liberado, sem orientação, só bloco, Art. 17 e secreto ficam fora e aparecem contados na ficha.
 - ⚠ Presença: só "Sessão Deliberativa" encerrada do PLEN; presença fora do período conta (mesma regra da participação).
+- ⚠ "Comissão" = Permanente, Especial ou CPI; "titular" inclui presidente e vices (a linha de Titular some durante a presidência).
+- ⚠ Presença em comissões só com os 8 tipos de reunião com presença regularmente registrada; seminários, mesas-redondas, visitas etc. fora.
+- ⚠ Eventos a pedido: autor = proponente em qualquer posição (apoio não conta); evento conta uma vez por deputado.
 - Aviso de "base pequena" (< 30) generalizado para todas as porcentagens (componente FewNotice).
 
 - Gráficos de barras e linha do tempo em HTML+CSS em vez de SVG (rótulos longos quebram linha no celular) — ADR 0013.

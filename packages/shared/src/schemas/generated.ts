@@ -176,6 +176,46 @@ export const alignmentSchema = z
   });
 export type Alignment = z.infer<typeof alignmentSchema>;
 
+// ---- Caderno 2 — Comissões ----
+
+export const organMembershipSchema = z.object({
+  organId: z.number().int(),
+  sigla: z.string(),
+  nome: z.string(),
+  /** Tipo oficial do órgão (Comissão Permanente, Comissão Especial, CPI...). */
+  tipo: z.string(),
+  cargo: z.string(),
+  inicio: localDate,
+  /** null = ainda em andamento na data de referência. */
+  fim: localDate.nullable(),
+});
+export type OrganMembership = z.infer<typeof organMembershipSchema>;
+
+export const requestedEventSchema = z.object({
+  data: localDate,
+  tipo: z.string(),
+  orgaos: z.array(z.string()),
+  descricao: z.string(),
+});
+
+export const comissoesSchema = z.object({
+  /** Todos os cargos em órgãos da Câmara na legislatura (comissões, conselhos, Mesa...). */
+  participacoes: z.array(organMembershipSchema),
+  /** Comissões (permanentes, especiais, CPIs) em que é titular, presidente ou vice hoje. */
+  titularHoje: count,
+  /** Foi titular (ou presidente/vice) de alguma comissão na legislatura. */
+  foiTitular: z.boolean(),
+  presencaReunioes: attendanceSchema,
+  eventosRequeridos: z.object({
+    total: count,
+    comoPrimeiroSignatario: count,
+    porTipo: z.array(z.object({ tipo: z.string(), quantidade: count })),
+    /** Até 5 eventos mais recentes, para dar exemplos na ficha. */
+    recentes: z.array(requestedEventSchema).max(5),
+  }),
+});
+export type Comissoes = z.infer<typeof comissoesSchema>;
+
 // ---- deputados/{id}.json (detalhe por deputado, organizado por caderno) ----
 // Não leva a data da edição: o arquivo só muda quando os dados do deputado mudam (ADR 0012).
 
@@ -188,6 +228,7 @@ export const deputyDetailSchema = z.object({
     alinhamentoPartido: alignmentSchema,
     alinhamentoGoverno: alignmentSchema,
   }),
+  comissoes: comissoesSchema,
 });
 export type DeputyDetail = z.infer<typeof deputyDetailSchema>;
 

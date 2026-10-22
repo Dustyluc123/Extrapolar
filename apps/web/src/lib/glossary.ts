@@ -107,6 +107,40 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition:
       "Aliança de partidos (e federações) formada dentro da Câmara para atuar em conjunto. Pode mudar ao longo da legislatura.",
   },
+  {
+    slug: "comissao",
+    term: "Comissão",
+    definition:
+      "Grupo menor de deputados que analisa e vota propostas de um tema antes (ou no lugar) do plenário. As permanentes existem sempre (Saúde, Educação...); as especiais são criadas para uma proposta específica; as CPIs investigam um fato determinado.",
+    plain: "É onde o assunto é estudado em detalhe antes de ir para a votação de todos.",
+  },
+  {
+    slug: "cpi",
+    term: "Comissão Parlamentar de Inquérito",
+    short: "CPI",
+    definition:
+      "Comissão temporária criada para investigar um fato determinado, com poderes de investigação próprios de autoridades judiciais.",
+  },
+  {
+    slug: "audiencia-publica",
+    term: "Audiência pública",
+    definition:
+      "Reunião de uma comissão para ouvir especialistas, autoridades e representantes da sociedade sobre um tema.",
+    plain: "É a comissão chamando gente de fora para explicar ou debater um assunto.",
+  },
+  {
+    slug: "requerimento",
+    term: "Requerimento",
+    short: "REQ",
+    definition:
+      "Pedido formal de um deputado (por exemplo, para realizar uma audiência pública ou um seminário). Precisa ser aprovado para acontecer.",
+  },
+  {
+    slug: "mesa-diretora",
+    term: "Mesa Diretora",
+    definition:
+      "Grupo de deputados que dirige os trabalhos da Câmara: presidente, vice-presidentes e secretários. É eleita para mandatos de dois anos.",
+  },
 ];
 
 export function glossaryEntry(slug: string): GlossaryEntry {

@@ -167,3 +167,73 @@ Igual ao alinhamento com o partido, usando a orientação da bancada "Governo" n
 - Não diz por que o deputado votou com ou contra o Governo, nem o tema das votações.
 - O Governo muda de posição conforme o tema; o número mistura votações de assuntos muito diferentes.
 - Não conta ausências (elas aparecem na participação).
+
+<a id="comissoes"></a>
+
+## Comissões de que participa
+
+### O que é
+
+A lista de cargos do deputado nos órgãos da Câmara durante a legislatura (comissões permanentes, especiais, CPIs, Mesa, conselhos, subcomissões e outros), com o período de cada um. O número principal é **em quantas comissões ele é titular hoje**.
+
+### Como é calculado
+
+- **Fonte:** o arquivo de participação dos deputados nos órgãos da legislatura (`orgaosDeputados-L57`), cruzado com a lista de órgãos (`orgaos`) para saber o tipo de cada um.
+- **"Comissão"**, para o número principal, a linha do tempo e a presença, quer dizer: Comissão Permanente, Comissão Especial ou Comissão Parlamentar de Inquérito. Os outros órgãos aparecem numa lista à parte.
+- **"Titular"** inclui quem ocupa a presidência ou uma vice-presidência da comissão: eles são membros com direito a voto, e nos dados a linha de "Titular" às vezes não aparece durante a presidência.
+- **Titular hoje:** comissões distintas em que o deputado tem cargo de titular, presidente ou vice na data da atualização. Zero é um valor válido (não é "sem dado").
+- **Datas:** o arquivo traz data de início e de fim de cada cargo; cargo sem data de fim está em andamento. Linhas com data de fim anterior à de início são ignoradas (4 casos em 22/10/2026, registrados nos avisos de qualidade).
+
+### O que este número **não** mede
+
+- O que o deputado fez nas comissões (relatorias, votos, perguntas).
+- A importância de cada comissão. A distribuição de vagas depende de acordos entre os partidos, proporcionais ao tamanho das bancadas.
+
+<a id="presenca-comissoes"></a>
+
+## Presença nas reuniões das comissões
+
+### O que é
+
+A porcentagem das reuniões das comissões em que o deputado era titular (ou presidente ou vice) em que ele registrou presença.
+
+### Como é calculado
+
+```
+presença em comissões = reuniões com presença registrada
+                        ÷ reuniões realizadas das comissões em que era titular, na data da reunião
+```
+
+1. **Comissões:** permanentes, especiais e CPIs (como acima). Comissões em que é só suplente não entram.
+2. **Reuniões que entram:** eventos encerrados desses órgãos dos tipos **Reunião Deliberativa, Audiência Pública, Audiência Pública e Deliberação, Reunião de Comparecimento de Ministro(a), Reunião, Reunião de Instalação e Eleição, Reunião de Eleição e Tomada de Depoimento**. Em 2025, esses tipos tinham presença registrada em 99% das reuniões encerradas.
+3. **Ficam fora:** seminários, mesas-redondas, visitas técnicas, reuniões técnicas, debates, testes do painel eletrônico e outros eventos. Nesses, a presença é registrada de forma irregular (por exemplo, em 2025 só 68 de 116 mesas-redondas encerradas tinham alguma presença), então incluí-los contaria como ausência o que é falta de registro.
+4. **Titular na data:** a reunião só entra se, no dia dela, o deputado tinha cargo de titular, presidente ou vice naquela comissão. Reuniões conjuntas de várias comissões entram se ele era titular de qualquer uma delas.
+5. **Períodos em exercício:** também respeitados, como nas outras métricas.
+6. **Nunca foi titular:** "sem dado" com esse motivo (não é 0%).
+
+### O que este número **não** mede
+
+- **Choque de horário:** comissões se reúnem ao mesmo tempo; quem é titular de várias pode ter duas reuniões no mesmo horário e só conseguir estar em uma.
+- Ausências justificadas (os dados não trazem a justificativa).
+- O que o deputado fez na reunião.
+
+<a id="eventos-requeridos"></a>
+
+## Audiências e eventos realizados a pedido do deputado
+
+### O que é
+
+Quantos eventos (audiências públicas, seminários, sessões solenes, comparecimento de ministros...) **já realizados** na legislatura tiveram origem em um requerimento de que o deputado é autor. É o dado oficial mais próximo de "ouvir a sociedade" que os dados abertos permitem.
+
+### Como é calculado
+
+1. **Ligação evento → requerimento:** arquivo `eventosRequerimentos-{ano}` (cada linha liga um evento a um requerimento; um evento pode ter vários).
+2. **Autoria:** arquivo `proposicoesAutores-{ano}`. Conta como autor o deputado **proponente** (`proponente = 1`), em qualquer posição; assinaturas de apoio (`proponente = 0`) não contam. A ficha mostra também em quantos ele foi o **primeiro signatário** (`ordemAssinatura = 1`).
+3. **Evento realizado:** situação "Encerrada…", dentro da legislatura e até a data da atualização. Cada evento conta uma vez por deputado, mesmo com vários requerimentos dele.
+4. **Requerimentos sem autoria conhecida:** se o requerimento não está nos arquivos de proposições da legislatura (por exemplo, apresentado antes de 2023), o evento não é atribuído a ninguém (12 casos em 22/10/2026).
+
+### O que este número **não** mede
+
+- Muitos eventos são pedidos por vários deputados juntos; todos eles contam o evento.
+- Pedidos rejeitados ou ainda não realizados.
+- A qualidade ou o resultado do evento.

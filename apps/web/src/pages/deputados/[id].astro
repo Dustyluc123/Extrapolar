@@ -10,6 +10,9 @@ import DeputyPhoto from "../../components/deputado/DeputyPhoto.astro";
 import ParticipationSection from "../../components/deputado/ParticipationSection.astro";
 import PresenceSection from "../../components/deputado/PresenceSection.astro";
 import AlignmentSection from "../../components/deputado/AlignmentSection.astro";
+import CommitteesSection from "../../components/deputado/CommitteesSection.astro";
+import CommitteePresenceSection from "../../components/deputado/CommitteePresenceSection.astro";
+import RequestedEventsSection from "../../components/deputado/RequestedEventsSection.astro";
 import Caderno from "../../components/ficha/Caderno.astro";
 import CadernoNav from "../../components/ficha/CadernoNav.astro";
 import { repository } from "../../lib/data";
@@ -28,7 +31,10 @@ const { deputy, detail } = profile;
 const meta = await repository.getMeta();
 const updatedAt = meta.referenceDateTime;
 
-const cadernos = [{ id: "plenario", label: "Plenário" }];
+const cadernos = [
+  { id: "plenario", label: "Plenário" },
+  { id: "caderno-comissoes", label: "Comissões" },
+];
 const conditionSlug =
   deputy.electoralCondition === "Titular"
     ? "titular"
@@ -113,6 +119,21 @@ const conditionSlug =
         alignment={detail.plenario.alinhamentoGoverno}
         updatedAt={updatedAt}
       />
+    </Caderno>
+
+    <Caderno
+      id="caderno-comissoes"
+      number={2}
+      title="Comissões"
+      intro="Os grupos menores onde as propostas são estudadas, debatidas e muitas vezes decididas."
+    >
+      <CommitteesSection
+        comissoes={detail.comissoes}
+        legislatureStart={meta.legislature.start}
+        updatedAt={updatedAt}
+      />
+      <CommitteePresenceSection comissoes={detail.comissoes} updatedAt={updatedAt} />
+      <RequestedEventsSection comissoes={detail.comissoes} updatedAt={updatedAt} />
     </Caderno>
 
     <p class="caption mt-10">Foto: Câmara dos Deputados.</p>

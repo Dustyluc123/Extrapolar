@@ -7,6 +7,10 @@ import {
   camaraEventOrgansFileSchema,
   camaraEventPresencesFileSchema,
   camaraEventsFileSchema,
+  camaraEventRequestsFileSchema,
+  camaraOrganMembersFileSchema,
+  camaraOrgansFileSchema,
+  camaraPropositionAuthorsFileSchema,
   camaraOrientationsFileSchema,
   camaraVotesFileSchema,
   parseOrThrow,
@@ -42,7 +46,54 @@ export const YEAR_FILES = {
     name: "Presença de deputados em eventos",
     schema: camaraEventPresencesFileSchema,
   },
+  eventRequests: {
+    folder: "eventosRequerimentos",
+    name: "Requerimentos que originaram eventos",
+    schema: camaraEventRequestsFileSchema,
+  },
+  propositionAuthors: {
+    folder: "proposicoesAutores",
+    name: "Autores de proposições",
+    schema: camaraPropositionAuthorsFileSchema,
+  },
 } as const;
+
+/** Arquivos sem ano. `file` é o caminho depois de /arquivos/. */
+export const STATIC_FILES = {
+  organs: {
+    file: "orgaos/json/orgaos.json",
+    name: "Órgãos da Câmara",
+    schema: camaraOrgansFileSchema,
+  },
+  organMembers: (legislatureId: number) => ({
+    file: `orgaosDeputados/json/orgaosDeputados-L${legislatureId}.json`,
+    name: `Deputados nos órgãos — ${legislatureId}ª legislatura`,
+    schema: camaraOrganMembersFileSchema,
+  }),
+};
+
+export async function fetchStaticFile<S extends z.ZodType<{ dados: unknown[] }>>(
+  context: CachedFetchContext,
+  spec: { file: string; name: string; schema: S },
+): Promise<{ items: z.output<S>["dados"][number][]; source: SourceInfo }> {
+  const url = `${CAMARA_FILES_BASE}/${spec.file}`;
+  const key = `arquivos/${spec.file.split("/").pop()}`;
+  const result = await fetchJsonCached(context, key, url, { checkLastModified: true });
+  log.info(`${spec.file.split("/").pop()} (${result.origin})`);
+  const parsed = parseOrThrow(spec.schema, result.data, url) as z.output<S>;
+  return {
+    items: parsed.dados as z.output<S>["dados"][number][],
+    source: {
+      id: `arquivo-${spec.file
+        .split("/")
+        .pop()
+        ?.replace(/\.json$/, "")}`,
+      name: spec.name,
+      url,
+      lastModified: result.meta.lastModified,
+    },
+  };
+}
 
 export function yearFileUrl(folder: string, year: number): string {
   return `${CAMARA_FILES_BASE}/${folder}/json/${folder}-${year}.json`;

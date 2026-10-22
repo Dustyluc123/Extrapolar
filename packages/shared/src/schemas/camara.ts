@@ -159,3 +159,70 @@ export const camaraBlocSchema = z.object({
 export const camaraBlocsPageSchema = apiPageSchema(camaraBlocSchema);
 export const camaraBlocPartySchema = z.object({ sigla: z.string().min(1), nome: z.string() });
 export const camaraBlocPartiesPageSchema = apiPageSchema(camaraBlocPartySchema);
+
+// ---- Arquivos: orgaos.json e orgaosDeputados-L{legislatura}.json ----
+
+const DATE_OR_EMPTY = z.union([z.literal(""), z.string().regex(LOCAL_DATE)]);
+
+/** Extrai o id numérico do fim de uma URI da API (".../orgaos/2003" → 2003). */
+export function idFromUri(uri: string): number {
+  const match = /\/(\d+)$/.exec(uri);
+  if (!match) throw new Error(`URI sem id numérico no fim: "${uri}"`);
+  return Number(match[1]);
+}
+
+const apiUri = (resource: string) =>
+  z.string().regex(new RegExp(`/api/v2/${resource}/\\d+$`), `esperado .../${resource}/{id}`);
+
+export const camaraOrganSchema = z.object({
+  uri: apiUri("orgaos"),
+  sigla: z.string(),
+  nome: z.string(),
+  apelido: z.string(),
+  tipoOrgao: z.string(),
+  codTipoOrgao: z.number().int(),
+});
+export type CamaraOrgan = z.infer<typeof camaraOrganSchema>;
+export const camaraOrgansFileSchema = z.object({ dados: z.array(camaraOrganSchema) });
+
+export const camaraOrganMemberSchema = z.object({
+  uriOrgao: apiUri("orgaos"),
+  siglaOrgao: z.string(),
+  nomeOrgao: z.string(),
+  nomePublicacaoOrgao: z.string(),
+  uriDeputado: apiUri("deputados"),
+  cargo: z.string().min(1),
+  dataInicio: z.string().regex(LOCAL_DATE),
+  dataFim: DATE_OR_EMPTY,
+});
+export type CamaraOrganMember = z.infer<typeof camaraOrganMemberSchema>;
+export const camaraOrganMembersFileSchema = z.object({ dados: z.array(camaraOrganMemberSchema) });
+
+// ---- Arquivo: eventosRequerimentos-{ano} ----
+
+export const camaraEventRequestSchema = z.object({
+  idEvento: z.number().int().positive(),
+  tituloRequerimento: z.string(),
+  uriRequerimento: apiUri("proposicoes"),
+});
+export type CamaraEventRequest = z.infer<typeof camaraEventRequestSchema>;
+export const camaraEventRequestsFileSchema = z.object({ dados: z.array(camaraEventRequestSchema) });
+
+// ---- Arquivo: proposicoesAutores-{ano} ----
+
+export const camaraPropositionAuthorSchema = z.object({
+  idProposicao: z.number().int().positive(),
+  /** Só existe quando o autor é deputado. */
+  idDeputadoAutor: z.number().int().positive().optional(),
+  codTipoAutor: z.number().int(),
+  tipoAutor: z.string(),
+  nomeAutor: z.string(),
+  /** "1" = primeiro signatário. */
+  ordemAssinatura: z.string().regex(/^\d+$/),
+  /** "1" = proponente; "0" = assinatura de apoio. */
+  proponente: z.enum(["0", "1"]),
+});
+export type CamaraPropositionAuthor = z.infer<typeof camaraPropositionAuthorSchema>;
+export const camaraPropositionAuthorsFileSchema = z.object({
+  dados: z.array(camaraPropositionAuthorSchema),
+});

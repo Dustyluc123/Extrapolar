@@ -7,9 +7,10 @@ import {
   type MetricsIndex,
   type MetricValue,
 } from "@extrapolar/shared";
-import { participationValue, ratioValue } from "@extrapolar/metrics";
+import { okValue, participationValue, ratioValue } from "@extrapolar/metrics";
 import { log } from "../lib/log";
 import type { PipelineContext } from "./context";
+import { computeComissoes } from "./metrics/comissoes";
 import { computePlenario } from "./metrics/plenario";
 import type { NormalizedData } from "./normalize";
 
@@ -77,16 +78,55 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
         "sem-orientacao-do-governo",
       ),
   },
+  {
+    key: "comissoes-titular-hoje",
+    caderno: "comissoes",
+    label: "Comissões em que é titular hoje",
+    unit: "contagem",
+    methodologyAnchor: "comissoes",
+    pick: (d) => okValue(d.comissoes.titularHoje),
+  },
+  {
+    key: "presenca-comissoes",
+    caderno: "comissoes",
+    label: "Presença nas reuniões das comissões em que é titular",
+    unit: "proporcao",
+    methodologyAnchor: "presenca-comissoes",
+    pick: (d) =>
+      !d.comissoes.foiTitular
+        ? { status: "sem-dado", reason: "nao-e-titular-de-comissao" }
+        : ratioValue(
+            d.comissoes.presencaReunioes.attendedEvents,
+            d.comissoes.presencaReunioes.eligibleEvents,
+            "sem-reuniao-elegivel",
+          ),
+  },
+  {
+    key: "eventos-requeridos",
+    caderno: "comissoes",
+    label: "Eventos realizados a pedido do deputado",
+    unit: "contagem",
+    methodologyAnchor: "eventos-requeridos",
+    pick: (d) => okValue(d.comissoes.eventosRequeridos.total),
+  },
 ];
 
 export function compute(context: PipelineContext, data: NormalizedData): ComputedData {
   log.step("Calculando o Caderno 1 — Plenário");
   const plenario = computePlenario(context, data);
+  log.step("Calculando o Caderno 2 — Comissões");
+  const comissoes = computeComissoes(context, data);
 
   const details: DeputyDetail[] = data.deputies.map((deputy) => {
     const p = plenario.get(deputy.id);
-    if (!p) throw new Error(`Plenário não calculado para o deputado ${deputy.id}.`);
-    return { schemaVersion: GENERATED_SCHEMA_VERSION, deputyId: deputy.id, plenario: p };
+    const c = comissoes.get(deputy.id);
+    if (!p || !c) throw new Error(`Cadernos não calculados para o deputado ${deputy.id}.`);
+    return {
+      schemaVersion: GENERATED_SCHEMA_VERSION,
+      deputyId: deputy.id,
+      plenario: p,
+      comissoes: c,
+    };
   });
 
   const lastVote = data.plenary.votes.at(-1);

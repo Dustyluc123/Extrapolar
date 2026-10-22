@@ -4,7 +4,8 @@
 // Uso:  pnpm build && pnpm --filter @extrapolar/web preview     (site em http://localhost:4321)
 //       node scripts/screenshots.mjs / /deputados/204379
 // Saída: docs/screenshots/<página>-<celular|desktop>-<claro|escuro>.png (fora do Git)
-// SCREENSHOT_MAX_HEIGHT=900 limita a altura da captura (a partir do topo), em pixels CSS.
+// SCREENSHOT_MAX_HEIGHT=900 limita a altura da captura, em pixels CSS.
+// Com âncora (/deputados/204379#caderno-comissoes), a captura começa no elemento indicado.
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BASE_URL, ROOT, evaluate, open, withChrome } from "./lib/chrome.mjs";
@@ -24,7 +25,8 @@ await mkdir(OUT, { recursive: true });
 let problems = 0;
 await withChrome(async (page) => {
   for (const path of paths) {
-    const slug = path.replace(/^\//, "").replace(/\//g, "-") || "capa";
+    const slug = path.replace(/^\//, "").replace(/[/#]/g, "-") || "capa";
+    const anchor = path.includes("#") ? path.split("#")[1] : null;
     for (const view of VIEWS) {
       await page.send("Emulation.setDeviceMetricsOverride", {
         width: view.width,
@@ -44,7 +46,9 @@ await withChrome(async (page) => {
             .filter((el) => el.getBoundingClientRect().right > doc.clientWidth + 1)
             .slice(0, 5)
             .map((el) => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ").slice(0, 3).join(".") : ""));
-          return { scrollWidth: doc.scrollWidth, clientWidth: doc.clientWidth, height: doc.scrollHeight, wide };
+          const target = ${JSON.stringify(anchor)} ? document.getElementById(${JSON.stringify(anchor)}) : null;
+          const top = target ? Math.max(0, target.getBoundingClientRect().top + window.scrollY - 8) : 0;
+          return { scrollWidth: doc.scrollWidth, clientWidth: doc.clientWidth, height: doc.scrollHeight, wide, top };
         })()`,
       );
       if (info.scrollWidth > info.clientWidth) {
@@ -58,9 +62,9 @@ await withChrome(async (page) => {
         captureBeyondViewport: true,
         clip: {
           x: 0,
-          y: 0,
+          y: info.top,
           width: view.width,
-          height: Math.min(info.height, MAX_HEIGHT),
+          height: Math.min(info.height - info.top, MAX_HEIGHT),
           scale: 1,
         },
       });

@@ -1,0 +1,57 @@
+---
+// Métrica: presença nas reuniões das comissões em que é titular (Caderno 2).
+import type { Comissoes } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import RateBar from "../charts/RateBar.astro";
+import FewNotice from "../ficha/FewNotice.astro";
+import Metric from "../ficha/Metric.astro";
+import NoData from "../ficha/NoData.astro";
+import { formatInteger, formatPercent, plural } from "../../lib/format";
+
+interface Props {
+  comissoes: Comissoes;
+  updatedAt: string;
+}
+const { comissoes: c, updatedAt } = Astro.props;
+const a = c.presencaReunioes;
+---
+
+<Metric
+  id="presenca-comissoes"
+  title="Presença nas reuniões das comissões"
+  whatIs="Mostra em quantas reuniões das comissões em que era titular o deputado registrou presença, contando só as reuniões que aconteceram enquanto ele era titular delas."
+  updatedAt={updatedAt}
+  methodologyAnchor="presenca-comissoes"
+>
+  {a.rate !== null ? (
+    <div class="max-w-xl">
+      <BigNumber
+        value={formatPercent(a.rate)}
+        label="Esteve presente em"
+        caption={`Registrou presença em ${formatInteger(a.attendedEvents)} de ${plural(a.eligibleEvents, "reunião", "reuniões")} das comissões em que era titular (reuniões deliberativas, audiências públicas e outras com presença registrada).`}
+      />
+      <RateBar
+        share={a.rate}
+        filledLabel="Com presença registrada"
+        emptyLabel="Sem presença registrada"
+      />
+      <FewNotice count={a.eligibleEvents} noun="reuniões" />
+    </div>
+  ) : (
+    <NoData
+      reason={c.foiTitular ? "sem-reuniao-elegivel" : "nao-e-titular-de-comissao"}
+      label="Esteve presente em"
+    />
+  )}
+  <Fragment slot="limites">
+    <li>
+      Comissões costumam se reunir ao mesmo tempo: quem é titular de várias pode ter reuniões no
+      mesmo horário e só conseguir estar em uma.
+    </li>
+    <li>Não conta reuniões das comissões em que é só suplente.</li>
+    <li>Ausências justificadas aparecem como ausência: os dados não trazem a justificativa.</li>
+    <li>
+      Seminários, mesas-redondas e visitas técnicas não entram (presença registrada irregular).
+    </li>
+  </Fragment>
+</Metric>

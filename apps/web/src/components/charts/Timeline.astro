@@ -1,17 +1,22 @@
 ---
-// Linha do tempo (ex.: comissões e cargos ao longo da legislatura). HTML + CSS com barras
-// posicionadas em %, para os nomes longos quebrarem linha no celular (ADR 0013).
+// Linha do tempo (ex.: comissões ao longo da legislatura). Cada linha pode ter vários trechos.
+// HTML + CSS com posições em %, para os nomes longos quebrarem linha no celular (ADR 0013).
 import ChartFigure from "./ChartFigure.astro";
+
+export interface TimelineSegment {
+  start: string;
+  /** null = ainda em andamento. */
+  end: string | null;
+  /** "cheio" (tinta) ou "claro" (hachurado), conforme a legenda. */
+  style: "cheio" | "claro";
+}
 
 export interface TimelineItem {
   label: string;
   /** Detalhe curto (ex.: "Titular · Presidente"). */
   detail?: string;
-  start: string;
-  /** null = ainda em andamento. */
-  end: string | null;
-  highlight?: boolean;
-  /** Período por extenso para a tabela (ex.: "01/03/2023 a hoje"). */
+  segments: TimelineSegment[];
+  /** Períodos por extenso para a tabela (ex.: "Titular de 01/03/2023 até hoje"). */
   periodText: string;
 }
 
@@ -24,59 +29,73 @@ interface Props {
   to: string;
   /** Anos marcados no eixo. */
   years: number[];
+  legend: { cheio: string; claro?: string };
 }
-const { title, description, items, from, to, years } = Astro.props;
+const { title, description, items, from, to, years, legend } = Astro.props;
 const t0 = Date.parse(from.slice(0, 10));
 const t1 = Date.parse(to.slice(0, 10));
 const pos = (date: string | null) => {
   const t = date ? Date.parse(date.slice(0, 10)) : t1;
   return Math.min(100, Math.max(0, ((t - t0) / (t1 - t0)) * 100));
 };
+const hatch =
+  "background-image: repeating-linear-gradient(135deg, var(--color-ink) 0 1.5px, transparent 1.5px 5px);";
 ---
 
 <ChartFigure
   title={title}
   description={description}
   table={{
-    headers: ["Item", "Período"],
-    rows: items.map((item) => [
-      item.detail ? `${item.label} (${item.detail})` : item.label,
-      item.periodText,
-    ]),
+    headers: ["Órgão", "Períodos"],
+    rows: items.map((item) => [item.label, item.periodText]),
   }}
 >
   <div aria-hidden="true">
+    <p class="m-0 mb-3 flex flex-wrap gap-x-4 gap-y-1 font-sans text-xs text-ink-soft">
+      <span class="inline-flex items-center gap-1.5">
+        <span class="inline-block h-2.5 w-5 rounded-sm bg-ink"></span>
+        {legend.cheio}
+      </span>
+      {legend.claro ? (
+        <span class="inline-flex items-center gap-1.5">
+          <span class="inline-block h-2.5 w-5 rounded-sm border border-ink/60" style={hatch} />
+          {legend.claro}
+        </span>
+      ) : null}
+    </p>
     <ul class="m-0 list-none space-y-3 p-0">
-      {items.map((item) => {
-        const left = pos(item.start);
-        const width = Math.max(0.8, pos(item.end) - left);
-        return (
-          <li>
-            <span class="block font-sans text-sm leading-snug">
-              {item.label}
-              {item.detail ? <span class="text-ink-soft"> · {item.detail}</span> : null}
-            </span>
-            <span class="relative mt-1 block h-3 rounded-sm bg-card">
-              <span
-                class:list={[
-                  "absolute inset-y-0 rounded-sm",
-                  item.highlight ? "bg-accent" : "bg-ink",
-                ]}
-                style={`left: ${left.toFixed(2)}%; width: ${width.toFixed(2)}%`}
-              />
-            </span>
-          </li>
-        );
-      })}
+      {items.map((item) => (
+        <li>
+          <span class="block font-sans text-sm leading-snug">
+            {item.label}
+            {item.detail ? <span class="text-ink-soft"> · {item.detail}</span> : null}
+          </span>
+          <span class="relative mt-1 block h-3 rounded-sm bg-card">
+            {item.segments.map((segment) => {
+              const left = pos(segment.start);
+              const width = Math.max(0.8, pos(segment.end) - left);
+              return (
+                <span
+                  class:list={[
+                    "absolute inset-y-0 rounded-sm",
+                    segment.style === "cheio" ? "bg-ink" : "border border-ink/60",
+                  ]}
+                  style={`left: ${left.toFixed(2)}%; width: ${width.toFixed(2)}%;${segment.style === "claro" ? ` ${hatch}` : ""}`}
+                />
+              );
+            })}
+          </span>
+        </li>
+      ))}
     </ul>
     <div class="relative mt-2 h-4 border-t border-ink font-sans text-[11px] text-ink-soft">
       {years.map((year) => {
         const left = pos(`${year}-01-01`);
-        return (
+        return left > 2 && left < 96 ? (
           <span class="absolute top-0.5 -translate-x-1/2" style={`left: ${left.toFixed(2)}%`}>
             {year}
           </span>
-        );
+        ) : null;
       })}
     </div>
   </div>

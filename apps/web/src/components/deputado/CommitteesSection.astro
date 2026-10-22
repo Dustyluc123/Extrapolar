@@ -1,0 +1,143 @@
+---
+// Métrica: comissões e cargos (Caderno 2). Linha do tempo das comissões permanentes, especiais
+// e CPIs; os demais órgãos (Mesa, conselhos, coordenadorias...) numa tabela.
+import type { Comissoes } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import Timeline, { type TimelineItem } from "../charts/Timeline.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger, formatShortDate, plural } from "../../lib/format";
+
+interface Props {
+  comissoes: Comissoes;
+  legislatureStart: string;
+  updatedAt: string;
+}
+const { comissoes: c, legislatureStart, updatedAt } = Astro.props;
+
+const COMMITTEE_TYPES = new Set([
+  "Comissão Permanente",
+  "Comissão Especial",
+  "Comissão Parlamentar de Inquérito",
+]);
+const VOTING = /^(Titular|Presidente|Vice-Presidente|\dº Vice-Presidente)$/;
+
+const period = (m: { cargo: string; inicio: string; fim: string | null }) =>
+  `${m.cargo} de ${formatShortDate(m.inicio)} ${m.fim ? `a ${formatShortDate(m.fim)}` : "até hoje"}`;
+
+const byOrgan = new Map<number, (typeof c.participacoes)[number][]>();
+for (const m of c.participacoes) {
+  const list = byOrgan.get(m.organId) ?? [];
+  list.push(m);
+  byOrgan.set(m.organId, list);
+}
+const committees: TimelineItem[] = [];
+/** Comissões em que só foi suplente: ficam numa lista recolhida para a linha do tempo não ficar longa. */
+const substituteOnly: TimelineItem[] = [];
+const others: { label: string; tipo: string; cargos: string }[] = [];
+for (const list of byOrgan.values()) {
+  const first = list[0]!;
+  const label = `${first.sigla} — ${first.nome}`;
+  const cargos = [...new Set(list.map((m) => m.cargo))].join(", ");
+  if (COMMITTEE_TYPES.has(first.tipo)) {
+    const segments = list
+      .filter((m) => VOTING.test(m.cargo) || m.cargo === "Suplente")
+      .map((m) => ({
+        start: m.inicio,
+        end: m.fim,
+        style: (VOTING.test(m.cargo) ? "cheio" : "claro") as "cheio" | "claro",
+      }));
+    const item = { label, detail: cargos, segments, periodText: list.map(period).join("; ") };
+    if (segments.some((segment) => segment.style === "cheio")) committees.push(item);
+    else substituteOnly.push(item);
+  } else {
+    others.push({ label, tipo: first.tipo, cargos: list.map(period).join("; ") });
+  }
+}
+committees.sort(
+  (a, b) =>
+    (a.segments[0]?.start ?? "").localeCompare(b.segments[0]?.start ?? "") ||
+    a.label.localeCompare(b.label),
+);
+const startYear = Number(legislatureStart.slice(0, 4));
+const endYear = Number(updatedAt.slice(0, 4));
+const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+---
+
+<Metric
+  id="comissoes"
+  title="Comissões de que participa"
+  whatIs="As comissões são grupos menores de deputados que estudam e votam as propostas de um tema (saúde, educação, segurança...) antes do plenário. Cada deputado pode ser titular (vota) ou suplente (substitui um titular)."
+  updatedAt={updatedAt}
+  methodologyAnchor="comissoes"
+>
+  <BigNumber
+    value={formatInteger(c.titularHoje)}
+    label="Comissões em que é titular hoje"
+    caption={`Titular, presidente ou vice-presidente em ${plural(c.titularHoje, "comissão", "comissões")} (permanentes, especiais ou CPIs) na data da atualização. Na legislatura, ocupou cargos em ${plural(byOrgan.size, "órgão", "órgãos")} da Câmara.`}
+  />
+
+  {committees.length > 0 ? (
+    <div class="mt-6">
+      <Timeline
+        title="Comissões na legislatura"
+        description="Cada linha é uma comissão permanente, especial ou CPI; cada trecho, um período como membro."
+        items={committees}
+        from={legislatureStart}
+        to={updatedAt}
+        years={years}
+        legend={{ cheio: "Titular, presidente ou vice", claro: "Suplente" }}
+      />
+    </div>
+  ) : (
+    <p class="caption mt-4">
+      Não foi titular, presidente nem vice de comissões permanentes, especiais ou CPIs na
+      legislatura.
+    </p>
+  )}
+
+  {others.length > 0 ? (
+    <details class="mt-5">
+      <summary class="cursor-pointer font-sans text-sm font-semibold">
+        Outros órgãos ({others.length}): Mesa, conselhos, subcomissões, comissões externas e mais
+      </summary>
+      <table class="mt-2 w-full border-collapse font-sans text-sm">
+        <thead>
+          <tr class="border-b border-ink">
+            <th scope="col" class="py-1 text-left font-semibold">
+              Órgão
+            </th>
+            <th scope="col" class="py-1 text-left font-semibold">
+              Cargos e períodos
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {others.map((o) => (
+            <tr class="border-b border-rule/60 align-top">
+              <th scope="row" class="py-1.5 pr-3 text-left font-normal">
+                {o.label}
+                <span class="block text-xs text-ink-soft">{o.tipo}</span>
+              </th>
+              <td class="py-1.5">{o.cargos}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  ) : null}
+
+  <Fragment slot="limites">
+    <li>
+      Fazer parte de uma <Term slug="comissao" /> não diz o que o deputado fez nela.
+    </li>
+    <li>
+      A quantidade de comissões depende de acordos entre os partidos, que dividem as vagas
+      proporcionalmente ao tamanho das bancadas.
+    </li>
+    <li>
+      Os cargos vêm como a Câmara registra; mudanças rápidas de titular para suplente aparecem como
+      trechos separados.
+    </li>
+  </Fragment>
+</Metric>

@@ -1,0 +1,84 @@
+---
+// Métrica: eventos realizados a pedido do deputado (Caderno 2): audiências públicas, seminários,
+// sessões solenes... originados de requerimentos de que ele é autor.
+import type { Comissoes } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Term from "../ui/Term.astro";
+import BarList from "../charts/BarList.astro";
+import Metric from "../ficha/Metric.astro";
+import { formatInteger, formatShortDate } from "../../lib/format";
+
+interface Props {
+  comissoes: Comissoes;
+  updatedAt: string;
+}
+const { comissoes: c, updatedAt } = Astro.props;
+const e = c.eventosRequeridos;
+---
+
+<Metric
+  id="eventos-requeridos"
+  title="Audiências e eventos realizados a pedido"
+  whatIs="Audiências públicas, seminários e outros eventos acontecem quando um deputado pede, por meio de um requerimento aprovado. É o dado oficial mais próximo de 'chamar a sociedade para conversar' sobre um tema."
+  updatedAt={updatedAt}
+  methodologyAnchor="eventos-requeridos"
+>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <BigNumber
+        value={formatInteger(e.total)}
+        label="Eventos realizados a pedido"
+        caption={
+          e.total > 0
+            ? `Eventos já realizados a partir de requerimentos de que é autor; em ${formatInteger(e.comoPrimeiroSignatario)} deles, como primeiro signatário.`
+            : "Nenhum evento realizado a partir de requerimento de que seja autor nesta legislatura."
+        }
+      />
+    </div>
+    {e.porTipo.length > 0 ? (
+      <BarList
+        title="Por tipo de evento"
+        description="Quantidade de eventos realizados a pedido do deputado, por tipo oficial."
+        labelHeader="Tipo"
+        valueHeader="Eventos"
+        items={e.porTipo.map((t, index) => ({
+          label: t.tipo,
+          value: t.quantidade,
+          display: formatInteger(t.quantidade),
+          highlight: index === 0,
+        }))}
+      />
+    ) : null}
+  </div>
+
+  {e.recentes.length > 0 ? (
+    <div class="mt-6">
+      <p class="kicker m-0">Os mais recentes</p>
+      <ul class="mt-2 mb-0 list-none space-y-3 p-0">
+        {e.recentes.map((r) => (
+          <li class="border-l-2 border-accent pl-3">
+            <span class="block font-sans text-xs text-ink-soft">
+              {formatShortDate(r.data)} · {r.tipo}
+              {r.orgaos.length > 0 ? ` · ${r.orgaos.join(", ")}` : ""}
+            </span>
+            <span class="block text-base leading-snug">
+              {r.descricao || "Sem descrição oficial."}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : null}
+
+  <Fragment slot="limites">
+    <li>
+      Muitos eventos são pedidos por vários deputados juntos; cada um deles conta o evento (veja
+      quantos foram como primeiro signatário).
+    </li>
+    <li>Não mede a qualidade nem o resultado do evento.</li>
+    <li>
+      Só conta pedidos atendidos: <Term slug="requerimento">requerimentos</Term> rejeitados ou ainda
+      não realizados não aparecem.
+    </li>
+  </Fragment>
+</Metric>

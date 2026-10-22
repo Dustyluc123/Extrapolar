@@ -95,6 +95,10 @@ export async function withChrome(task) {
 
 /** Navega e espera o carregamento (mais um tempo para fontes e imagens). */
 export async function open(page, url, extraWaitMs = 600) {
+  // Passa por about:blank: navegar para a mesma página mudando só a âncora não dispara "load".
+  const blank = page.once("Page.loadEventFired");
+  await page.send("Page.navigate", { url: "about:blank" });
+  await blank;
   const loaded = page.once("Page.loadEventFired");
   await page.send("Page.navigate", { url });
   await loaded;
