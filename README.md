@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>O que os deputados federais estão fazendo, em números e fatos.</strong><br />
-  Dados oficiais da Câmara e da CGU, explicados em poucas linhas, para quem não acompanha política. Sem ranking e sem adjetivo.
+  Dados oficiais da Câmara e da CGU, explicados em poucas linhas, para quem não acompanha política. Sem ranking oficial e sem adjetivo, com jogos para conhecer a Câmara.
 </p>
 
 <p align="center">
@@ -11,7 +11,7 @@
   <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-4-06b6d4?logo=tailwindcss&logoColor=white" />
   <img alt="Zod" src="https://img.shields.io/badge/Zod-4-3e67b1?logo=zod&logoColor=white" />
   <a href="https://github.com/Dustyluc123/Extrapolar/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Dustyluc123/Extrapolar/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Testes" src="https://img.shields.io/badge/testes-144_passando-12a85f" />
+  <img alt="Testes" src="https://img.shields.io/badge/testes-243_passando-12a85f" />
 </p>
 
 <p align="center">
@@ -50,7 +50,7 @@ O visual lembra um **jornal impresso antigo** (papel, tinta, manchetes, réguas)
 4. **Custo perto de zero.** Site estático, sem servidor ligado; os dados são atualizados por uma tarefa agendada.
 5. **Contexto.** Toda métrica documenta suas limitações.
 
-O site **nunca define um ranking**: a lista de deputados é sempre em ordem alfabética.
+O site **nunca define um ranking**: a lista de deputados é sempre em ordem alfabética. A única lista ordenada é o **Monte seu ranking**, em que quem escolhe métricas, pesos e direção é o leitor.
 
 ## Funcionalidades
 
@@ -69,7 +69,13 @@ O site **nunca define um ranking**: a lista de deputados é sempre em ordem alfa
 - [x] **Glossário** (`/glossario`) com 42 termos, no estilo "Classificados", linkado a partir das fichas
 - [x] Página de **metodologia** gerada a partir de [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md), com o que ficou de fora e por quê
 - [x] Cabeçalho de jornal com a **data da edição**, **edição noturna** (modo escuro), fotos em **meio-tom** só em CSS
-- [x] Valores brutos de todas as métricas guardados (`metricas.json`) para o futuro "monte seu ranking" — sem ranking, média ou comparação no site
+- [x] **Jogos** (`/jogos`), com sequência, estatísticas e compartilhar em quadradinhos sem a resposta:
+  - **Dle do seu estado:** adivinhar o deputado do dia entre os do estado, com pistas factuais (partido, condição, estreia, nascimento, comissões, projetos)
+  - **Placar:** ler uma votação real e chutar como votou a maioria do seu estado e a porcentagem de Sim
+  - **Vote você também:** votar em 10 votações recentes e ver com quais deputados (e orientações de partido) votou igual
+  - **Seja deputado:** a votação mais recente — vote e veja o resultado e quem votou o quê
+  - Só votações **nominais de mérito** do plenário, separadas das de procedimento por um método documentado e conferido numa amostra (lista em `/jogos/votacoes`); o voto do jogador fica só no navegador
+- [x] **Monte seu ranking** (`/ranking`): o leitor escolhe métricas, pesos (0 a 5) e se o valor maior ou menor sobe; percentil, contribuição de cada métrica, "sem dado" à parte e link compartilhável. Nada vem marcado
 - [x] Acessível: contraste AA nos dois temas, navegação por teclado, textos alternativos, verificação automática com axe-core
 - [x] Pipeline diário no GitHub Actions: baixa, valida com Zod, calcula e publica; se algo vier diferente do esperado, **para sem publicar**
 
@@ -79,6 +85,10 @@ O site **nunca define um ranking**: a lista de deputados é sempre em ordem alfa
 | ------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | ![Capa no celular](docs/imagens/capa-celular.jpg) | ![Resumo em números da ficha](docs/imagens/ficha-celular.jpg) | ![Caderno de dinheiro na edição noturna](docs/imagens/ficha-celular-noturna.jpg) |
 
+| Jogo: Dle do seu estado                                            | Monte seu ranking, edição noturna                                            |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| ![Dle do seu estado com chutes](docs/imagens/jogo-dle-celular.jpg) | ![Monte seu ranking com critérios](docs/imagens/ranking-celular-noturno.jpg) |
+
 ## Arquitetura
 
 O site nunca fala com a Câmara. Um pipeline agendado lê os dados abertos, valida, calcula e grava JSON no repositório; a Vercel builda o site estático a partir desses arquivos.
@@ -87,7 +97,8 @@ O site nunca fala com a Câmara. Um pipeline agendado lê os dados abertos, vali
 flowchart LR
     camara["Câmara dos Deputados<br/>arquivos estáticos + API"]
     pipeline["packages/pipeline<br/>fetch → normalize → compute → publish"]
-    metrics["packages/metrics<br/>cálculo puro"]
+    metrics["packages/metrics<br/>cálculo puro + ranking"]
+    games["packages/games<br/>regras puras dos jogos"]
     shared["packages/shared<br/>Zod, tipos, legislatura"]
     raw[("data/raw<br/>cache (fora do Git)")]
     gen[("data/generated<br/>JSON no Git")]
@@ -100,6 +111,8 @@ flowchart LR
     pipeline --> gen
     gen --> web
     shared --> web
+    games --> web
+    games --> pipeline
 ```
 
 Princípios que guiaram o código:
@@ -121,6 +134,7 @@ Mais detalhes em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) e nas decisões em
 | Estilo      | Tailwind CSS 4, Fraunces e Newsreader    | Tokens próprios de papel e tinta; fontes variáveis servidas pelo site  |
 | Validação   | Zod 4                                    | Tudo que vem da Câmara e da CGU é validado antes de entrar no projeto  |
 | Gráficos    | Componentes Astro (SVG e HTML) no build  | Zero JavaScript no navegador; leve no celular                          |
+| Interação   | Ilhas React só nos jogos e no ranking    | O resto do site continua sem JavaScript de framework                   |
 | Dados       | JSON gerado no Git (sem banco na Fase 0) | Zero infraestrutura; histórico dos dados no próprio repositório        |
 | Agendamento | GitHub Actions (cron diário)             | Atualização dos dados sem servidor ligado                              |
 | Hospedagem  | Vercel                                   | Deploy automático a cada commit de dados                               |
@@ -134,19 +148,22 @@ Extrapolar/
 ├── apps/
 │   └── web/                        # Site em Astro
 │       └── src/
-│           ├── pages/              # index, deputados/[id], metodologia, sobre
+│           ├── pages/              # index, deputados/[id], jogos/*, ranking, metodologia, glossario, sobre
 │           ├── components/
 │           │   ├── ficha/          # Caderno, bloco de métrica, resumo em números, "sem dado"
 │           │   ├── charts/         # Barras, colunas e linha do tempo (gerados no build)
 │           │   ├── ui/             # Manchete, régua, selo, número-manchete, linha de fonte
-│           │   ├── deputado/       # Linha da lista, filtros, foto em meio-tom, seção de participação
+│           │   ├── deputado/       # Linha da lista, filtros, foto em meio-tom, seções da ficha
+│           │   ├── games/          # Ilhas React dos quatro jogos
+│           │   ├── ranking/        # Ilha do "Monte seu ranking"
 │           │   └── layout/         # Cabeçalho (masthead), seletor de edição, rodapé
 │           ├── layouts/            # Layout base
 │           ├── lib/                # Leitura dos dados gerados, formatação (datas, %), estados
 │           └── styles/             # Tokens, fontes, textura de papel
 ├── packages/
 │   ├── shared/                     # Legislatura, esquemas Zod (entrada e saída), tipos, repositório
-│   ├── metrics/                    # Funções puras de cada indicador (participação)
+│   ├── metrics/                    # Funções puras de cada indicador e do ranking
+│   ├── games/                      # Regras puras dos jogos (dia de Brasília, sorteio, comparação, pontos)
 │   └── pipeline/                   # Rede, cache, normalização, orquestração
 │       └── src/
 │           ├── sources/            # camara-api.ts, camara-arquivos.ts
@@ -155,11 +172,12 @@ Extrapolar/
 │           └── lib/                # HTTP com novas tentativas, cache, horário de Brasília
 ├── data/
 │   ├── raw/                        # Cache dos downloads (fora do Git)
-│   └── generated/                  # deputados.json, deputados/{id}.json, metricas.json, frentes.json, meta.json
+│   └── generated/                  # deputados.json, deputados/{id}.json, metricas.json, frentes.json, meta.json, jogos/
+├── content/resumos/                # Resumos de votações em linguagem simples (escritos à mão, opcionais)
 ├── docs/
 │   ├── ARQUITETURA.md  METODOLOGIA.md  DESIGN.md  FONTES.md  DEPLOY.md
 │   ├── decisoes/                   # ADRs (0001-astro.md ...)
-│   └── briefing-fase0.md           # Briefing original do projeto
+│   └── briefing-fase*.md           # Briefings de cada fase
 ├── scripts/                        # Neutralidade, acessibilidade, capturas de tela
 ├── .github/workflows/              # ci.yml (a cada push) e pipeline.yml (diário)
 ├── CLAUDE.md                       # Guia para o Claude Code
@@ -189,7 +207,7 @@ Para atualizar os dados com o que a Câmara publicou hoje:
 
 ```bash
 pnpm pipeline              # usa o cache de data/raw quando ainda vale (20 horas)
-pnpm pipeline -- --refresh # ignora o cache e baixa tudo de novo (~300 MB, 2 a 3 minutos)
+pnpm pipeline -- --refresh # ignora o cache e baixa tudo de novo (~1,3 GB; 15 a 20 minutos, quase tudo nos discursos)
 ```
 
 ### Scripts
@@ -205,6 +223,7 @@ pnpm pipeline -- --refresh # ignora o cache e baixa tudo de novo (~300 MB, 2 a 3
 | `pnpm format`             | Formata o código com Prettier (`format:check` só confere)                          |
 | `pnpm check:neutralidade` | Procura palavras de julgamento nos textos do site (só avisa, nunca quebra)         |
 | `pnpm check:a11y`         | Acessibilidade com axe-core e teste da busca pelo teclado (\*)                     |
+| `pnpm check:a11y:jogos`   | Acessibilidade dos jogos e do ranking depois de jogar (\*)                         |
 | `pnpm screenshots`        | Capturas no celular e no desktop, claro e escuro, e alerta de rolagem lateral (\*) |
 
 (\*) Precisam do site rodando (`pnpm build && pnpm --filter @extrapolar/web preview`) e do Google Chrome instalado.
@@ -219,6 +238,7 @@ Algumas regras que valem para tudo:
 - Votações: só as **nominais** do **plenário** (as únicas com voto de cada deputado registrado).
 - Projetos: **autor principal** (primeiro signatário) separado de coautoria e de assinaturas de apoio.
 - Dinheiro: teto da cota só onde há tabela oficial; emendas ligadas ao deputado só por nome exato e único (ou conferência manual).
+- Jogos: só votações nominais **de mérito** do plenário, com a ementa oficial e o resultado oficial; o sorteio diário é igual para todos e vira à meia-noite de Brasília.
 
 A explicação completa de cada métrica, com o que ela não mede e o que ficou de fora, está em [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md) e na página `/metodologia`.
 
@@ -228,12 +248,13 @@ A explicação completa de cada métrica, com o que ela não mede e o que ficou 
 pnpm test
 ```
 
-| Pacote                 | Testes | O que cobrem                                                                                                                                                 |
-| ---------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@extrapolar/shared`   |     18 | Legislatura, esquemas Zod com amostras reais e dados alterados, valor de métrica padronizado ("sem dado" com motivo conhecido)                               |
-| `@extrapolar/metrics`  |     51 | Participação, presença, alinhamento, comissões, projetos (situação, temas, pareceres), fiscalização, discursos, cota e teto, emendas, frentes                |
-| `@extrapolar/pipeline` |     59 | HTTP com novas tentativas, cache (inclusive download interrompido e cache calculado), CSV, períodos em exercício, orientações, sessões, proposições, emendas |
-| `@extrapolar/web`      |     16 | Formatação de datas, porcentagens e reais em pt-BR e leitura validada dos dados gerados                                                                      |
+| Pacote                 | Testes | O que cobrem                                                                                                                                           |
+| ---------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@extrapolar/shared`   |     21 | Legislatura, esquemas Zod com amostras reais e dados alterados, valor de métrica padronizado ("sem dado" com motivo conhecido)                         |
+| `@extrapolar/metrics`  |     65 | Participação, presença, alinhamento, comissões, projetos (situação, temas, pareceres), fiscalização, discursos, cota e teto, emendas, frentes, ranking |
+| `@extrapolar/games`    |     36 | Dia de Brasília, sorteio por ciclos, embaralhamento, comparação de atributos, pontuação do placar, concordância, sequência, compartilhar               |
+| `@extrapolar/pipeline` |    105 | HTTP, cache, CSV, períodos em exercício, orientações, sessões, proposições, emendas, votações elegíveis, sorteio, dados dos jogos, resumos             |
+| `@extrapolar/web`      |     16 | Formatação de datas, porcentagens e reais em pt-BR e leitura validada dos dados gerados                                                                |
 
 O CI (`.github/workflows/ci.yml`) roda formatação, lint, neutralidade, tipos, testes e build a cada push.
 
@@ -250,10 +271,8 @@ O passo a passo está em [`docs/DEPLOY.md`](docs/DEPLOY.md). Resumo:
 
 - [x] **Fase 0** — Monorepo, documentação, pipeline de deputados, participação em votações nominais, capa, ficha e metodologia
 - [x] **Fase 1** — Todas as métricas com dado oficial (7 cadernos), gráficos, glossário e design mais leve
-- [ ] **Fase 2** — "Quem é meu deputado?" por estado e "Monte seu ranking" (o usuário escolhe os pesos; o site nunca define um ranking oficial)
-- [ ] **Fase 3** — "Vote você também": votar nos mesmos projetos que a Câmara e ver quais deputados votam parecido
-- [ ] **Fase 4** — Resumo semanal do que foi votado, gerado com IA a partir do texto oficial e revisado por humano
-- [ ] **Fase 5** — Minigames diários: quiz sobre proposições e um "dle" de deputados
+- [x] **Fase 2** — Quatro jogos (Dle do seu estado, Placar, Vote você também, Seja deputado) e "Monte seu ranking" (o leitor escolhe métricas, pesos e direção; o site nunca define um ranking oficial)
+- [ ] **Próxima** — Resumos das votações em linguagem simples (escritos ou gerados com IA e sempre revisados por humano)
 
 ## Sobre mim
 

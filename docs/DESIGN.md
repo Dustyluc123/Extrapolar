@@ -121,3 +121,14 @@ A estética de jornal antigo continua; o humor fica **na moldura e nos textos de
 - Infográfico de jornal: tinta sobre papel; vermelho-tomate só para destacar o valor principal (a primeira barra, o tipo mais frequente) — nunca para indicar "bom" ou "ruim".
 - Rótulos diretos ao lado das barras, valores em pt-BR (`R$ 1,2 mi`), tabela com os mesmos dados em "Ver os dados em tabela".
 - Colunas em SVG com posições em %; barras e linhas do tempo em HTML/CSS (rótulos longos quebram linha no celular).
+
+## Fase 2 — Jogos e ranking
+
+Estilos em `apps/web/src/styles/games.css`, importado só nessas páginas.
+
+- **Peças do Dle:** verde (`--color-hit`), amarelo (`--color-near`) e vermelho (`--color-miss`), sempre com símbolo (✓ ≈ ✗, ↑ ↓) e texto para leitor de tela. As cores falam do **chute**, nunca do deputado. Contraste: texto pequeno ≥ 4,5:1 nos dois temas (vermelho das peças no claro escurecido para `#b5321c`, 5,3:1, depois da auditoria do axe com o jogo terminado).
+- **Revelação:** faixa "Edição extra" (régua dupla + caixa-alta espaçada) e **carimbo grande** APROVADA/REJEITADA (`.stamp-big`, mesma cor para os dois resultados), que "bate" na tela (`.stamp-in`) só com `prefers-reduced-motion: no-preference`.
+- **Placar:** barra Sim (tinta) × Não (hachurado), com os números escritos; controle deslizante grande para o polegar.
+- **Ranking:** aviso permanente em caixa com borda no topo; barra empilhada da nota em tons de tinta e hachura (só distinguem as métricas, não avaliam); "maior sobe" / "menor sobe" em vez de "mais é melhor".
+- **Quadradinhos de compartilhar** sem a resposta (🟩🟨🟥 no Dle, barra ▰▱ no Placar).
+- Botões: `.game-button` (pílula vermelha) e `.choice` (escolha marcada com tinta cheia, `aria-pressed` ou `aria-checked`).

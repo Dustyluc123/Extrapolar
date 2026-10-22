@@ -23,6 +23,8 @@ import { log } from "../../lib/log";
 
 /** Dias sorteados além de hoje: folga se uma execução diária falhar. */
 export const DAYS_AHEAD = 3;
+/** Dias passados guardados em `picks` (o resto é descartado para o arquivo não crescer). */
+const PICKS_KEPT_DAYS = 30;
 
 /** Chave usada sem o segredo (desenvolvimento local). Quem ler o código consegue prever os dias. */
 const LOCAL_SECRET = "extrapolar-local-sem-segredo";
@@ -58,10 +60,14 @@ export async function loadDrawState(generatedDir: string): Promise<DrawStateFile
 export class DrawState {
   readonly launchDate: string;
   private readonly rosters: Map<string, RosterEntry[]>;
+  private readonly picks: Map<string, Record<string, string>>;
+  private readonly today: string;
 
   constructor(previous: DrawStateFile | null, today: string) {
     this.launchDate = previous?.launchDate ?? today;
+    this.today = today;
     this.rosters = new Map(Object.entries(previous?.rosters ?? {}));
+    this.picks = new Map(Object.entries(previous?.picks ?? {}).map(([k, v]) => [k, { ...v }]));
   }
 
   /**
@@ -81,17 +87,25 @@ export class DrawState {
     const roster = updateRoster(current, input.ids, since);
     this.rosters.set(input.key, roster);
     const available = new Set(input.ids);
+    const published = this.picks.get(input.key) ?? {};
     const days: DrawnDay[] = [];
     for (let offset = 0; offset <= DAYS_AHEAD; offset++) {
       const date = addDays(input.today, offset);
-      const id = dailyPick({ dateKey: date, roster, rank: input.rank, available });
+      // Dia já publicado: vale o mesmo (se o item ainda existir).
+      const previous = published[date];
+      const id =
+        previous !== undefined && available.has(previous)
+          ? previous
+          : dailyPick({ dateKey: date, roster, rank: input.rank, available });
       if (id === null) continue;
+      published[date] = id;
       days.push({
         date,
         number: dailyNumber(date, this.launchDate),
         data: scramble(JSON.stringify(input.payload(id)), date),
       });
     }
+    this.picks.set(input.key, published);
     return days;
   }
 
@@ -101,6 +115,18 @@ export class DrawState {
       launchDate: this.launchDate,
       rosters: Object.fromEntries(
         [...this.rosters.entries()].sort(([a], [b]) => a.localeCompare(b)),
+      ),
+      picks: Object.fromEntries(
+        [...this.picks.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, days]) => [
+            key,
+            Object.fromEntries(
+              Object.entries(days)
+                .filter(([date]) => date >= addDays(this.today, -PICKS_KEPT_DAYS))
+                .sort(([a], [b]) => a.localeCompare(b)),
+            ),
+          ]),
       ),
     };
   }

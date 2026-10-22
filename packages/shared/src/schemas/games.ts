@@ -94,6 +94,11 @@ export const drawStateFileSchema = z.object({
   /** Dia do desafio #1. */
   launchDate: localDate,
   rosters: z.record(z.string(), z.array(z.object({ id: z.string().min(1), since: localDate }))),
+  /**
+   * Dias já publicados (jogo → data → id). São reaproveitados nas execuções seguintes, para um
+   * dia publicado nunca mudar (nem se a chave do sorteio for trocada). Guarda os últimos 30 dias.
+   */
+  picks: z.record(z.string(), z.record(z.string(), z.string())).default({}),
 });
 export type DrawStateFile = z.infer<typeof drawStateFileSchema>;
 

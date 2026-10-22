@@ -82,3 +82,30 @@ Os formatos estão definidos (e validados) em `packages/shared/src/schemas/gener
 ## Deploy
 
 Ver `docs/DEPLOY.md`.
+
+## Fase 2 — Jogos e "Monte seu ranking"
+
+```
+pipeline (6h de Brasília)
+  fetch: + votacoesProposicoes-{ano}, deputados.json (todas as legislaturas),
+           API de proposições (citadas e renumeradas)
+  compute → steps/games/
+     catalog.ts     votações elegíveis (ADR 0019) + votos compactos
+     dle.ts         atributos por estado + sorteio
+     placar.ts      sorteio entre as elegíveis dos últimos 12 meses
+     vote-round.ts  rodada semanal (10) e votação mais recente, com orientações
+     draw.ts        DrawState: HMAC com EXTRAPOLAR_DAILY_SECRET, hoje + 3 dias, picks (ADR 0020)
+     summaries.ts   content/resumos/*.md (só revisados)
+  publish → data/generated/jogos/*.json (validados com schemas/games.ts)
+
+site (build)
+  /jogos/*            páginas Astro + ilhas React (client:load)
+  /jogos/dados/dle-UF.json, /ranking/dados.json   arquivos estáticos para as ilhas
+navegador
+  @extrapolar/games e @extrapolar/metrics (ranking): regras puras
+  localStorage extrapolar:jogos:* (try/catch); nada é enviado
+```
+
+- **Votos compactos:** um caractere por deputado em exercício (`S N A O P -`), na ordem de `jogos/deputados.json`. Orientações de partido também em texto compacto (`S N A O L B -`).
+- **Embaralhamento:** cada dia sorteado vai como `scramble(JSON, data)` (XOR com a data invertida + base64). Não é segredo: evita só que a resposta apareça num olhar casual.
+- **Ranking:** `/ranking/dados.json` (~160 KB, ~40 KB comprimido) é montado no build a partir de `metricas.json`; o cálculo (`buildRanking`) roda no navegador a cada mudança de critério ou filtro.

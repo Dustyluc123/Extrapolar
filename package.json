@@ -22,7 +22,8 @@
     "check:neutralidade": "node scripts/check-neutrality.mjs",
     "check:a11y": "node scripts/a11y.mjs",
     "screenshots": "node scripts/screenshots.mjs",
-    "repo-growth": "node scripts/repo-growth.mjs"
+    "repo-growth": "node scripts/repo-growth.mjs",
+    "check:a11y:jogos": "node scripts/a11y-jogos.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -7,6 +7,9 @@
 #   cota, funcionários), API de deputados/histórico/lideranças e emendas da CGU;
 # - semanal: discursos (só há API, mais lenta). O cache de cada deputado vale 7 dias e é
 #   guardado entre execuções em data/raw (ADR 0015).
+# - jogos (Fase 2, data/generated/jogos): votações elegíveis, sorteio de hoje e dos próximos
+#   3 dias (Dle e Placar), rodada semanal (troca na segunda) e a votação mais recente.
+#   O sorteio usa o segredo EXTRAPOLAR_DAILY_SECRET (ADR 0020); sem ele, a ordem é previsível.
 name: Atualização dos dados
 
 on:
@@ -58,7 +61,12 @@ jobs:
           restore-keys: dados-camara-
 
       - name: Rodar o pipeline
+        env:
+          EXTRAPOLAR_DAILY_SECRET: ${{ secrets.EXTRAPOLAR_DAILY_SECRET }}
         run: |
+          if [ -z "$EXTRAPOLAR_DAILY_SECRET" ]; then
+            echo "::warning::Secret EXTRAPOLAR_DAILY_SECRET não configurado; o sorteio dos jogos fica previsível (ADR 0020)."
+          fi
           if [ "${{ inputs.baixar_tudo }}" = "true" ]; then
             pnpm pipeline -- --refresh
           else

@@ -161,6 +161,29 @@ describe("estado do sorteio", () => {
     expect(second.toFile().launchDate).toBe("2026-10-23");
   });
 
+  it("dia já publicado não muda, nem com outra chave", () => {
+    const first = new DrawState(null, "2026-10-23");
+    const ids = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    const day1 = first.draw({
+      key: "placar",
+      ids,
+      today: "2026-10-23",
+      rank: makeRank("chave-local-00000000", "placar"),
+      payload: (id) => id,
+    });
+    const second = new DrawState(first.toFile(), "2026-10-24");
+    const day2 = second.draw({
+      key: "placar",
+      ids,
+      today: "2026-10-24",
+      rank: makeRank("chave-nova-000000000", "placar"),
+      payload: (id) => id,
+    });
+    // 24, 25 e 26 já tinham sido publicados na primeira execução
+    expect(day2.slice(0, 3)).toEqual(day1.slice(1, 4));
+    expect(Object.keys(second.toFile().picks.placar!)).toHaveLength(5);
+  });
+
   it("chaves diferentes dão ordens diferentes", () => {
     const a = makeRank("chave-um-0000000000", "placar")(0, "x");
     const b = makeRank("chave-dois-00000000", "placar")(0, "x");

@@ -9,17 +9,18 @@ O Dle e o Placar têm um desafio por dia, igual para todo mundo, que vira à mei
 ## Decisão
 
 - **Ordem dos dias:** ciclos sem repetição, como no Chutaí (`packages/games/src/draw.ts`). A ordem de cada ciclo é um HMAC-SHA256 com a chave `EXTRAPOLAR_DAILY_SECRET` (segredo do GitHub Actions). Sem a chave (desenvolvimento local), o pipeline usa uma chave fixa e avisa no log.
-- **Listas que só crescem:** o estado do sorteio fica em `data/generated/jogos/sorteio.json`. Item novo (deputado que assumiu, votação nova) entra com a data do dia e só aparece no ciclo seguinte; item que saiu continua na lista (se for sorteado, vale o próximo disponível). Assim os dias já sorteados não mudam.
+- **Listas que só crescem:** o estado do sorteio fica em `data/generated/jogos/sorteio.json`. Item novo (deputado que assumiu, votação nova) entra com a data do dia e só aparece no ciclo seguinte; item que saiu continua na lista (se for sorteado, vale o próximo disponível).
+- **Dias publicados não mudam:** o mesmo arquivo guarda os dias já sorteados (últimos 30, campo `picks`); a execução seguinte reaproveita esses dias em vez de sortear de novo. Assim nada muda para quem já jogou — nem quando a chave for criada ou trocada (decidido no fechamento, ao perceber que os primeiros dias foram sorteados com a chave local).
 - **Janela publicada:** o pipeline publica o sorteio de **hoje e dos próximos 3 dias** (folga se uma execução falhar). Cada dia vai **embaralhado com a própria data** (XOR + base64), só para a resposta não aparecer num olhar casual.
 - **Virada do dia:** o navegador calcula a data de Brasília (`Intl`, fuso `America/Sao_Paulo`) e abre o dia correspondente. Se o site estiver desatualizado há mais de 3 dias, o jogo avisa que o desafio do dia ainda não saiu.
 - **Lançamento:** o desafio #1 é o dia da primeira execução do pipeline com os jogos (`launchDate` no `sorteio.json`).
 
 ## O que um jogador curioso consegue ver
 
-Abrindo o código-fonte da página e o JavaScript, dá para desembaralhar e descobrir a resposta de **hoje e dos próximos 3 dias**. Não dá para prever os dias seguintes sem a chave. Como não há prêmio nem placar entre jogadores, o risco é aceitável; esconder de verdade exigiria um servidor.
+Abrindo o código-fonte da página e o JavaScript, dá para desembaralhar e descobrir a resposta de **hoje e dos próximos 3 dias**. O mesmo vale para quem abrir `data/generated/jogos/sorteio.json` no repositório (os dias publicados ficam ali, sem embaralhar; o site não serve esse arquivo). Não dá para prever os dias seguintes sem a chave. Como não há prêmio nem placar entre jogadores, o risco é aceitável; esconder de verdade exigiria um servidor.
 
 ## Consequências
 
 - Custo zero; nada roda fora do build e do pipeline.
-- Trocar a chave muda a ordem dos ciclos futuros; os dias já publicados no Git continuam como foram.
+- Trocar a chave muda a ordem dos dias ainda não publicados; os já publicados continuam como foram (`picks`). Logo depois da troca, um dia novo pode repetir um item de poucos dias antes (a ordem do ciclo recomeça com a nova chave).
 - TODO (Lucas): criar o segredo `EXTRAPOLAR_DAILY_SECRET` no GitHub (Settings → Secrets and variables → Actions), com pelo menos 16 caracteres aleatórios.

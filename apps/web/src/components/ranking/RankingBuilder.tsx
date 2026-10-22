@@ -157,7 +157,7 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
                     <input
                       id={id}
                       type="checkbox"
-                      className="mt-1.5 size-5 accent-[var(--color-accent-strong)]"
+                      className="mt-1.5 size-5 shrink-0 accent-[var(--color-accent-strong)]"
                       checked={!!draft}
                       onChange={() => toggle(metric.key)}
                     />

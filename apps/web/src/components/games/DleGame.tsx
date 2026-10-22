@@ -332,7 +332,7 @@ function DleRound({
                     item.direction === "up" ? "↑" : item.direction === "down" ? "↓" : "";
                   return (
                     <div key={item.key} className={`tile tile-flip tile-${item.status}`}>
-                      <span className="text-[0.6rem] font-semibold uppercase opacity-90">
+                      <span className="text-[0.6rem] font-semibold uppercase">
                         {attribute.label}
                       </span>
                       <span>{displayValue(attribute.key, value)}</span>
