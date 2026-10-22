@@ -63,7 +63,8 @@
   font-weight: 700;
   cursor: pointer;
 }
-.choice[aria-pressed="true"] {
+.choice[aria-pressed="true"],
+.choice[aria-checked="true"] {
   background: var(--color-ink);
   color: var(--color-paper);
 }

@@ -18,7 +18,7 @@ Nenhum indicador sozinho diz se um mandato é bom ou ruim. Eles mostram uma part
 - **Período:** a legislatura atual (57ª, de 1º de fevereiro de 2023 a 31 de janeiro de 2027), até a data da última atualização.
 - **Quem aparece:** os deputados que estão em exercício na data da atualização, segundo a Câmara.
 - **Dado ausente** aparece como "sem dado", nunca como zero.
-- **Sem ranking:** o site não ordena deputados por nenhum indicador nem mostra médias ou comparações. Os valores brutos de cada métrica ficam guardados (com numerador e denominador) para uma futura ferramenta em que o próprio leitor escolhe o que comparar.
+- **Sem ranking oficial:** o site não ordena deputados por nenhum indicador nem mostra médias ou comparações. A única exceção é o [Monte seu ranking](/ranking), em que o próprio leitor escolhe as métricas, os pesos e a direção (veja abaixo).
 
 ### O que ficou de fora (e por quê)
 
@@ -627,3 +627,27 @@ A **votação elegível mais recente** (pelo horário de registro) até a últim
 - Só deputados em exercício hoje; quem não votou aparece como "sem voto registrado". O placar mostrado é sempre o oficial (todos os que votaram).
 - Partido atual, com o partido da época entre parênteses quando era outro (registrado no voto).
 - A única comparação do jogador é com a maioria do plenário ("como a maioria" ou "como a minoria"), sem dizer qual lado está certo.
+
+<a id="monte-seu-ranking"></a>
+
+## Monte seu ranking
+
+A única página que ordena deputados, e quem define os critérios é o leitor (ADR 0010). Nada vem marcado.
+
+1. **Escolha:** o leitor marca as métricas (as mesmas 21 da ficha, guardadas em `metricas.json`), dá um **peso** de 0 a 5 e uma **direção** a cada uma ("maior sobe na lista" ou "menor sobe na lista"). Métrica sem peso ou sem direção não entra; peso 0 também não.
+2. **Normalização em percentil:** para cada métrica, entre os **deputados em exercício com dado** (a Câmara inteira, mesmo com filtro de estado ou partido):
+
+   `percentil = (quantos têm valor menor + (quantos têm o mesmo valor − 1) ÷ 2) ÷ (n − 1)`
+
+   O menor valor fica com 0, o maior com 1 e os empates com a média das posições. Com um único valor (ou todos iguais), todos ficam com 0,5. Com "menor sobe", usa-se `1 − percentil`. Assim reais, contagens e porcentagens viram a mesma escala.
+
+3. **Nota** (de 0 a 100) = soma de `peso × percentil` ÷ soma dos pesos × 100. A contribuição de cada métrica é a sua parcela dessa soma, mostrada em cada posição (barra e lista).
+4. **Empate** na nota divide a posição (1º, 2º, 2º, 4º); a ordem dentro do empate é alfabética.
+5. **Sem dado não é zero:** quem não tem dado em alguma métrica escolhida fica **fora da classificação** e aparece numa lista à parte, com o motivo de cada "sem dado".
+6. **Base pequena:** porcentagens com menos de 30 casos no denominador aparecem com aviso, como no resto do site.
+7. **Filtros** de estado e partido (partido atual) só escolhem quem aparece; não mudam o percentil.
+8. **Link compartilhável:** métricas, pesos, direções e filtros vão na URL (`?m=participacao.3.mais,cota-total.2.menos&uf=SP&partido=PL`).
+
+Tudo é calculado no navegador, a partir de uma versão compacta de `metricas.json` gerada no build (`/ranking/dados.json`).
+
+**Limitações:** métricas de total (cota gasta, projetos, discursos, emendas) dependem do tempo em exercício na legislatura: quem passou meses licenciado (por exemplo, como ministro) tem totais menores, e isso aparece no ranking. O percentil mostra posição relativa, não distância (o 1º e o 2º podem estar muito perto ou muito longe); métricas diferentes medem coisas diferentes e somá-las é uma escolha de quem monta o ranking — por isso o aviso no topo da página.

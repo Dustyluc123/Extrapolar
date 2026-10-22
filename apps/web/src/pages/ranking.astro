@@ -1,0 +1,52 @@
+---
+// Monte seu ranking: a única página que ordena deputados, e quem define os critérios é o leitor
+// (ADR 0010). Nada vem marcado; o cálculo é feito no navegador.
+import "../styles/games.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Headline from "../components/ui/Headline.astro";
+import RankingBuilder from "../components/ranking/RankingBuilder";
+import { CADERNO_LABELS } from "../lib/ranking";
+import { STATE_NAMES } from "../lib/states";
+
+const states = Object.entries(STATE_NAMES)
+  .map(([code, name]) => ({ code, name }))
+  .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+---
+
+<BaseLayout
+  title="Monte seu ranking"
+  description="Escolha as métricas, os pesos e a direção e veja os deputados ordenados pelos seus critérios. O Extrapolar não define ranking oficial."
+  current="ranking"
+>
+  <div
+    class="rounded border-2 border-ink bg-card px-4 py-3 font-sans text-sm font-semibold"
+    role="note"
+  >
+    Este ranking reflete os critérios de quem o montou, não uma avaliação do Extrapolar.
+  </div>
+  <div class="mt-5 flex flex-wrap items-center gap-3">
+    <p class="kicker m-0">Faça você mesmo</p>
+    <span class="stamp" aria-hidden="true">
+      Seus critérios
+    </span>
+  </div>
+  <Headline as="h1" size="xl" class="mt-2">
+    Monte seu ranking
+  </Headline>
+  <p class="mt-3 max-w-prose text-lg">
+    O Extrapolar não ordena deputados. Aqui quem decide é você: quais números importam, quanto cada
+    um pesa e se o valor maior ou o menor deve subir na lista. Gastar menos cota, votar mais com o
+    partido, apresentar mais projetos: o que deve subir na lista é escolha sua.
+  </p>
+  <p class="caption max-w-prose">
+    Cada métrica vira um percentil entre os deputados com dado, de 0 (menor valor) a 100 (maior); a
+    nota é a média dos percentis com os seus pesos. Fórmula na
+    <a href="/metodologia#monte-seu-ranking">metodologia</a>. Tudo é calculado no seu navegador.
+  </p>
+  <noscript>
+    <p class="clipping mt-4">O "Monte seu ranking" precisa de JavaScript ligado no navegador.</p>
+  </noscript>
+  <div class="mt-8">
+    <RankingBuilder client:load states={states} cadernoLabels={CADERNO_LABELS} />
+  </div>
+</BaseLayout>
