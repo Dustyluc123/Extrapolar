@@ -1,0 +1,82 @@
+---
+// Ficha do deputado: dados básicos e participação em votações nominais de plenário,
+// sempre com fonte, data de atualização e link para a metodologia.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Badge from "../../components/ui/Badge.astro";
+import Headline from "../../components/ui/Headline.astro";
+import Rule from "../../components/ui/Rule.astro";
+import DeputyPhoto from "../../components/deputado/DeputyPhoto.astro";
+import ParticipationSection from "../../components/deputado/ParticipationSection.astro";
+import { repository } from "../../lib/data";
+import { formatDateTime } from "../../lib/format";
+import { stateName } from "../../lib/states";
+
+export async function getStaticPaths() {
+  const deputies = await repository.listDeputies();
+  return deputies.map((deputy) => ({ params: { id: String(deputy.id) } }));
+}
+
+const id = Number(Astro.params.id);
+const profile = await repository.getDeputy(id);
+if (!profile) throw new Error(`Deputado ${id} não encontrado nos dados gerados.`);
+const { deputy, participation } = profile;
+const meta = await repository.getMeta();
+---
+
+<BaseLayout
+  title={deputy.name}
+  description={`${deputy.name} (${deputy.party}-${deputy.state}): dados oficiais da Câmara dos Deputados, com fonte e metodologia.`}
+  current="deputados"
+>
+  <p class="m-0 font-sans text-sm">
+    <a href="/" class="no-underline hover:underline">
+      ← Todos os deputados
+    </a>
+  </p>
+
+  <article class="mt-5">
+    <header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8">
+      <DeputyPhoto src={deputy.photoUrl} name={deputy.name} size="lg" eager />
+      <div class="min-w-0">
+        <p class="kicker m-0">Câmara dos Deputados · {stateName(deputy.state)}</p>
+        <Headline as="h1" size="xl" class="mt-1 break-words">
+          {deputy.name}
+        </Headline>
+        <p class="mt-3 mb-0 flex flex-wrap gap-2">
+          <Badge label={deputy.party} title={`Partido: ${deputy.party}`} />
+          <Badge label={deputy.state} title={`Estado: ${stateName(deputy.state)}`} />
+        </p>
+      </div>
+    </header>
+
+    <Rule class="mt-6" />
+
+    <dl class="m-0 grid gap-x-8 gap-y-3 py-4 font-sans text-sm sm:grid-cols-3">
+      <div>
+        <dt class="kicker">Situação</dt>
+        <dd class="m-0 mt-0.5">
+          {deputy.status}
+          {deputy.inServiceSince ? ` desde ${formatDateTime(deputy.inServiceSince)}` : null}
+        </dd>
+      </div>
+      <div>
+        <dt class="kicker">Condição</dt>
+        <dd class="m-0 mt-0.5">{deputy.electoralCondition ?? "Sem dado"}</dd>
+      </div>
+      <div>
+        <dt class="kicker">Página oficial</dt>
+        <dd class="m-0 mt-0.5">
+          <a href={deputy.profileUrl} rel="external">
+            camara.leg.br
+          </a>
+        </dd>
+      </div>
+    </dl>
+
+    <Rule variant="thick" class="mb-6" />
+
+    <ParticipationSection participation={participation} updatedAt={meta.referenceDateTime} />
+
+    <p class="caption mt-10">Foto: Câmara dos Deputados.</p>
+  </article>
+</BaseLayout>

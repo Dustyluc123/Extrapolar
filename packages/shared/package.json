@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Tipos, esquemas Zod e constantes (como a legislatura atual) usados pelo pipeline e pelo site.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./text": "./src/text.ts"
   },
   "scripts": {
     "test": "vitest run",

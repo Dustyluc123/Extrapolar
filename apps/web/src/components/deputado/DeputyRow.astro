@@ -1,0 +1,36 @@
+---
+// Item da lista da capa: foto, nome, partido, UF. Os atributos data-* alimentam a busca.
+import { foldText, type Deputy } from "@extrapolar/shared";
+import Badge from "../ui/Badge.astro";
+import DeputyPhoto from "./DeputyPhoto.astro";
+import { stateName } from "../../lib/states";
+
+interface Props {
+  deputy: Deputy;
+}
+const { deputy } = Astro.props;
+---
+
+<li
+  data-deputy
+  data-name={foldText(deputy.name)}
+  data-state={deputy.state}
+  data-party={deputy.party}
+  class="border-b border-rule/70"
+>
+  <a
+    href={`/deputados/${deputy.id}`}
+    class="group flex items-center gap-4 py-3 no-underline transition-transform duration-200 ease-[var(--ease-ink)] hover:translate-x-0.5"
+  >
+    <DeputyPhoto src={deputy.photoUrl} name={deputy.name} />
+    <span class="min-w-0">
+      <span class="block truncate font-display text-xl leading-tight font-[650] text-ink decoration-accent decoration-2 underline-offset-4 group-hover:underline">
+        {deputy.name}
+      </span>
+      <span class="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <Badge label={deputy.party} title={`Partido: ${deputy.party}`} />
+        <Badge label={deputy.state} title={`Estado: ${stateName(deputy.state)}`} />
+      </span>
+    </span>
+  </a>
+</li>

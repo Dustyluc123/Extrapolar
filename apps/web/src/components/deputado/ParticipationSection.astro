@@ -1,0 +1,159 @@
+---
+// Seção da métrica de participação na ficha do deputado: número, contexto, detalhamento
+// e limitações. Mesma apresentação para todos os deputados (sem cor de "bom" ou "ruim").
+import type { Participation } from "@extrapolar/shared";
+import BigNumber from "../ui/BigNumber.astro";
+import Headline from "../ui/Headline.astro";
+import { formatDateTime, formatInteger, formatPercent, plural } from "../../lib/format";
+
+interface Props {
+  participation: Participation | null;
+  updatedAt: string;
+}
+const { participation, updatedAt } = Astro.props;
+
+/** Abaixo disso, a ficha avisa que a porcentagem pode mudar muito (docs/METODOLOGIA.md). */
+const FEW_VOTES = 30;
+
+const p = participation;
+const missing = p ? p.eligibleVotes - p.ballotsCast : 0;
+const rows = p
+  ? [
+      { label: "Sim", value: p.breakdown.yes },
+      { label: "Não", value: p.breakdown.no },
+      { label: "Abstenção", value: p.breakdown.abstention },
+      { label: "Obstrução", value: p.breakdown.obstruction },
+      { label: "Artigo 17 (presidindo a sessão)", value: p.breakdown.article17 },
+      { label: "Voto secreto", value: p.breakdown.secret },
+    ]
+  : [];
+const castShare = p && p.eligibleVotes > 0 ? (p.ballotsCast / p.eligibleVotes) * 100 : 0;
+---
+
+<section aria-labelledby="participacao" class="pt-2">
+  <p class="kicker m-0">Plenário</p>
+  <Headline as="h2" size="lg" id="participacao" class="mt-1">
+    Participação em votações nominais
+  </Headline>
+
+  {p && p.rate !== null ? (
+    <div class="mt-5 grid gap-8 lg:grid-cols-[1fr_1fr]">
+      <div>
+        <BigNumber
+          value={formatPercent(p.rate)}
+          label="Votou em"
+          caption={`Registrou voto em ${formatInteger(p.ballotsCast)} das ${plural(p.eligibleVotes, "votação nominal", "votações nominais")} do plenário que aconteceram enquanto estava em exercício na legislatura.`}
+          updatedAt={updatedAt}
+          methodologyAnchor="participacao"
+        />
+
+        <div class="mt-6" aria-hidden="true">
+          <div class="flex h-3 overflow-hidden rounded-full border border-ink/70">
+            <div class="h-full bg-ink" style={`width: ${castShare.toFixed(2)}%`} />
+            <div
+              class="h-full flex-1"
+              style="background-image: repeating-linear-gradient(135deg, var(--color-rule) 0 1px, transparent 1px 6px);"
+            />
+          </div>
+          <div class="mt-1.5 flex justify-between font-sans text-xs text-ink-soft">
+            <span>Com voto registrado</span>
+            <span>Sem voto registrado</span>
+          </div>
+        </div>
+
+        {p.eligibleVotes < FEW_VOTES ? (
+          <p class="mt-4 rounded-card border border-rule bg-card p-3 font-sans text-sm">
+            Poucas votações na conta ({formatInteger(p.eligibleVotes)}): com tão poucas, a
+            porcentagem pode mudar bastante a cada nova votação.
+          </p>
+        ) : null}
+      </div>
+
+      <div>
+        <table class="w-full border-collapse font-sans text-sm">
+          <caption class="kicker mb-2 text-left">Como foram os votos registrados</caption>
+          <thead class="sr-only">
+            <tr>
+              <th scope="col">Tipo</th>
+              <th scope="col">Votações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr class="border-b border-rule/70">
+                <th scope="row" class="py-1.5 text-left font-normal">
+                  {row.label}
+                </th>
+                <td class="py-1.5 text-right tabular-nums">{formatInteger(row.value)}</td>
+              </tr>
+            ))}
+            <tr class="border-b-2 border-ink">
+              <th scope="row" class="py-1.5 text-left font-semibold">
+                Total com voto registrado
+              </th>
+              <td class="py-1.5 text-right font-semibold tabular-nums">
+                {formatInteger(p.ballotsCast)}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" class="py-1.5 text-left font-normal">
+                Sem voto registrado
+              </th>
+              <td class="py-1.5 text-right tabular-nums">{formatInteger(missing)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="caption mt-3">
+          Obstrução e voto secreto contam como participação: o deputado registrou presença na
+          votação. "Artigo 17" é registrado para quem está presidindo a sessão.
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div class="mt-5">
+      <p class="m-0 font-display text-5xl font-[800]">Sem dado</p>
+      <p class="caption mt-2 max-w-prose">
+        Não houve votação nominal no plenário enquanto este deputado estava em exercício nesta
+        legislatura, então não há o que calcular. Isso não é o mesmo que 0%.
+      </p>
+    </div>
+  )}
+
+  <details class="mt-8 rounded-card border border-rule bg-card p-4">
+    <summary class="cursor-pointer font-sans text-sm font-semibold">
+      O que este número não mostra
+    </summary>
+    <ul class="mt-3 mb-0 space-y-1.5 pl-5 text-base">
+      <li>Trabalho em comissões, relatorias, projetos apresentados e atuação no estado.</li>
+      <li>Votações simbólicas, em que ninguém tem voto individual registrado.</li>
+      <li>Como o deputado votou em cada tema, só se registrou voto.</li>
+      <li>O motivo de uma ausência (missão oficial, doença, compromisso no estado).</li>
+    </ul>
+    <p class="mt-3 mb-0 font-sans text-sm">
+      <a href="/metodologia#participacao" class="font-semibold text-accent-ink">
+        Leia a metodologia completa
+      </a>
+    </p>
+  </details>
+
+  {p && p.servicePeriods.length > 0 ? (
+    <div class="mt-8">
+      <p class="kicker m-0">Períodos em exercício nesta legislatura</p>
+      <ul class="mt-2 mb-0 list-none space-y-1 p-0 font-sans text-sm text-ink-soft">
+        {p.servicePeriods.map((period) => (
+          <li>
+            De {formatDateTime(period.start)}{" "}
+            {period.end ? `até ${formatDateTime(period.end)}` : "até hoje"}
+          </li>
+        ))}
+      </ul>
+      {p.ballotsOutsideServicePeriods > 0 ? (
+        <p class="caption mt-2">
+          {plural(p.ballotsOutsideServicePeriods, "voto foi registrado", "votos foram registrados")}{" "}
+          fora desses períodos (diferença de horário nos registros da Câmara) e{" "}
+          {p.ballotsOutsideServicePeriods === 1 ? "foi contado" : "foram contados"} mesmo assim.
+        </p>
+      ) : null}
+    </div>
+  ) : null}
+</section>

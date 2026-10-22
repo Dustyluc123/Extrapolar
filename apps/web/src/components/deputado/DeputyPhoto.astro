@@ -1,0 +1,26 @@
+---
+// Foto oficial da Câmara com tratamento de jornal (meio-tom em CSS). O arquivo não é alterado.
+interface Props {
+  src: string;
+  name: string;
+  size?: "sm" | "lg";
+  eager?: boolean;
+}
+const { src, name, size = "sm", eager = false } = Astro.props;
+const sizes = {
+  sm: "w-16 sm:w-[4.5rem] rounded-[0.35rem]",
+  lg: "w-36 sm:w-52 rounded-card",
+};
+---
+
+<div class:list={["halftone aspect-[3/4] shrink-0 border border-rule/60", sizes[size]]}>
+  <img
+    src={src}
+    alt={`Foto de ${name}`}
+    width="354"
+    height="472"
+    loading={eager ? "eager" : "lazy"}
+    decoding="async"
+    referrerpolicy="no-referrer"
+  />
+</div>

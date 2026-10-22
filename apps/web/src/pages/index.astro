@@ -1,15 +1,20 @@
 ---
-// Capa provisória (Etapa 6): mostra a identidade visual com um dado real.
-// A lista de deputados com busca e filtros entra na Etapa 7.
+// Capa: manchete com o número de deputados e a lista com busca e filtros por estado e partido.
+// A lista é sempre em ordem alfabética: o site não ordena deputados por nenhum indicador.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import BigNumber from "../components/ui/BigNumber.astro";
 import Headline from "../components/ui/Headline.astro";
 import Rule from "../components/ui/Rule.astro";
+import DeputyFilters from "../components/deputado/DeputyFilters.astro";
+import DeputyRow from "../components/deputado/DeputyRow.astro";
 import { repository } from "../lib/data";
 import { formatInteger, formatLongDate } from "../lib/format";
 
 const summary = await repository.getParticipationSummary();
 const deputies = await repository.listDeputies();
+const collator = new Intl.Collator("pt-BR");
+const states = [...new Set(deputies.map((d) => d.state))].sort(collator.compare);
+const parties = [...new Set(deputies.map((d) => d.party))].sort(collator.compare);
 ---
 
 <BaseLayout current="deputados">
@@ -21,19 +26,37 @@ const deputies = await repository.listDeputies();
         <span class="marker">Veja o que cada um</span> fez no plenário.
       </Headline>
       <p class="mt-4 max-w-prose text-lg">
-        Números oficiais, explicados em poucas linhas. Sem ranking e sem adjetivo: você olha o dado
-        e tira suas conclusões.
+        Escolha um nome para ver os dados oficiais dessa pessoa, explicados em poucas linhas. Sem
+        ranking e sem adjetivo: você olha o dado e tira suas conclusões.
       </p>
     </div>
     <div class="lg:pl-8">
       <BigNumber
         value={formatInteger(summary.nominalPlenaryVotes)}
         label="Votações nominais no plenário"
-        caption={`Desde o início da legislatura, em 1º de fevereiro de 2023, até ${summary.lastVoteDate ? formatLongDate(summary.lastVoteDate) : "hoje"}.`}
+        caption={`Votações em que cada voto fica registrado com o nome do deputado. Desde 1º de fevereiro de 2023 até ${summary.lastVoteDate ? formatLongDate(summary.lastVoteDate) : "hoje"}.`}
         updatedAt={summary.referenceDateTime}
         methodologyAnchor="participacao"
       />
     </div>
   </section>
-  <Rule class="my-8" />
+
+  <Rule variant="thick" class="mt-10" />
+
+  <section aria-labelledby="lista-deputados" class="pt-4">
+    <Headline as="h2" size="lg" id="lista-deputados">
+      Os deputados
+    </Headline>
+    <div class="mt-4">
+      <DeputyFilters states={states} parties={parties} total={deputies.length} />
+    </div>
+    <ul
+      class="mt-4 grid list-none grid-cols-1 gap-x-8 p-0 sm:grid-cols-2 lg:grid-cols-3"
+      aria-label="Lista de deputados"
+    >
+      {deputies.map((deputy) => (
+        <DeputyRow deputy={deputy} />
+      ))}
+    </ul>
+  </section>
 </BaseLayout>

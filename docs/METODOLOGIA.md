@@ -64,7 +64,7 @@ participação = votações em que o deputado registrou voto
 
 ### Limitações conhecidas
 
-- **Licenças e cargos no governo:** deputado licenciado (por exemplo, para ser ministro) não é cobrado pelas votações do período de licença, porque só contamos os dias em exercício. Mas quem ficou pouco tempo em exercício tem poucas votações na conta, e a porcentagem pode mudar muito com poucos votos. A ficha mostra sempre o número de votações consideradas ao lado da porcentagem.
+- **Licenças e cargos no governo:** deputado licenciado (por exemplo, para ser ministro) não é cobrado pelas votações do período de licença, porque só contamos os dias em exercício. Mas quem ficou pouco tempo em exercício tem poucas votações na conta, e a porcentagem pode mudar muito com poucos votos. A ficha mostra sempre o número de votações consideradas ao lado da porcentagem. Quando são menos de 30 votações, a ficha mostra um aviso de que a porcentagem pode mudar bastante.
 - **Suplentes:** entram e saem conforme os titulares se licenciam. A conta usa só os períodos em que cada suplente estava em exercício.
 - **Quem preside a sessão** aparece com "Artigo 17" e, por isso, com participação alta mesmo sem votar.
 - **Horários:** a comparação entre o horário da votação e o horário de posse ou licença usa os horários publicados pela Câmara (horário de Brasília). Erros de registro da Câmara se refletem aqui.

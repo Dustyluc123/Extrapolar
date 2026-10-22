@@ -1,0 +1,114 @@
+---
+// Busca por nome e filtros por estado e partido. Sem JavaScript, o formulário fica escondido
+// e a lista completa continua visível (melhoria progressiva, ADR 0005).
+import { stateName } from "../../lib/states";
+
+interface Props {
+  states: string[];
+  parties: string[];
+  total: number;
+}
+const { states, parties, total } = Astro.props;
+const fieldClass =
+  "mt-1 block w-full rounded-card border border-ink/60 bg-paper px-3 py-2.5 font-sans text-base text-ink focus-visible:outline-2";
+---
+
+<form
+  data-filters
+  hidden
+  class="grid gap-3 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-end"
+  role="search"
+>
+  <label class="block">
+    <span class="kicker">Buscar por nome</span>
+    <input type="search" name="q" autocomplete="off" placeholder="Ex.: Maria" class={fieldClass} />
+  </label>
+  <label class="block">
+    <span class="kicker">Estado</span>
+    <select name="uf" class={fieldClass}>
+      <option value="">Todos os estados</option>
+      {states.map((uf) => (
+        <option value={uf}>
+          {stateName(uf)} ({uf})
+        </option>
+      ))}
+    </select>
+  </label>
+  <label class="block">
+    <span class="kicker">Partido</span>
+    <select name="partido" class={fieldClass}>
+      <option value="">Todos os partidos</option>
+      {parties.map((party) => (
+        <option value={party}>{party}</option>
+      ))}
+    </select>
+  </label>
+  <button
+    type="reset"
+    class="rounded-full border border-ink/60 px-4 py-2.5 font-sans text-xs font-semibold tracking-[0.1em] text-ink uppercase transition-colors duration-150 hover:bg-ink hover:text-paper"
+  >
+    Limpar
+  </button>
+</form>
+
+<p data-filter-status class="caption mt-4 mb-0" aria-live="polite">
+  {total} deputados em exercício, em ordem alfabética.
+</p>
+<p data-filter-empty hidden class="mt-6 font-display text-2xl">
+  Nenhum deputado encontrado com esses filtros.
+</p>
+
+<script>
+  // Só o módulo de texto: importar o pacote inteiro levaria o Zod para o navegador.
+  import { foldText } from "@extrapolar/shared/text";
+
+  const form = document.querySelector<HTMLFormElement>("[data-filters]");
+  const status = document.querySelector<HTMLElement>("[data-filter-status]");
+  const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
+  const items = [...document.querySelectorAll<HTMLElement>("[data-deputy]")];
+
+  if (form && status && empty) {
+    form.hidden = false;
+    const query = form.elements.namedItem("q") as HTMLInputElement;
+    const state = form.elements.namedItem("uf") as HTMLSelectElement;
+    const party = form.elements.namedItem("partido") as HTMLSelectElement;
+
+    // Restaura filtros da URL (links compartilháveis: /?uf=SP&partido=PT&q=maria).
+    const params = new URLSearchParams(window.location.search);
+    query.value = params.get("q") ?? "";
+    if ([...state.options].some((o) => o.value === params.get("uf")))
+      state.value = params.get("uf")!;
+    if ([...party.options].some((o) => o.value === params.get("partido")))
+      party.value = params.get("partido")!;
+
+    const apply = () => {
+      const q = foldText(query.value);
+      let visible = 0;
+      for (const item of items) {
+        const match =
+          (!q || (item.dataset.name ?? "").includes(q)) &&
+          (!state.value || item.dataset.state === state.value) &&
+          (!party.value || item.dataset.party === party.value);
+        item.hidden = !match;
+        if (match) visible++;
+      }
+      const filtered = Boolean(q || state.value || party.value);
+      status.textContent = filtered
+        ? `${visible} de ${items.length} deputados com esses filtros.`
+        : `${items.length} deputados em exercício, em ordem alfabética.`;
+      empty.hidden = visible > 0;
+
+      const next = new URLSearchParams();
+      if (query.value.trim()) next.set("q", query.value.trim());
+      if (state.value) next.set("uf", state.value);
+      if (party.value) next.set("partido", party.value);
+      const search = next.toString();
+      history.replaceState(null, "", search ? `?${search}` : window.location.pathname);
+    };
+
+    form.addEventListener("input", apply);
+    form.addEventListener("submit", (event) => event.preventDefault());
+    form.addEventListener("reset", () => setTimeout(apply));
+    apply();
+  }
+</script>
