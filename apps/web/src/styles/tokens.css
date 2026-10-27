@@ -25,6 +25,16 @@
   --color-miss: #b5321c;
   --color-on-miss: #f4efe3;
 
+  /* Mesa de votação (jogos): mata-borrão verde-escuro e papel do ofício. Contrastes no DESIGN.md. */
+  --color-desk: #2b3a31;
+  --color-on-desk: #ece5d4;
+  --color-on-desk-soft: #b9b2a0;
+  --color-sheet: #fbf8ef;
+  --color-sheet-edge: #c9c0ac;
+  /* Cabo de madeira dos carimbos (igual nos dois temas; só desenho, sem texto) */
+  --color-wood: #6b4a32;
+  --color-wood-dark: #3f2a1c;
+
   --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
   --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
   --font-sans:
@@ -54,6 +64,11 @@
     --color-on-near: #161512;
     --color-miss: #ff6b4f;
     --color-on-miss: #161512;
+    --color-desk: #101712;
+    --color-on-desk: #d9d1bf;
+    --color-on-desk-soft: #a39b89;
+    --color-sheet: #24221d;
+    --color-sheet-edge: #4a463d;
     color-scheme: dark;
   }
 
@@ -77,6 +92,11 @@
       --color-on-near: #161512;
       --color-miss: #ff6b4f;
       --color-on-miss: #161512;
+      --color-desk: #101712;
+      --color-on-desk: #d9d1bf;
+      --color-on-desk-soft: #a39b89;
+      --color-sheet: #24221d;
+      --color-sheet-edge: #4a463d;
       color-scheme: dark;
     }
   }
