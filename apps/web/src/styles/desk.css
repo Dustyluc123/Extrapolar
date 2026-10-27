@@ -558,6 +558,99 @@
   color: var(--color-ink-soft);
 }
 
+/* Dle: pasta de arquivo (secreta, depois aberta) e fichas de chute */
+.folder {
+  position: relative;
+  padding: 1.1rem 1rem 1rem;
+  background: var(--color-folder);
+  color: var(--color-ink);
+  border-radius: 0 0.35rem 0.35rem 0.35rem;
+  box-shadow: 3px 6px 14px -4px rgb(0 0 0 / 0.5);
+}
+@media (min-width: 640px) {
+  .folder {
+    padding: 1.3rem 1.4rem 1.2rem;
+  }
+}
+.folder a {
+  color: var(--color-ink);
+}
+.folder-tab {
+  position: absolute;
+  top: -1.45rem;
+  left: 0;
+  margin: 0;
+  padding: 0.3rem 0.9rem 0.25rem;
+  background: var(--color-folder);
+  color: var(--color-ink);
+  border-radius: 0.4rem 0.4rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.folder-clues {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 0.75rem;
+  margin: 0.75rem 0 0;
+}
+@media (min-width: 640px) {
+  .folder-clues {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.folder-clues > div {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-ink) 35%, transparent);
+  padding-bottom: 0.15rem;
+}
+.folder-clues dt {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+.folder-clues dd {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.index-card {
+  position: relative;
+  padding: 0.65rem 0.75rem 0.75rem;
+  background: var(--color-sheet);
+  color: var(--color-ink);
+  border-radius: 0.2rem;
+  box-shadow: 2px 4px 10px -4px rgb(0 0 0 / 0.55);
+}
+.index-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
+  margin: 0;
+  padding-bottom: 0.3rem;
+  /* Linha vermelha das fichas de arquivo */
+  border-bottom: 2px solid color-mix(in oklab, var(--color-accent) 60%, transparent);
+}
+.index-card-number {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+/* Pistas como abas de fichário: canto de cima arredondado, base reta */
+.tile-tab {
+  border-radius: 0.5rem 0.5rem 0.1rem 0.1rem;
+}
+
 /* Pilha de documentos (Vote você também): folhas por baixo da de cima, conforme o que falta. */
 .pile {
   position: relative;

@@ -31,6 +31,8 @@
   --color-on-desk-soft: #b9b2a0;
   --color-sheet: #fbf8ef;
   --color-sheet-edge: #c9c0ac;
+  /* Pasta de arquivo do Dle (sem texto vermelho pequeno: 4,4:1) */
+  --color-folder: #e8d9b0;
   /* Cabo de madeira dos carimbos (igual nos dois temas; só desenho, sem texto) */
   --color-wood: #6b4a32;
   --color-wood-dark: #3f2a1c;
@@ -72,6 +74,7 @@
     --color-on-desk-soft: #a39b89;
     --color-sheet: #24221d;
     --color-sheet-edge: #4a463d;
+    --color-folder: #3a3426;
     color-scheme: dark;
   }
 
@@ -100,6 +103,8 @@
       --color-on-desk-soft: #a39b89;
       --color-sheet: #24221d;
       --color-sheet-edge: #4a463d;
+      --color-folder: #3a3426;
+      --color-folder: #3a3426;
       color-scheme: dark;
     }
   }

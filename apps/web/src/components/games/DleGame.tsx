@@ -1,10 +1,13 @@
-// Jogo 1 — Dle do seu estado (ilha React). Regras em @extrapolar/games; dados em
+// Jogo 1 — Dle do seu estado (ilha React). Na mesa, uma investigação de arquivo: a pasta secreta
+// do deputado do dia e, ao lado, uma ficha para cada chute, com as pistas marcadas como abas de
+// fichário. No fim, a pasta abre com a foto. Regras em @extrapolar/games; dados em
 // /jogos/dados/dle-{UF}.json. O estado do jogo fica só no navegador.
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { DleDeputy, DleStateFile } from "@extrapolar/shared";
 import {
   EMPTY_STATS,
   compareAll,
+  currentStreak,
   dleShareText,
   maxGuessesFor,
   parseStats,
@@ -22,10 +25,12 @@ import {
   PrivacyNote,
   ShareButton,
   StatePicker,
-  StatsLine,
   formatDay,
   useToday,
 } from "./common";
+import { playSound } from "../../lib/games/sound";
+import { Badge } from "./desk/Badge";
+import { Desk, DeskNote } from "./desk/Desk";
 
 interface Props {
   states: { code: string; name: string; count: number }[];
@@ -178,7 +183,9 @@ function DleRound({
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [fresh, setFresh] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const revealRef = useRef<HTMLHeadingElement>(null);
   const listId = useId();
 
   useEffect(() => {
@@ -208,11 +215,18 @@ function DleRound({
 
   const guess = (deputy: DleDeputy) => {
     if (finished || day.guesses.includes(deputy.id)) return;
+    playSound(deputy.id === answer.id ? "seal" : "paper");
+    setFresh(true);
     update({ ...day, guesses: [...day.guesses, deputy.id] });
     setQuery("");
     setActive(0);
     inputRef.current?.focus();
   };
+
+  // Ao terminar, o foco vai para a pasta aberta (os campos de chute somem).
+  useEffect(() => {
+    if (fresh && finished) revealRef.current?.focus();
+  }, [fresh, finished]);
 
   if (!loaded) return null;
 
@@ -225,170 +239,222 @@ function DleRound({
     url: `${window.location.origin}/jogos/dle`,
   });
 
+  // Pistas já confirmadas (alguma ficha acertou o atributo): vão para a pasta secreta.
+  const known = attributes.map((attribute, i) => {
+    const index = rows.findIndex((row) => row[i]?.status === "hit");
+    return index >= 0
+      ? displayValue(attribute.key, dleValues(guesses[index]!)[attribute.key] ?? null)
+      : null;
+  });
+
+  const badge = (
+    <Badge
+      items={[
+        ["jogos", stats.played],
+        ["acertos", stats.completed],
+        ["sequência", currentStreak(stats, today)],
+        ["maior sequência", stats.maxStreak],
+      ]}
+    />
+  );
+
   return (
     <div className="mt-5">
-      <p className="kicker m-0">
-        Dle {data.state} #{number} · {formatDay(today)} · {data.deputies.length} deputados ·{" "}
-        {guesses.length} de {maxGuesses} chutes
-      </p>
+      <Desk label={`Arquivo · Dle ${data.state} #${number}`} aside={badge}>
+        <DeskNote className="font-sans text-sm font-bold">
+          {formatDay(today)} · {data.deputies.length} deputados de {stateName} · {guesses.length} de{" "}
+          {maxGuesses} fichas puxadas
+        </DeskNote>
 
-      {!finished ? (
-        <div className="relative mt-3 max-w-md">
-          <label htmlFor={`${listId}-input`} className="block font-sans text-sm font-semibold">
-            Quem é o deputado do dia de {stateName}?
-          </label>
-          <input
-            ref={inputRef}
-            id={`${listId}-input`}
-            type="text"
-            role="combobox"
-            aria-expanded={suggestions.length > 0}
-            aria-controls={listId}
-            aria-autocomplete="list"
-            aria-activedescendant={
-              suggestions[active] ? `${listId}-${suggestions[active]!.id}` : undefined
-            }
-            autoComplete="off"
-            className="mt-1 min-h-11 w-full rounded border border-ink bg-paper px-3 font-sans text-base text-ink"
-            placeholder="Digite um nome"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setActive(0);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                setActive((i) => Math.min(i + 1, suggestions.length - 1));
-              } else if (event.key === "ArrowUp") {
-                event.preventDefault();
-                setActive((i) => Math.max(i - 1, 0));
-              } else if (event.key === "Enter" && suggestions[active]) {
-                event.preventDefault();
-                guess(suggestions[active]!);
-              } else if (event.key === "Escape") {
-                setQuery("");
-              }
-            }}
-          />
-          {suggestions.length > 0 ? (
-            <ul
-              id={listId}
-              role="listbox"
-              aria-label="Deputados do estado"
-              className="absolute z-10 mt-1 max-h-72 w-full list-none overflow-y-auto rounded border border-ink bg-paper p-0 shadow-md"
-            >
-              {suggestions.map((s, index) => (
-                <li
-                  key={s.id}
-                  id={`${listId}-${s.id}`}
-                  role="option"
-                  aria-selected={index === active}
-                  className={`cursor-pointer px-3 py-2 font-sans text-sm ${index === active ? "bg-ink text-paper" : ""}`}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    guess(s);
-                  }}
-                  onMouseEnter={() => setActive(index)}
-                >
-                  {s.name} <span className="opacity-75">({s.party})</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
-
-      {!finished && guesses.length > 0 ? (
-        <div className="mt-3">
-          {day.hint ? (
-            <HintPhoto id={answer.id} />
-          ) : (
-            <button
-              type="button"
-              className="game-button game-button-ghost game-button-small"
-              onClick={() => update({ ...day, hint: true })}
-            >
-              Ver dica: foto borrada
-            </button>
-          )}
-        </div>
-      ) : null}
-
-      <ol className="mt-5 list-none space-y-3 p-0" aria-label="Seus chutes">
-        {guesses
-          .map((g, index) => ({ g, row: rows[index]!, index }))
-          .reverse()
-          .map(({ g, row, index }) => (
-            <li key={g.id} className="rise-in">
-              <p className="m-0 font-sans text-sm font-semibold">
-                {index + 1}. {g.name}
-              </p>
-              <div className="mt-1 grid grid-cols-4 gap-1 sm:grid-cols-7">
-                {row.map((item, i) => {
-                  const attribute = attributes[i]!;
-                  const value = dleValues(g)[attribute.key] ?? null;
-                  const arrow =
-                    item.direction === "up" ? "↑" : item.direction === "down" ? "↓" : "";
-                  return (
-                    <div key={item.key} className={`tile tile-flip tile-${item.status}`}>
-                      <span className="text-[0.6rem] font-semibold uppercase">
-                        {attribute.label}
-                      </span>
-                      <span>{displayValue(attribute.key, value)}</span>
-                      <span className="tile-symbol" aria-hidden="true">
-                        {arrow || SYMBOL[item.status]}
-                      </span>
-                      <span className="visually-hidden">
-                        {STATUS_TEXT[item.status]}
-                        {item.direction === "up"
-                          ? ", o do dia é maior"
-                          : item.direction === "down"
-                            ? ", o do dia é menor"
-                            : ""}
-                      </span>
-                    </div>
-                  );
-                })}
+        {finished ? (
+          <section
+            className={`folder folder-open mt-6${fresh ? " sheet-slide" : ""}`}
+            aria-live="polite"
+            aria-labelledby="dle-revelacao"
+          >
+            <p className="folder-tab">
+              Pasta aberta · Dle {data.state} #{number}
+            </p>
+            <ExtraBanner>Edição extra</ExtraBanner>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <div className="halftone h-32 w-24 rounded">
+                <img
+                  src={`https://www.camara.leg.br/internet/deputado/bandep/${answer.id}.jpg`}
+                  alt={`Foto de ${answer.name}`}
+                  width={96}
+                  height={128}
+                />
               </div>
-            </li>
-          ))}
-      </ol>
-
-      <Legend />
-
-      {finished ? (
-        <section className="clipping mt-6" aria-live="polite" aria-labelledby="dle-revelacao">
-          <ExtraBanner>Edição extra</ExtraBanner>
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            <img
-              src={`https://www.camara.leg.br/internet/deputado/bandep/${answer.id}.jpg`}
-              alt={`Foto de ${answer.name}`}
-              width={96}
-              height={128}
-              className="h-32 w-24 rounded object-cover"
-            />
-            <div>
-              <h2 id="dle-revelacao" className="m-0 font-display text-2xl font-[750]">
-                {won ? "Acertou: " : "Era "}
-                {answer.name}
-              </h2>
-              <p className="m-0 mt-1">
-                {answer.party} · {stateName}
-              </p>
-              <p className="m-0 mt-1">
-                <a href={`/deputados/${answer.id}`}>Ver a ficha completa</a>
-              </p>
-              <p className="caption m-0">Foto: Câmara dos Deputados</p>
+              <div>
+                <h2
+                  id="dle-revelacao"
+                  ref={revealRef}
+                  tabIndex={-1}
+                  className="m-0 font-display text-2xl font-[750]"
+                >
+                  {won ? "Acertou: " : "Era "}
+                  {answer.name}
+                </h2>
+                <p className="m-0 mt-1">
+                  {answer.party} · {stateName}
+                </p>
+                <p className="m-0 mt-1">
+                  <a href={`/deputados/${answer.id}`}>Ver a ficha completa</a>
+                </p>
+                <p className="caption m-0">Foto: Câmara dos Deputados</p>
+              </div>
             </div>
-          </div>
-          <StatsLine stats={stats} today={today} label="acertos" />
-          <ShareButton text={shareText} />
-          <p className="caption m-0 mt-3">
-            Amanhã tem outro deputado do dia. Experimente outro estado também.
-          </p>
-        </section>
-      ) : null}
+            <ShareButton text={shareText} />
+            <p className="caption m-0 mt-3">
+              Amanhã tem outro deputado do dia. Experimente outro estado também.
+            </p>
+          </section>
+        ) : (
+          <section className="folder mt-6" aria-labelledby={`${listId}-pasta`}>
+            <p className="folder-tab">
+              Confidencial · Dle {data.state} #{number}
+            </p>
+            <h2 id={`${listId}-pasta`} className="m-0 font-display text-xl font-[720]">
+              Ficha secreta: o deputado do dia de {stateName}
+            </h2>
+            <dl className="folder-clues" aria-label="Pistas confirmadas">
+              {attributes.map((attribute, i) => (
+                <div key={attribute.key}>
+                  <dt>{attribute.label}</dt>
+                  <dd>{known[i] ?? <span aria-label="ainda sem pista">?</span>}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="relative mt-4 max-w-md">
+              <label htmlFor={`${listId}-input`} className="block font-sans text-sm font-semibold">
+                Puxe a ficha de um deputado de {stateName}
+              </label>
+              <input
+                ref={inputRef}
+                id={`${listId}-input`}
+                type="text"
+                role="combobox"
+                aria-expanded={suggestions.length > 0}
+                aria-controls={listId}
+                aria-autocomplete="list"
+                aria-activedescendant={
+                  suggestions[active] ? `${listId}-${suggestions[active]!.id}` : undefined
+                }
+                autoComplete="off"
+                className="mt-1 min-h-11 w-full rounded border border-ink bg-sheet px-3 font-sans text-base text-ink"
+                placeholder="Digite um nome"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setActive(0);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setActive((i) => Math.min(i + 1, suggestions.length - 1));
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setActive((i) => Math.max(i - 1, 0));
+                  } else if (event.key === "Enter" && suggestions[active]) {
+                    event.preventDefault();
+                    guess(suggestions[active]!);
+                  } else if (event.key === "Escape") {
+                    setQuery("");
+                  }
+                }}
+              />
+              {suggestions.length > 0 ? (
+                <ul
+                  id={listId}
+                  role="listbox"
+                  aria-label="Deputados do estado"
+                  className="absolute z-10 mt-1 max-h-72 w-full list-none overflow-y-auto rounded border border-ink bg-sheet p-0 shadow-md"
+                >
+                  {suggestions.map((s, index) => (
+                    <li
+                      key={s.id}
+                      id={`${listId}-${s.id}`}
+                      role="option"
+                      aria-selected={index === active}
+                      className={`cursor-pointer px-3 py-2 font-sans text-sm ${index === active ? "bg-ink text-paper" : ""}`}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        guess(s);
+                      }}
+                      onMouseEnter={() => setActive(index)}
+                    >
+                      {s.name} <span className="opacity-75">({s.party})</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            {guesses.length > 0 ? (
+              <div className="mt-3">
+                {day.hint ? (
+                  <HintPhoto id={answer.id} />
+                ) : (
+                  <button
+                    type="button"
+                    className="game-button game-button-ghost game-button-small"
+                    onClick={() => update({ ...day, hint: true })}
+                  >
+                    Ver dica: foto borrada
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </section>
+        )}
+
+        <ol className="mt-6 grid list-none gap-4 p-0" aria-label="Fichas puxadas">
+          {guesses
+            .map((g, index) => ({ g, row: rows[index]!, index }))
+            .reverse()
+            .map(({ g, row, index }) => (
+              <li
+                key={g.id}
+                className={`index-card ${index % 2 ? "sheet-tilt-r" : "sheet-tilt-l"}${
+                  fresh && index === guesses.length - 1 ? " sheet-in" : ""
+                }`}
+              >
+                <p className="index-card-head">
+                  <span className="index-card-number">Ficha {index + 1}</span>
+                  <span className="font-display text-lg font-[720]">{g.name}</span>
+                </p>
+                <div className="mt-2 grid grid-cols-4 gap-1 sm:grid-cols-7">
+                  {row.map((item, i) => {
+                    const attribute = attributes[i]!;
+                    const value = dleValues(g)[attribute.key] ?? null;
+                    const arrow =
+                      item.direction === "up" ? "↑" : item.direction === "down" ? "↓" : "";
+                    return (
+                      <div key={item.key} className={`tile tile-tab tile-flip tile-${item.status}`}>
+                        <span className="text-[0.6rem] font-semibold uppercase">
+                          {attribute.label}
+                        </span>
+                        <span>{displayValue(attribute.key, value)}</span>
+                        <span className="tile-symbol" aria-hidden="true">
+                          {arrow || SYMBOL[item.status]}
+                        </span>
+                        <span className="visually-hidden">
+                          {STATUS_TEXT[item.status]}
+                          {item.direction === "up"
+                            ? ", o do dia é maior"
+                            : item.direction === "down"
+                              ? ", o do dia é menor"
+                              : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </li>
+            ))}
+        </ol>
+
+        <Legend />
+      </Desk>
     </div>
   );
 }
@@ -411,7 +477,7 @@ function HintPhoto({ id }: { id: number }) {
 
 function Legend() {
   return (
-    <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 font-sans text-xs">
+    <ul className="m-0 mt-5 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 font-sans text-xs text-on-desk">
       <li>
         <span className="legend-swatch tile-hit">✓</span> igual
       </li>
