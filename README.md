@@ -173,7 +173,7 @@ Extrapolar/
 ├── data/
 │   ├── raw/                        # Cache dos downloads (fora do Git)
 │   └── generated/                  # deputados.json, deputados/{id}.json, metricas.json, frentes.json, meta.json, jogos/
-├── content/resumos/                # Resumos de votações em linguagem simples (escritos à mão, opcionais)
+├── content/resumos/                # Resumos de votações em linguagem simples (rascunho pelo /resumos, revisão à mão)
 ├── docs/
 │   ├── ARQUITETURA.md  METODOLOGIA.md  DESIGN.md  FONTES.md  DEPLOY.md
 │   ├── decisoes/                   # ADRs (0001-astro.md ...)

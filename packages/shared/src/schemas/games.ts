@@ -34,8 +34,18 @@ export const gameVoteSchema = z.object({
     /** Ementa oficial. */
     summary: z.string().min(1),
   }),
-  /** Resumo em linguagem simples, só quando existe e foi revisado (content/resumos). */
-  plainSummary: z.string().nullable(),
+  /**
+   * Resumo em linguagem simples, só quando existe e foi revisado (content/resumos). Os textos
+   * podem ter links do glossário no formato `[termo](/glossario#slug)`.
+   */
+  plainSummary: z
+    .object({
+      /** "O que estava em votação". */
+      text: z.string().min(1),
+      /** "Curiosidade" sobre como a Câmara funciona (opcional). */
+      curiosity: z.string().min(1).nullable(),
+    })
+    .nullable(),
   /** O que foi votado, como na descrição oficial ("Substitutivo", "Projeto de Lei"…). */
   object: z.string().min(1),
   turn: z.enum(["primeiro", "segundo"]).nullable(),

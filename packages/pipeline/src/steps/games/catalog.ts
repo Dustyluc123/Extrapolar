@@ -66,7 +66,7 @@ export function buildCatalog(input: {
         label: propositionLabel(result.proposition),
         summary: result.proposition.summary.replace(/\s+/g, " ").trim(),
       },
-      plainSummary: summary?.reviewed ? summary.text : null,
+      plainSummary: summary?.reviewed ? { text: summary.text, curiosity: summary.curiosity } : null,
       object: result.merit.object,
       turn: result.merit.turn,
       approved: result.approved,

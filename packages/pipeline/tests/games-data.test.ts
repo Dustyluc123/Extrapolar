@@ -3,7 +3,13 @@ import { unscramble } from "@extrapolar/games";
 import type { Ballot } from "@extrapolar/metrics";
 import { buildCatalog, buildGameDeputies, encodeBallots } from "../src/steps/games/catalog";
 import { DrawState, makeRank } from "../src/steps/games/draw";
-import { parseSummaryFile } from "../src/steps/games/summaries";
+import { join } from "node:path";
+import {
+  parseSummaryFile,
+  readPlainSummaries,
+  type PlainSummary,
+} from "../src/steps/games/summaries";
+import { CONTENT_DIR } from "../src/lib/paths";
 import type { GameVotesSources } from "../src/steps/fetch";
 
 describe("resumos em linguagem simples", () => {
@@ -12,11 +18,22 @@ describe("resumos em linguagem simples", () => {
       "1-2",
       "---\nrevisado: true\nautor: Lucas\ndata: 2026-10-30\n---\n\nTexto simples.\n",
     );
-    expect(s).toEqual({ voteId: "1-2", reviewed: true, text: "Texto simples." });
+    expect(s).toEqual({
+      voteId: "1-2",
+      reviewed: true,
+      text: "Texto simples.",
+      curiosity: null,
+      doubts: null,
+      source: null,
+    });
   });
 
   it("rascunho é lido, mas marcado como não revisado", () => {
     expect(parseSummaryFile("1-2", "---\nrevisado: false\n---\nRascunho").reviewed).toBe(false);
+  });
+
+  it("os arquivos de content/resumos são válidos (os mesmos que o pipeline lê)", async () => {
+    await expect(readPlainSummaries(join(CONTENT_DIR, "resumos"))).resolves.toBeInstanceOf(Map);
   });
 
   it("cabeçalho ausente ou inválido para com mensagem clara", () => {
@@ -25,6 +42,10 @@ describe("resumos em linguagem simples", () => {
     expect(() => parseSummaryFile("1-2", "---\nrevisado: true\n---\n")).toThrow(/sem texto/);
   });
 });
+
+function summary(voteId: string, text: string, curiosity: string | null = null): PlainSummary {
+  return { voteId, reviewed: true, text, curiosity, doubts: null, source: null };
+}
 
 const sources: GameVotesSources = {
   info: new Map([
@@ -90,12 +111,15 @@ describe("catálogo de votações elegíveis", () => {
       sources,
       ballots,
       summaries: new Map([
-        ["10-1", { voteId: "10-1", reviewed: true, text: "Resumo." }],
-        ["99-9", { voteId: "99-9", reviewed: true, text: "Outro." }],
+        ["10-1", summary("10-1", "Resumo.", "Curiosidade.")],
+        ["99-9", summary("99-9", "Outro.")],
       ]),
       onUnusedSummary: (id) => unused.push(id),
     });
-    expect(catalog.file.votes[0]!.plainSummary).toBe("Resumo.");
+    expect(catalog.file.votes[0]!.plainSummary).toEqual({
+      text: "Resumo.",
+      curiosity: "Curiosidade.",
+    });
     expect(unused).toEqual(["99-9"]);
   });
 

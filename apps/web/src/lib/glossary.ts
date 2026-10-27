@@ -171,6 +171,33 @@ export const GLOSSARY: GlossaryEntry[] = [
       "Proposta sobre assuntos que são decididos só pelo Congresso, sem sanção do Presidente — por exemplo, aprovar tratados ou suspender atos do Poder Executivo.",
   },
   {
+    slug: "medida-provisoria",
+    term: "Medida Provisória",
+    short: "MPV",
+    definition:
+      "Norma editada pelo Presidente da República que já vale como lei desde a publicação. O Congresso tem até 120 dias para aprová-la (às vezes com mudanças, na forma de um projeto de lei de conversão) ou ela perde a validade.",
+    plain: "É uma lei que começa a valer antes de ser votada.",
+  },
+  {
+    slug: "substitutivo",
+    term: "Substitutivo",
+    definition:
+      "Texto que substitui por inteiro a proposta original, em geral escrito pelo relator. Quando o plenário aprova o substitutivo, é ele que segue adiante, e não o texto original.",
+    plain: "É a versão reescrita do projeto.",
+  },
+  {
+    slug: "maioria-absoluta",
+    term: "Maioria absoluta",
+    definition:
+      "Mais da metade de todos os deputados, e não só dos presentes: 257 dos 513. É o mínimo de votos Sim para aprovar um projeto de lei complementar, mesmo que os votos Sim sejam mais numerosos que os Não.",
+  },
+  {
+    slug: "dois-turnos",
+    term: "Dois turnos",
+    definition:
+      "Uma proposta de emenda à Constituição é votada duas vezes no plenário da Câmara (e duas no Senado). Nas duas, precisa de três quintos dos deputados, 308 votos Sim.",
+  },
+  {
     slug: "prc",
     term: "Projeto de Resolução da Câmara",
     short: "PRC",

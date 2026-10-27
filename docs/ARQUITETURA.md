@@ -95,7 +95,7 @@ pipeline (6h de Brasília)
      placar.ts      sorteio entre as elegíveis dos últimos 12 meses
      vote-round.ts  rodada semanal (10) e votação mais recente, com orientações
      draw.ts        DrawState: HMAC com EXTRAPOLAR_DAILY_SECRET, hoje + 3 dias, picks (ADR 0020)
-     summaries.ts   content/resumos/*.md (só revisados)
+     summaries.ts   content/resumos/*.md (só revisados; leitor em packages/shared/src/summaries.ts)
   publish → data/generated/jogos/*.json (validados com schemas/games.ts)
 
 site (build)

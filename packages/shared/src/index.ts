@@ -14,3 +14,4 @@ export * from "./schemas/camara";
 export * from "./schemas/generated";
 export * from "./schemas/games";
 export * from "./repositories";
+export * from "./summaries";

@@ -1,6 +1,7 @@
 // Cartão de uma votação (jogos 2, 3 e 4): o que foi votado, com a fonte oficial.
 import type { GameVote } from "@extrapolar/shared";
 import { formatDay } from "./common";
+import { SummaryText } from "./SummaryText";
 
 export function propositionUrl(id: number): string {
   return `https://www.camara.leg.br/propostas-legislativas/${id}`;
@@ -19,7 +20,6 @@ export function VoteCard({
   compact?: boolean;
 }) {
   const Heading = headingLevel === 2 ? "h2" : "h3";
-  const text = vote.plainSummary ?? vote.proposition.summary;
   return (
     <article className={compact ? "" : "clipping"}>
       <p className="kicker m-0">
@@ -29,7 +29,18 @@ export function VoteCard({
       <Heading className="m-0 mt-1 font-display text-xl font-[720] sm:text-2xl">
         {vote.proposition.label}
       </Heading>
-      <p className="m-0 mt-2 text-[1.05rem]">{text}</p>
+      <p className="m-0 mt-2 text-[1.05rem]">
+        {vote.plainSummary ? (
+          <SummaryText text={vote.plainSummary.text} />
+        ) : (
+          vote.proposition.summary
+        )}
+      </p>
+      {vote.plainSummary?.curiosity ? (
+        <p className="m-0 mt-2">
+          <strong>Curiosidade:</strong> <SummaryText text={vote.plainSummary.curiosity} />
+        </p>
+      ) : null}
       <p className="caption m-0 mt-2">
         {vote.plainSummary ? "Resumo em linguagem simples, revisado. " : "Ementa oficial. "}O que
         foi votado: {vote.object.toLowerCase()}.{" "}

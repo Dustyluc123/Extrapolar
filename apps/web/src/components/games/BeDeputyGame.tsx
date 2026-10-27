@@ -12,6 +12,7 @@ import {
 import { STATE_KEY, parseState, readStored, writeStored } from "../../lib/games/storage";
 import { ExtraBanner, PrivacyNote, ShareButton, formatDay, formatInt } from "./common";
 import { ScoreBar, VoteCard, voteDataUrl } from "./VoteCard";
+import { SummaryText } from "./SummaryText";
 
 interface Props {
   latest: LatestVoteFile;
@@ -134,7 +135,13 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
           {vote.proposition.label}: {vote.approved ? "aprovada" : "rejeitada"} por{" "}
           {formatInt(vote.official.yes)} a {formatInt(vote.official.no)}
         </h2>
-        <p className="m-0 mt-2">{vote.plainSummary ?? vote.proposition.summary}</p>
+        <p className="m-0 mt-2">
+          {vote.plainSummary ? (
+            <SummaryText text={vote.plainSummary.text} />
+          ) : (
+            vote.proposition.summary
+          )}
+        </p>
         <div className="mt-3">
           <ScoreBar yes={vote.official.yes} no={vote.official.no} />
           <p className="caption m-0 mt-1">

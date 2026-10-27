@@ -5,6 +5,7 @@ import "../../styles/games.css";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Headline from "../../components/ui/Headline.astro";
 import { gameVotes, propositionUrl, voteDataUrl, voteText } from "../../lib/games/data";
+import { SummaryText } from "../../components/games/SummaryText";
 import { formatInteger, formatShortDate } from "../../lib/format";
 
 const votes = [...gameVotes.votes].reverse();
@@ -52,7 +53,7 @@ const excluded = Object.entries(gameVotes.excluded).filter(([, n]) => n > 0);
             {formatShortDate(vote.date)} · {vote.proposition.label}
             {vote.turn ? ` · ${vote.turn} turno` : ""}
           </p>
-          <p class="m-0 mt-1">{text}</p>
+          <p class="m-0 mt-1">{isPlain ? <SummaryText text={text} /> : text}</p>
           {isPlain ? <p class="caption m-0">Resumo em linguagem simples, revisado.</p> : null}
           <p class="m-0 mt-1 font-sans text-sm">
             <strong>{vote.approved ? "Aprovada" : "Rejeitada"}</strong> · Sim{" "}

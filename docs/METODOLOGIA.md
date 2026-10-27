@@ -546,7 +546,7 @@ Na primeira versão da regra, 1 votação de mérito ficou de fora (PEC 45/2019,
 
 **O que aparece no jogo:**
 
-- **Descrição:** a ementa oficial, com sigla, número e ano (ex.: "PL 6.139/2023") e link para a página da proposição na Câmara. Quando houver um resumo em linguagem simples escrito ou revisado à mão (`content/resumos/`, campo `revisado: true`), ele aparece no lugar, com a ementa como fonte. Nenhum resumo é gerado por IA.
+- **Descrição:** a ementa oficial, com sigla, número e ano (ex.: "PL 6.139/2023") e link para a página da proposição na Câmara. Quando houver um resumo em linguagem simples revisado (`content/resumos/`, campo `revisado: true`), ele aparece no lugar, com a ementa como fonte. Os rascunhos são escritos com IA (Claude) a partir da ementa e do texto oficial da proposição (redação final, parecer ou inteiro teor) e **só vão para o site depois de revisados à mão** (ADR 0022). O resumo diz o que o texto muda, sem argumentos a favor ou contra; a ementa oficial continua sempre visível logo abaixo.
 - **Resultado:** o campo oficial (aprovada ou rejeitada). Atenção: "aprovada" não é "mais Sim do que Não". Projeto de lei complementar precisa de **257** votos Sim (maioria absoluta) e PEC, de **308** (três quintos), em dois turnos. Ex.: o PLP 281/2019 teve 252 Sim e 176 Não em 14/10/2026 e foi rejeitado.
 - **Placar:** o oficial do arquivo de votações (Sim, Não e outros) e, a partir dos votos individuais, abstenção, obstrução e Art. 17 (quem preside a sessão).
 - **Voto de cada deputado:** só dos deputados em exercício hoje (os que têm ficha no site); quem não estava em exercício na data aparece como "sem voto registrado". Por isso a soma dos votos listados pode ser menor que o placar oficial.

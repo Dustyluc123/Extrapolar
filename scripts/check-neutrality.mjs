@@ -1,4 +1,5 @@
-// Varredura de palavras de julgamento nos textos da interface (apps/web/src).
+// Varredura de palavras de julgamento nos textos da interface (apps/web/src) e nos resumos de
+// votações (content/resumos), que também viram texto do site.
 // Princípio de neutralidade: ver CLAUDE.md. Gera AVISO, nunca erro (sempre sai com código 0),
 // porque palavras como "melhor" aparecem em frases normais ("para entender melhor").
 // Exceções aprovadas ficam em scripts/neutrality-allowlist.json.
@@ -7,44 +8,14 @@
 import { readFile, readdir } from "node:fs/promises";
 import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { JUDGMENT_WORDS, fold } from "./lib/neutrality-words.mjs";
+
+export { JUDGMENT_WORDS };
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SCAN_DIR = join(ROOT, "apps", "web", "src");
+const SCAN_DIRS = [join(ROOT, "apps", "web", "src"), join(ROOT, "content", "resumos")];
 const EXTENSIONS = new Set([".astro", ".ts", ".tsx", ".md", ".mdx"]);
 const ALLOWLIST_FILE = join(ROOT, "scripts", "neutrality-allowlist.json");
-
-/**
- * Palavras de julgamento (comparadas sem acento e sem diferença de maiúsculas).
- * Cada entrada é o começo da palavra: "corrupt" pega corrupto, corrupta, corrupção.
- */
-export const JUDGMENT_WORDS = [
-  "melhor",
-  "pior",
-  "corrupt",
-  "corrupcao",
-  "vergonh",
-  "heroi",
-  "heroin",
-  "pessim",
-  "excelent",
-  "ruim",
-  "ruins",
-  "bandid",
-  "ladra",
-  "ladrao",
-  "ladroes",
-  "mentiros",
-  "incompetent",
-  "vagabund",
-  "golpista",
-  "traidor",
-  "traira",
-  "fantasma",
-  "vilao",
-  "viloes",
-];
-
-const fold = (text) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 const pattern = new RegExp(`\\b(${JUDGMENT_WORDS.join("|")})[a-z]*`, "g");
 
@@ -73,7 +44,12 @@ const allowlist = await loadAllowlist();
 const findings = [];
 let allowed = 0;
 
-for (const file of await listFiles(SCAN_DIR)) {
+const files = [];
+// O LEIA-ME dos resumos não vai para o site (e cita as palavras proibidas como exemplo).
+for (const dir of SCAN_DIRS) {
+  files.push(...(await listFiles(dir)).filter((f) => !f.toUpperCase().endsWith("LEIA-ME.MD")));
+}
+for (const file of files) {
   const path = relative(ROOT, file);
   const lines = (await readFile(file, "utf8")).split("\n");
   lines.forEach((line, index) => {
@@ -102,6 +78,6 @@ for (const finding of findings) {
 }
 console.log(
   findings.length === 0
-    ? `Neutralidade: nenhuma palavra de julgamento encontrada em apps/web/src (${allowed} exceção(ões) aprovada(s)).`
+    ? `Neutralidade: nenhuma palavra de julgamento encontrada em apps/web/src e content/resumos (${allowed} exceção(ões) aprovada(s)).`
     : `Neutralidade: ${findings.length} aviso(s). Isto não quebra o CI; revise cada caso.`,
 );

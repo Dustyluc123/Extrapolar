@@ -14,7 +14,7 @@ Os briefings originais estão em `docs/briefing-fase0.md`, `docs/briefing-fase1.
 4. **Custo perto de zero.** Sem servidor rodando 24 horas. Site estático; dados atualizados por tarefa agendada (GitHub Actions).
 5. **Contexto das métricas.** Toda métrica tem limitações documentadas em `docs/METODOLOGIA.md` (o que mede e o que **não** mede).
 
-Uma varredura de palavras de julgamento (`pnpm check:neutralidade`, `scripts/check-neutrality.mjs`) roda no CI só sobre `apps/web/src` e gera **aviso**, não erro. A lista de palavras fica no próprio script; exceções aprovadas (arquivo + trecho + motivo) ficam em `scripts/neutrality-allowlist.json`. Atenção: `docs/METODOLOGIA.md` também aparece no site (`/metodologia`), mas não é varrido; revise à mão.
+Uma varredura de palavras de julgamento (`pnpm check:neutralidade`, `scripts/check-neutrality.mjs`) roda no CI sobre `apps/web/src` e `content/resumos` e gera **aviso**, não erro. A lista de palavras fica em `scripts/lib/neutrality-words.mjs`; exceções aprovadas (arquivo + trecho + motivo) ficam em `scripts/neutrality-allowlist.json`. Atenção: `docs/METODOLOGIA.md` também aparece no site (`/metodologia`), mas não é varrido; revise à mão.
 
 ## Idioma e nomes
 
@@ -41,6 +41,8 @@ pnpm check:a11y           # axe-core + busca pelo teclado (precisa do preview ro
 pnpm check:a11y:jogos     # axe-core nos jogos e no ranking depois de jogar (idem)
 pnpm screenshots          # capturas celular/desktop, claro/escuro + alerta de rolagem lateral
 pnpm repo-growth          # quanto o commit de data/generated vai acrescentar ao repositório
+node scripts/resumos.mjs pendentes      # votações dos jogos sem resumo (usado pelo /resumos)
+node scripts/resumos.mjs fontes <id>    # baixa ementa, parecer e redação final para data/raw/resumos/<id>
 ```
 
 `check:a11y`, `check:a11y:jogos` e `screenshots` precisam de `pnpm build && pnpm --filter @extrapolar/web preview` (porta 4321) e do Google Chrome; o controle do Chrome fica em `scripts/lib/chrome.mjs`. Capturas vão para `docs/screenshots/` (fora do Git); as imagens do README ficam em `docs/imagens/`.
@@ -64,7 +66,7 @@ Detalhes em `docs/ARQUITETURA.md`. Resumo:
 - `packages/games` — regras **puras** dos jogos: dia de Brasília, sorteio por ciclos (adaptado do Chutaí), embaralhamento da resposta, comparação de atributos do Dle, pontuação do Placar, concordância, sequência e textos de compartilhar. Usado pelo pipeline e pelas ilhas React.
 - `packages/pipeline` — rede, disco e orquestração: `sources/` (uma fonte por arquivo) → `normalize/` → `steps/` (`fetch → normalize → compute → publish`), com um módulo de cálculo por caderno em `steps/metrics/`. Arquivos grandes são reduzidos ano a ano logo depois de validados (`steps/fetch.ts`). Valida tudo com Zod; se algo vier diferente do esperado, **falha com mensagem clara e não publica**. A publicação é atômica (escreve em temporário e renomeia).
 - `apps/web` — Astro, HTML estático. Lê `data/generated/*.json` no build por meio de `JsonDeputyRepository` (`src/lib/data.ts`), que valida com os esquemas de saída. **Nunca** chama a API da Câmara. Interatividade mínima com `<script>` do Astro; ilhas React (`@astrojs/react` 5, que roda no Vite 7 do Astro 6 — a versão 7 puxa o Vite 8 e quebra o build) só nos jogos (`components/games/`) e no ranking (`components/ranking/`), ADR 0021. Dados grandes para as ilhas saem como arquivos estáticos gerados no build (`/jogos/dados/dle-UF.json`, `/ranking/dados.json`). Estado do jogador só em `localStorage` (`extrapolar:jogos:*`), sempre com try/catch.
-- `data/raw/` — cache de downloads (fora do Git; discursos e lideranças guardam só o resultado reduzido). `data/generated/` — JSON final (no Git; ADRs 0004 e 0012): `deputados.json` (índice), `deputados/{id}.json` (detalhe por caderno, sem a data da edição), `metricas.json` (valores brutos para a Fase 2, sem ranking), `frentes.json` (títulos das frentes), `meta.json` (fontes, data de referência, avisos de qualidade, totais) e `jogos/` (votações elegíveis, deputados na ordem dos votos compactos, Dle por estado, Placar, rodada semanal, votação mais recente e o estado do sorteio, `sorteio.json`, que só cresce). `content/resumos/{idVotacao}.md` — resumos de votações em linguagem simples, escritos à mão; só vão para o site com `revisado: true`.
+- `data/raw/` — cache de downloads (fora do Git; discursos e lideranças guardam só o resultado reduzido). `data/generated/` — JSON final (no Git; ADRs 0004 e 0012): `deputados.json` (índice), `deputados/{id}.json` (detalhe por caderno, sem a data da edição), `metricas.json` (valores brutos para a Fase 2, sem ranking), `frentes.json` (títulos das frentes), `meta.json` (fontes, data de referência, avisos de qualidade, totais) e `jogos/` (votações elegíveis, deputados na ordem dos votos compactos, Dle por estado, Placar, rodada semanal, votação mais recente e o estado do sorteio, `sorteio.json`, que só cresce). `content/resumos/{idVotacao}.md` — resumos de votações em linguagem simples (seções "O que estava em votação", "Curiosidade" e "Dúvidas"; formato em `content/resumos/LEIA-ME.md`). Rascunhos escritos pelo comando `/resumos` com `revisado: false`; só vão para o site depois que o Lucas revisa e marca `revisado: true` (ADR 0022).
 - Valor de métrica padronizado: `MetricValue` = `ok` (valor, numerador, denominador) ou `sem-dado` com motivo de `packages/shared/src/no-data.ts`. Nunca 0 no lugar de sem dado.
 
 Pacotes internos não têm build: exportam `src/*.ts` direto (padrão do Chutaí).
@@ -82,7 +84,7 @@ Pacotes internos não têm build: exportam `src/*.ts` direto (padrão do Chutaí
 
 ## Decisões
 
-ADRs curtos em `docs/decisoes/NNNN-titulo.md`. Toda decisão de arquitetura ou de metodologia relevante ganha um ADR. ADRs da Fase 1: 0012 (dados por deputado), 0013 (gráficos estáticos), 0014 (orientação de bloco), 0015 e 0016 (discursos), 0017 (teto da cota), 0018 (emendas). Fase 2: 0019 (votações elegíveis), 0020 (sorteio diário num site estático), 0021 (ilhas React e estado só no navegador) e 0010 atualizado (exceção do ranking). Fases futuras previstas (não implementar sem pedido): resumos de votações com IA revisados por humano, login/contas, salvar rankings em servidor, PostgreSQL.
+ADRs curtos em `docs/decisoes/NNNN-titulo.md`. Toda decisão de arquitetura ou de metodologia relevante ganha um ADR. ADRs da Fase 1: 0012 (dados por deputado), 0013 (gráficos estáticos), 0014 (orientação de bloco), 0015 e 0016 (discursos), 0017 (teto da cota), 0018 (emendas). Fase 2: 0019 (votações elegíveis), 0020 (sorteio diário num site estático), 0021 (ilhas React e estado só no navegador) e 0010 atualizado (exceção do ranking). Depois: 0022 (resumos das votações: rascunho com IA, revisão humana). Fases futuras previstas (não implementar sem pedido): login/contas, salvar rankings em servidor, PostgreSQL.
 
 ## Ficha e design
 
@@ -93,9 +95,16 @@ ADRs curtos em `docs/decisoes/NNNN-titulo.md`. Toda decisão de arquitetura ou d
 
 ## Trabalho
 
+- **No começo de cada sessão, rode `git pull --rebase`**: o robô da atualização diária faz commits no `main` todos os dias.
 - Commits pequenos, em português, ao fim de cada etapa.
 - Testes para tudo em `packages/metrics` e para a validação de dados.
 - Se algo parecer ambíguo ou errado, perguntar antes de seguir.
+
+### Rotina semanal: resumos das votações
+
+1. Rodar `/resumos` no Claude Code (`.claude/commands/resumos.md`): ele lista as votações dos jogos sem resumo (Placar, Vote você também, Seja deputado), lê a ementa e o texto oficial e escreve os rascunhos em `content/resumos/` com `revisado: false`. O Claude **nunca** marca um resumo como revisado.
+2. O Lucas revisa em `pnpm dev` → http://localhost:4321/dev/resumos (ementa e rascunho lado a lado; página só de desenvolvimento, não vai para o build), resolve a seção "Dúvidas" e troca para `revisado: true`.
+3. Commit dos resumos revisados; a próxima execução do pipeline publica os textos nos jogos.
 
 ## Segundo cérebro (Obsidian)
 
