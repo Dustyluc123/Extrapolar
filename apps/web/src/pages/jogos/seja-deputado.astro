@@ -2,6 +2,7 @@
 // Jogo 4 — Seja deputado: a votação de mérito mais recente.
 import "../../styles/games.css";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { staticOgImage } from "../../lib/og";
 import GameHeader from "../../components/games/GameHeader.astro";
 import BeDeputyGame from "../../components/games/BeDeputyGame";
 import { latestVote } from "../../lib/games/rounds";
@@ -19,6 +20,7 @@ const states = [...new Set(gameDeputies.deputies.map((d) => d.state))]
   title="Seja deputado"
   description="A votação mais recente do plenário da Câmara: vote você e confira o resultado e o voto de cada deputado."
   current="jogos"
+  ogImage={staticOgImage("jogos/seja-deputado")}
 >
   <GameHeader slug="seja-deputado" />
   <section class="mt-6" aria-label="Jogo">

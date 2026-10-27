@@ -12,8 +12,9 @@ cron diário (06:00 Brasília) → pnpm pipeline → testes + build → commit e
 2. **Root Directory:** `apps/web`. Deixe ligada a opção de incluir arquivos fora do Root Directory (o site lê `data/generated` e `docs/METODOLOGIA.md` da raiz).
 3. **Framework:** Astro (detectado). **Build command:** padrão (`astro build`). **Output:** `dist`. **Install command:** padrão (`pnpm install`).
 4. **Node.js:** 22.x (Settings → General).
-5. **Variáveis de ambiente (opcional):** `SITE_URL` com o endereço público (ex.: o domínio definitivo), usado em links absolutos.
+5. **Variáveis de ambiente (opcional):** `SITE_URL` com o endereço público (ex.: o domínio definitivo), usado nas URLs absolutas das prévias de compartilhamento (`og:url`, `og:image`). Sem ela, o build usa o domínio de produção que a Vercel informa (`VERCEL_PROJECT_PRODUCTION_URL`, disponível com a opção "Automatically expose System Environment Variables", ligada por padrão).
 6. Faça o primeiro deploy e confira a capa, uma ficha (`/deputados/204379`) e `/metodologia`.
+7. Confira a prévia de um link (ex.: cole o endereço de uma ficha no WhatsApp ou em https://www.opengraph.xyz). As imagens de prévia são geradas no build (ADR 0023): o build baixa as 513 fotos oficiais da Câmara (cache em `node_modules/.cache/extrapolar-og/`) e leva de 30 a 40 s a mais.
 
 ## Deploy hook (opcional) — TODO (Lucas)
 

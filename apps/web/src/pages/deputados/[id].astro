@@ -33,6 +33,7 @@ import SummaryNumbers from "../../components/ficha/SummaryNumbers.astro";
 import { repository } from "../../lib/data";
 import { formatDateTime } from "../../lib/format";
 import { stateName } from "../../lib/states";
+import { deputyOgImage } from "../../lib/og";
 
 export async function getStaticPaths() {
   const deputies = await repository.listDeputies();
@@ -68,6 +69,7 @@ const conditionSlug =
   title={deputy.name}
   description={`${deputy.name} (${deputy.party}-${deputy.state}): dados oficiais da Câmara dos Deputados, com fonte e metodologia.`}
   current="deputados"
+  ogImage={deputyOgImage(deputy)}
 >
   <p class="m-0 font-sans text-sm">
     <a href="/" class="no-underline hover:underline">

@@ -71,6 +71,7 @@ Os formatos estão definidos (e validados) em `packages/shared/src/schemas/gener
 - Interatividade da capa (busca e filtros) em `<script>` do Astro, sem framework.
 - Tailwind CSS 4 com tokens próprios em `src/styles/tokens.css` (ver `docs/DESIGN.md`).
 - `/metodologia` é gerada a partir de `docs/METODOLOGIA.md` (content collection com loader `glob`).
+- **Prévias ao compartilhar (ADR 0023):** `BaseLayout.astro` escreve as meta tags Open Graph e Twitter com URLs absolutas (`src/lib/site.ts`: `SITE_URL` → domínio de produção da Vercel → localhost). As imagens (1200 × 630, PNG) são geradas no build por `src/pages/og/[...slug].png.ts` com satori + resvg + sharp (`src/lib/og/`): uma geral, uma para os jogos, uma por jogo, uma para o ranking e uma por deputado (foto oficial em meio-tom, sem métricas). Não vão para o Git.
 
 ## Preparado para o futuro (não implementado)
 

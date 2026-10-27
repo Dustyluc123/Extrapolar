@@ -2,6 +2,7 @@
 // Página dos jogos (Fase 2): os quatro jogos com "Como jogar" curto.
 import "../../styles/games.css";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { staticOgImage } from "../../lib/og";
 import Headline from "../../components/ui/Headline.astro";
 import { GAMES, NEUTRALITY_NOTE, PRIVACY_NOTE } from "../../lib/games/list";
 import { gameVotes } from "../../lib/games/data";
@@ -12,6 +13,7 @@ import { formatInteger } from "../../lib/format";
   title="Jogos"
   description="Quatro jogos rápidos com dados oficiais da Câmara: adivinhe o deputado do seu estado, chute o placar, vote você também e seja deputado por um dia."
   current="jogos"
+  ogImage={staticOgImage("jogos")}
 >
   <div class="flex flex-wrap items-center gap-3">
     <p class="kicker m-0">Passatempos</p>

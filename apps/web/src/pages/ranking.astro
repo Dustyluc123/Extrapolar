@@ -3,6 +3,7 @@
 // (ADR 0010). Nada vem marcado; o cálculo é feito no navegador.
 import "../styles/games.css";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { staticOgImage } from "../lib/og";
 import Headline from "../components/ui/Headline.astro";
 import RankingBuilder from "../components/ranking/RankingBuilder";
 import { CADERNO_LABELS } from "../lib/ranking";
@@ -17,6 +18,7 @@ const states = Object.entries(STATE_NAMES)
   title="Monte seu ranking"
   description="Escolha as métricas, os pesos e a direção e veja os deputados ordenados pelos seus critérios. O Extrapolar não define ranking oficial."
   current="ranking"
+  ogImage={staticOgImage("ranking")}
 >
   <div
     class="rounded border-2 border-ink bg-card px-4 py-3 font-sans text-sm font-semibold"

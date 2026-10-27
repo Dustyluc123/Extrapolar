@@ -2,6 +2,7 @@
 // Jogo 3 — Vote você também.
 import "../../styles/games.css";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { staticOgImage } from "../../lib/og";
 import GameHeader from "../../components/games/GameHeader.astro";
 import VoteRoundGame from "../../components/games/VoteRoundGame";
 import { voteRound } from "../../lib/games/rounds";
@@ -17,6 +18,7 @@ const states = [...new Set(gameDeputies.deputies.map((d) => d.state))]
   title="Vote você também"
   description="Vote em 10 votações recentes do plenário da Câmara e veja com quais deputados você votou igual. Seus votos ficam só no seu aparelho."
   current="jogos"
+  ogImage={staticOgImage("jogos/vote-voce-tambem")}
 >
   <GameHeader slug="vote-voce-tambem" />
   <section class="mt-6" aria-label="Jogo">

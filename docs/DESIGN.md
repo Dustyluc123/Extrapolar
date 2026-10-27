@@ -84,6 +84,10 @@ Tratamento de foto de jornal **só em CSS**, sem alterar o arquivo original:
 - `alt` sempre com o nome do deputado; crédito "Foto: Câmara dos Deputados".
 - Ao passar o mouse ou focar no cartão, a retícula some suavemente (microinteração).
 
+## Imagens de prévia (compartilhar)
+
+Geradas no build (ADR 0023, `apps/web/src/lib/og/cards.tsx`), 1200 × 630, sempre na edição do dia: masthead "Extrapolar" com régua dupla, chapéu em vermelho, manchete em Fraunces, traço de caneta, subtítulo em Newsreader itálico, carimbo vermelho girado no canto e rodapé com a fonte (e o domínio). Na ficha: foto em meio-tom de verdade (pontos de tinta), nome, selos de partido e UF, nome do estado e a chamada "Veja o que fez na Câmara" em marca-texto. **Sem números nem métricas**, e sem gênero na chamada. Para ver: `pnpm dev` e abrir `/og/extrapolar.png` ou `/og/deputados/<id>.png`.
+
 ## Microinterações
 
 - Transições curtas (150–200 ms), só em `transform`, `opacity` e cor.

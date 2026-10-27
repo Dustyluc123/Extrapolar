@@ -3,6 +3,7 @@
 // Transparência: cada uma com a proposição, o resultado oficial e os links para conferir.
 import "../../styles/games.css";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { staticOgImage } from "../../lib/og";
 import Headline from "../../components/ui/Headline.astro";
 import { gameVotes, propositionUrl, voteDataUrl, voteText } from "../../lib/games/data";
 import { SummaryText } from "../../components/games/SummaryText";
@@ -24,6 +25,7 @@ const excluded = Object.entries(gameVotes.excluded).filter(([, n]) => n > 0);
   title="Votações dos jogos"
   description="As votações nominais de mérito do plenário usadas nos jogos do Extrapolar, com resultado oficial e links para a Câmara."
   current="jogos"
+  ogImage={staticOgImage("jogos")}
 >
   <p class="kicker m-0">
     <a href="/jogos">Jogos</a> · Bastidores
