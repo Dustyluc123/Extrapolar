@@ -50,7 +50,7 @@ export const GAMES: GameInfo[] = [
     pitch: "Vote em 10 votações reais e veja com quem você coincidiu.",
     rhythm: "Uma rodada nova por semana, às segundas",
     howTo: [
-      "Vote Sim ou Não em 10 votações recentes do plenário (ou pule).",
+      "Carimbe Sim ou Não em 10 votações recentes do plenário. Na dúvida, separe para depois: os separados voltam no fim, e quem quiser os deixa em branco.",
       "No fim, veja com quais deputados você votou igual mais vezes.",
       "É só uma conta de votos iguais, não uma recomendação: cada votação é uma de muitas.",
     ],

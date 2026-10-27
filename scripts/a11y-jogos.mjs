@@ -15,9 +15,12 @@ const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8")
 const PLAY = {
   "/jogos/vote-voce-tambem": `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    const click = (text) => [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === text)?.click();
-    for (let i = 0; i < 10; i++) { click(i % 3 === 0 ? "Pular" : i % 2 ? "Sim" : "Não"); await wait(60); }
-    [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Ver com quem"))?.click();
+    const button = (text) => [...document.querySelectorAll("button")].find((b) => b.textContent.trim().includes(text));
+    const stamps = () => [...document.querySelectorAll("button.rubber-stamp")];
+    // Carimba, separa alguns para depois e, no fim, deixa os separados em branco.
+    for (let i = 0; i < 10; i++) { (i % 3 === 0 ? button("Separar para depois") : stamps()[i % 2])?.click(); await wait(60); }
+    for (let i = 0; i < 10 && stamps().length > 0; i++) { button("Deixar em branco")?.click(); await wait(60); }
+    button("Ver o relatório final")?.click();
     await wait(200);
     return true;
   })()`,

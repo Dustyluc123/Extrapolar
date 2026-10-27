@@ -1,6 +1,7 @@
-// Jogo 3 — Vote você também (ilha React). O jogador vota Sim/Não (ou pula) em 10 votações e vê
-// com quais deputados votou igual mais vezes. Só uma conta de votos iguais, nunca recomendação.
-import { useEffect, useMemo, useState } from "react";
+// Jogo 3 — Vote você também (ilha React). Uma pilha com as 10 votações da semana na mesa: o
+// jogador carimba SIM ou NÃO, ou separa para depois; no fim, um relatório com os deputados com
+// quem votou igual mais vezes. Só uma conta de votos iguais, nunca recomendação.
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { VoteRoundFile } from "@extrapolar/shared";
 import {
   agreement,
@@ -12,7 +13,10 @@ import {
 } from "@extrapolar/games";
 import { STATE_KEY, parseState, readStored, writeStored } from "../../lib/games/storage";
 import { PrivacyNote, ShareButton, StatePicker, formatDay, formatInt } from "./common";
-import { VoteCard } from "./VoteCard";
+import { Badge } from "./desk/Badge";
+import { Desk, DeskNote } from "./desk/Desk";
+import { EmptyStampArea, Oficio } from "./desk/Oficio";
+import { StampPad } from "./desk/StampPad";
 
 interface Props {
   round: VoteRoundFile;
@@ -25,7 +29,11 @@ type Choices = Record<string, PlayerChoice | null>;
 interface RoundState {
   choices: Choices;
   done: boolean;
+  /** Ids separados para depois (ainda sem carimbo). Campo novo; ausente no formato antigo. */
+  later: string[];
 }
+
+const EMPTY: RoundState = { choices: {}, done: false, later: [] };
 
 const ORIENTATION_BALLOT: Record<string, BallotCode | null> = {
   S: "yes",
@@ -41,7 +49,14 @@ function parseRound(raw: unknown, ids: readonly string[]): RoundState {
     const value = r.choices?.[id];
     if (value === "yes" || value === "no" || value === null) choices[id] = value;
   }
-  return { choices, done: r.done === true && Object.keys(choices).length === ids.length };
+  const later = Array.isArray(r.later)
+    ? ids.filter((id) => r.later!.includes(id) && !(id in choices))
+    : [];
+  return {
+    choices,
+    done: r.done === true && Object.keys(choices).length === ids.length,
+    later,
+  };
 }
 
 export default function VoteRoundGame({ round, deputies, states }: Props) {
@@ -49,16 +64,22 @@ export default function VoteRoundGame({ round, deputies, states }: Props) {
   const codes = useMemo(() => states.map((s) => s.code), [states]);
   const storageKey = `vote-voce:${round.week}`;
   const [state, setState] = useState<string | null>(null);
-  const [progress, setProgress] = useState<RoundState>({ choices: {}, done: false });
+  const [progress, setProgress] = useState<RoundState>(EMPTY);
   const [loaded, setLoaded] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
+  const [moved, setMoved] = useState(false);
+  const finishRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setState(readStored(STATE_KEY, (raw) => parseState(raw, codes), null));
-    setProgress(
-      readStored(storageKey, (raw) => parseRound(raw, ids), { choices: {}, done: false }),
-    );
+    setProgress(readStored(storageKey, (raw) => parseRound(raw, ids), EMPTY));
     setLoaded(true);
   }, [codes, ids, storageKey]);
+
+  // Quando a pilha acaba, os carimbos somem: o foco vai para o botão do relatório.
+  useEffect(() => {
+    if (moved) finishRef.current?.focus();
+  }, [moved, progress]);
 
   if (round.votes.length === 0) {
     return (
@@ -67,12 +88,25 @@ export default function VoteRoundGame({ round, deputies, states }: Props) {
   }
   if (!loaded) return <p className="caption">Carregando…</p>;
 
-  const save = (next: RoundState) => {
+  const save = (next: RoundState, message = "") => {
     setProgress(next);
     writeStored(storageKey, next);
+    setAnnouncement(message);
+    setMoved(true);
   };
   const answered = ids.filter((id) => id in progress.choices).length;
-  const current = round.votes.find((v) => !(v.id in progress.choices));
+  const stamped = Object.values(progress.choices).filter((c) => c !== null).length;
+  const blank = answered - stamped;
+  // Primeiro a pilha principal; depois, os separados para depois, na ordem da rodada.
+  const fromPile = round.votes.find(
+    (v) => !(v.id in progress.choices) && !progress.later.includes(v.id),
+  );
+  const fromTray = fromPile ? undefined : round.votes.find((v) => progress.later.includes(v.id));
+  const current = fromPile ?? fromTray;
+  const remainingInPile = round.votes.filter(
+    (v) => !(v.id in progress.choices) && !progress.later.includes(v.id),
+  ).length;
+  const position = current ? ids.indexOf(current.id) + 1 : ids.length;
 
   if (progress.done) {
     return (
@@ -86,77 +120,164 @@ export default function VoteRoundGame({ round, deputies, states }: Props) {
           setState(code);
           writeStored(STATE_KEY, code);
         }}
-        onRestart={() => save({ choices: {}, done: false })}
+        onRestart={() => save(EMPTY)}
       />
     );
   }
 
+  const stamp = (choice: PlayerChoice | null) => {
+    if (!current) return;
+    const next: RoundState = {
+      ...progress,
+      choices: { ...progress.choices, [current.id]: choice },
+      later: progress.later.filter((id) => id !== current.id),
+    };
+    const word = choice === "yes" ? "Sim" : choice === "no" ? "Não" : "em branco";
+    save(
+      next,
+      `${current.proposition.label}: ${choice ? `carimbado ${word}` : "deixado em branco"}.`,
+    );
+  };
+  const separate = () => {
+    if (!current || !fromPile) return;
+    save(
+      { ...progress, later: [...progress.later, current.id] },
+      `${current.proposition.label} foi para a bandeja Para depois.`,
+    );
+  };
+
+  const tray = round.votes.filter((v) => progress.later.includes(v.id));
+
   return (
     <div>
-      <p className="kicker m-0">
-        Rodada da semana de {formatDay(round.week, true)} · votação{" "}
-        {Math.min(answered + 1, ids.length)} de {ids.length}
+      <p className="visually-hidden" aria-live="polite">
+        {announcement}
       </p>
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-card" aria-hidden="true">
-        <div className="h-full bg-ink" style={{ width: `${(answered / ids.length) * 100}%` }} />
-      </div>
-      {current ? (
-        <div className="mt-4" key={current.id}>
-          <VoteCard vote={current} />
-          <p className="mt-4 mb-2 font-display text-xl font-[700]">E você, votaria como?</p>
-          <div className="flex flex-wrap gap-2">
-            {(["yes", "no"] as const).map((choice) => (
-              <button
-                key={choice}
-                type="button"
-                className="choice"
-                onClick={() =>
-                  save({ ...progress, choices: { ...progress.choices, [current.id]: choice } })
-                }
-              >
-                {choice === "yes" ? "Sim" : "Não"}
-              </button>
-            ))}
+      <Desk
+        label={`Mesa de votação · semana de ${formatDay(round.week, true)}`}
+        aside={
+          <>
+            {current ? (
+              <StampPad prompt="E você, votaria como?" onStamp={(choice) => stamp(choice)}>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {fromPile ? (
+                    <button type="button" className="desk-action" onClick={separate}>
+                      Separar para depois
+                    </button>
+                  ) : (
+                    <button type="button" className="desk-action" onClick={() => stamp(null)}>
+                      Deixar em branco
+                    </button>
+                  )}
+                </div>
+              </StampPad>
+            ) : null}
+            <Badge
+              role="Rodada da semana"
+              items={[
+                ["carimbados", stamped],
+                ["em branco", blank],
+                ["para depois", tray.length],
+                ["na pilha", remainingInPile],
+              ]}
+            />
+            {tray.length > 0 ? (
+              <div className="tray" role="group" aria-label="Bandeja Para depois">
+                <p className="tray-label">Bandeja · Para depois</p>
+                <ul className="m-0 list-none p-0">
+                  {tray.map((v) => (
+                    <li key={v.id} className="tray-item">
+                      {v.proposition.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        }
+      >
+        <DeskNote className="font-sans text-sm font-bold">
+          {current
+            ? fromPile
+              ? `Documento ${position} de ${ids.length} · ${remainingInPile} na pilha`
+              : `Da bandeja Para depois · ${tray.length} separado${tray.length > 1 ? "s" : ""}`
+            : `Pilha terminada · ${stamped} carimbados, ${blank} em branco`}
+        </DeskNote>
+        <div
+          className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--color-on-desk)_25%,transparent)]"
+          aria-hidden="true"
+        >
+          <div
+            className="h-full bg-on-desk"
+            style={{ width: `${(answered / ids.length) * 100}%` }}
+          />
+        </div>
+        {current ? (
+          <div
+            className="pile mt-6"
+            data-depth={Math.min(3, Math.max(0, remainingInPile + tray.length - 1))}
+          >
+            <Oficio
+              key={current.id}
+              vote={current}
+              tab={fromPile ? `Documento ${position} de ${ids.length}` : "Separado para depois"}
+              headingId="vv-oficio"
+              className={moved ? "sheet-in" : ""}
+              stampArea={<EmptyStampArea />}
+            />
+          </div>
+        ) : (
+          <div className="sheet mt-6">
+            <p className="oficio-label m-0">Pilha terminada</p>
+            <p className="m-0 mt-2 font-display text-2xl font-[720]">
+              Você passou pelas {ids.length} votações.
+            </p>
+            <p className="m-0 mt-2">
+              {stamped} com carimbo{blank > 0 ? `, ${blank} em branco (não entram na conta)` : ""}.
+            </p>
             <button
+              ref={finishRef}
               type="button"
-              className="game-button game-button-ghost game-button-small self-center"
-              onClick={() =>
-                save({ ...progress, choices: { ...progress.choices, [current.id]: null } })
-              }
+              className="game-button mt-4"
+              onClick={() => save({ ...progress, done: true })}
             >
-              Pular
+              Ver o relatório final
             </button>
           </div>
-          <PrivacyNote />
-        </div>
-      ) : (
-        <div className="mt-4">
-          <p>Pronto! Você passou pelas {ids.length} votações.</p>
-          <button
-            type="button"
-            className="game-button"
-            onClick={() => save({ ...progress, done: true })}
-          >
-            Ver com quem votei igual
-          </button>
-        </div>
-      )}
-      {answered > 0 && current ? (
-        <p className="caption mt-4">
-          <button
-            type="button"
-            className="underline"
-            onClick={() => {
-              const choices = { ...progress.choices };
-              const last = ids.filter((id) => id in choices).at(-1);
-              if (last) delete choices[last];
-              save({ choices, done: false });
-            }}
-          >
-            Voltar uma votação
-          </button>
-        </p>
-      ) : null}
+        )}
+        {current && fromTray && tray.length > 1 ? (
+          <p className="mt-4">
+            <button
+              type="button"
+              className="desk-link"
+              onClick={() => {
+                const choices = { ...progress.choices };
+                for (const v of tray) choices[v.id] = null;
+                save({ ...progress, choices, later: [] }, "Separados deixados em branco.");
+              }}
+            >
+              Deixar os {tray.length} separados em branco
+            </button>
+          </p>
+        ) : null}
+        {answered > 0 && current ? (
+          <p className="mt-3">
+            <button
+              type="button"
+              className="desk-link font-sans text-sm"
+              onClick={() => {
+                const choices = { ...progress.choices };
+                const last = ids.filter((id) => id in choices).at(-1);
+                if (last) delete choices[last];
+                save({ ...progress, choices, done: false }, "Último carimbo desfeito.");
+              }}
+            >
+              Desfazer o último carimbo
+            </button>
+          </p>
+        ) : null}
+      </Desk>
+      <PrivacyNote />
     </div>
   );
 }
@@ -235,91 +356,105 @@ function Results({
   const stateName = states.find((s) => s.code === state)?.name;
 
   return (
-    <div>
-      <p className="kicker m-0">Rodada da semana de {formatDay(round.week, true)} · resultado</p>
-      <h2 className="m-0 mt-1 font-display text-2xl font-[750]">Com quem você votou igual</h2>
-      <p className="translate-note mt-3">
-        É só uma conta: votos iguais ÷ votações em que vocês dois votaram Sim ou Não. Não é
-        recomendação nem nota — {voted} votações dizem pouco sobre um mandato inteiro.
-      </p>
-      {voted === 0 ? (
-        <p className="mt-4">Você pulou todas as votações; não há o que comparar.</p>
-      ) : (
-        <>
-          <section className="mt-6" aria-labelledby="vv-estado">
-            <h3 id="vv-estado" className="font-display text-xl font-[700]">
-              Deputados {stateName ? `de ${stateName}` : "do seu estado"}
-            </h3>
-            <StatePicker id="vv-estado-sel" states={states} value={state} onChange={onState} />
-            {state ? (
-              <AgreementList rows={own} total={round.votes.length} />
-            ) : (
-              <p className="caption">Escolha o estado.</p>
-            )}
-          </section>
+    <Desk label={`Mesa de votação · semana de ${formatDay(round.week, true)}`}>
+      <div className="sheet sheet-slide">
+        <span className="paper-clip" aria-hidden="true" />
+        <header className="oficio-head">
+          <p className="oficio-brand">Extrapolar</p>
+          <p className="oficio-sub">
+            Relatório final · rodada da semana de {formatDay(round.week, true)}
+          </p>
+        </header>
+        <h2 className="m-0 mt-4 font-display text-2xl font-[750]">Com quem você votou igual</h2>
+        <p className="m-0 mt-2">
+          Você carimbou {voted} de {round.votes.length} votações
+          {skipped > 0 ? ` e deixou ${skipped} em branco` : ""}.
+        </p>
+        <p className="translate-note mt-3">
+          É só uma conta: votos iguais ÷ votações em que vocês dois votaram Sim ou Não. Não é
+          recomendação nem nota — {voted} votações dizem pouco sobre um mandato inteiro.
+        </p>
+        {voted === 0 ? (
+          <p className="mt-4">Você deixou todas as votações em branco; não há o que comparar.</p>
+        ) : (
+          <>
+            <section className="mt-6" aria-labelledby="vv-estado">
+              <h3 id="vv-estado" className="font-display text-xl font-[700]">
+                Deputados {stateName ? `de ${stateName}` : "do seu estado"}
+              </h3>
+              <StatePicker id="vv-estado-sel" states={states} value={state} onChange={onState} />
+              {state ? (
+                <AgreementList rows={own} total={round.votes.length} />
+              ) : (
+                <p className="caption">Escolha o estado.</p>
+              )}
+            </section>
 
-          <section className="mt-8" aria-labelledby="vv-partidos">
-            <h3 id="vv-partidos" className="font-display text-xl font-[700]">
-              Orientação dos partidos
-            </h3>
-            <p className="caption m-0">
-              Orientação do próprio partido ou, se não houver, da federação; orientação de bloco não
-              entra (<a href="/metodologia#alinhamento-partido">regra do alinhamento</a>).
-            </p>
-            {parties.length === 0 ? (
-              <p>Nenhum partido orientou Sim ou Não nas votações em que você votou.</p>
-            ) : (
-              <ul className="m-0 mt-2 list-none p-0">
-                {parties.map((p) => (
-                  <li
-                    key={p.party}
-                    className="flex flex-wrap items-baseline justify-between gap-2 border-t border-rule py-2"
-                  >
-                    <span className="font-sans font-semibold">{p.party}</span>
-                    <span>
-                      concordou em {p.result.agreed} de {p.result.compared}
-                      {p.result.smallBase ? <span className="caption"> · base pequena</span> : null}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+            <section className="mt-8" aria-labelledby="vv-partidos">
+              <h3 id="vv-partidos" className="font-display text-xl font-[700]">
+                Orientação dos partidos
+              </h3>
+              <p className="caption m-0">
+                Orientação do próprio partido ou, se não houver, da federação; orientação de bloco
+                não entra (<a href="/metodologia#alinhamento-partido">regra do alinhamento</a>).
+              </p>
+              {parties.length === 0 ? (
+                <p>Nenhum partido orientou Sim ou Não nas votações em que você votou.</p>
+              ) : (
+                <ul className="m-0 mt-2 list-none p-0">
+                  {parties.map((p) => (
+                    <li
+                      key={p.party}
+                      className="flex flex-wrap items-baseline justify-between gap-2 border-t border-rule py-2"
+                    >
+                      <span className="font-sans font-semibold">{p.party}</span>
+                      <span>
+                        concordou em {p.result.agreed} de {p.result.compared}
+                        {p.result.smallBase ? (
+                          <span className="caption"> · base pequena</span>
+                        ) : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
-          <section className="mt-8" aria-labelledby="vv-todos">
-            <h3 id="vv-todos" className="font-display text-xl font-[700]">
-              Todos os deputados
-            </h3>
-            <AgreementList rows={shown} total={round.votes.length} showState />
-            {all.length > 20 ? (
-              <button
-                type="button"
-                className="game-button game-button-ghost game-button-small mt-3"
-                onClick={() => setShowAll(!showAll)}
-              >
-                {showAll
-                  ? "Mostrar só os 20 primeiros"
-                  : `Mostrar todos (${formatInt(all.length)})`}
-              </button>
-            ) : null}
-          </section>
-        </>
-      )}
-      <ShareButton
-        text={voteRoundShareText({
-          week: formatDay(round.week, true),
-          voted,
-          skipped,
-          url: `${window.location.origin}/jogos/vote-voce-tambem`,
-        })}
-      />
-      <p className="caption mt-3">
-        <button type="button" className="underline" onClick={onRestart}>
-          Votar de novo nesta rodada
-        </button>{" "}
-        · Rodada nova toda segunda-feira.
-      </p>
-    </div>
+            <section className="mt-8" aria-labelledby="vv-todos">
+              <h3 id="vv-todos" className="font-display text-xl font-[700]">
+                Todos os deputados
+              </h3>
+              <AgreementList rows={shown} total={round.votes.length} showState />
+              {all.length > 20 ? (
+                <button
+                  type="button"
+                  className="game-button game-button-ghost game-button-small mt-3"
+                  onClick={() => setShowAll(!showAll)}
+                >
+                  {showAll
+                    ? "Mostrar só os 20 primeiros"
+                    : `Mostrar todos (${formatInt(all.length)})`}
+                </button>
+              ) : null}
+            </section>
+          </>
+        )}
+        <ShareButton
+          text={voteRoundShareText({
+            week: formatDay(round.week, true),
+            voted,
+            skipped,
+            url: `${window.location.origin}/jogos/vote-voce-tambem`,
+          })}
+        />
+        <p className="caption mt-3">
+          <button type="button" className="underline" onClick={onRestart}>
+            Votar de novo nesta rodada
+          </button>{" "}
+          · Rodada nova toda segunda-feira.
+        </p>
+      </div>
+    </Desk>
   );
 }
 
