@@ -1,6 +1,6 @@
 // Peças comuns das ilhas dos jogos: dia de Brasília, estatísticas, compartilhar, aviso de privacidade.
 import { useEffect, useState, type ReactNode } from "react";
-import { brasiliaDateKey, currentStreak, msUntilNextDay, type GameStats } from "@extrapolar/games";
+import { brasiliaDateKey, msUntilNextDay } from "@extrapolar/games";
 import { copyText } from "../../lib/games/storage";
 
 /** Data de hoje em Brasília; atualiza sozinha à meia-noite. Null até montar no navegador. */
@@ -30,33 +30,6 @@ export function PrivacyNote() {
 
 export function ExtraBanner({ children }: { children: ReactNode }) {
   return <p className="extra-banner m-0">{children}</p>;
-}
-
-export function StatsLine({
-  stats,
-  today,
-  label,
-}: {
-  stats: GameStats;
-  today: string;
-  label?: string;
-}) {
-  const items: [string, number][] = [
-    ["jogos", stats.played],
-    [label ?? "completos", stats.completed],
-    ["sequência", currentStreak(stats, today)],
-    ["maior sequência", stats.maxStreak],
-  ];
-  return (
-    <dl className="m-0 mt-4 grid grid-cols-4 gap-2 text-center">
-      {items.map(([name, value]) => (
-        <div key={name} className="border-t border-rule pt-2">
-          <dt className="kicker text-[0.62rem]">{name}</dt>
-          <dd className="m-0 font-display text-2xl font-[750]">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
 }
 
 /** Botão de compartilhar: usa o menu do celular ou copia; se nada der certo, mostra o texto. */

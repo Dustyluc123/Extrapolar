@@ -2,7 +2,7 @@
 // nos temas claro e escuro, mais um teste da busca da capa feito pelo teclado.
 //
 // Uso:  pnpm build && pnpm --filter @extrapolar/web preview     (site em http://localhost:4321)
-//       node scripts/a11y.mjs [caminhos...]      (padrão: capa, uma ficha, metodologia, sobre)
+//       node scripts/a11y.mjs [caminhos...]      (padrão: capa, ficha, metodologia, sobre e jogos)
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { BASE_URL, evaluate, open, wait, withChrome } from "./lib/chrome.mjs";
@@ -11,7 +11,17 @@ const require = createRequire(import.meta.url);
 const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
 
 const paths = process.argv.slice(2);
-if (paths.length === 0) paths.push("/", "/deputados/204379", "/metodologia", "/sobre");
+if (paths.length === 0)
+  paths.push(
+    "/",
+    "/deputados/204379",
+    "/metodologia",
+    "/sobre",
+    "/jogos/dle",
+    "/jogos/placar",
+    "/jogos/vote-voce-tambem",
+    "/jogos/seja-deputado",
+  );
 
 let violations = 0;
 await withChrome(async (page) => {

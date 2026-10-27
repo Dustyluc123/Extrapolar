@@ -416,7 +416,9 @@ function Reveal({
         <p className="m-0 font-display text-3xl font-[800]">
           {total} de {max} pontos
         </p>
-        <InkMark word="Conferido" seed={`placar-${today}`} fresh={fresh} />
+        <span className="inline-block py-3">
+          <InkMark word="Conferido" seed={`placar-${today}`} fresh={fresh} />
+        </span>
       </div>
       <p className="caption m-0">
         Confira na fonte: <a href={voteDataUrl(vote.id)}>dado bruto da votação na Câmara</a>.

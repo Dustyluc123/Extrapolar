@@ -136,3 +136,40 @@ Estilos em `apps/web/src/styles/games.css`, importado só nessas páginas.
 - **Ranking:** aviso permanente em caixa com borda no topo; barra empilhada da nota em tons de tinta e hachura (só distinguem as métricas, não avaliam); "maior sobe" / "menor sobe" em vez de "mais é melhor".
 - **Quadradinhos de compartilhar** sem a resposta (🟩🟨🟥 no Dle, barra ▰▱ no Placar).
 - Botões: `.game-button` (pílula vermelha) e `.choice` (escolha marcada com tinta cheia, `aria-pressed` ou `aria-checked`).
+
+## Mesa de votação (jogos)
+
+ADR 0025. Os jogos passam a sensação de **estar votando**: uma mesa com documentos que a pessoa lê, decide e carimba. A inspiração é só a sensação dos jogos de mesa burocrática; nada de pixel art, personagens, brasões, nomes ou frases de nenhum jogo. Os materiais são os do jornal: papel, tinta, carimbo, clipe, régua. Estilos em `apps/web/src/styles/desk.css`; peças em `apps/web/src/components/games/desk/`.
+
+### Peças
+
+- **Mesa** (`Desk`): mata-borrão verde-escuro (feltro em CSS, ruído SVG muito leve e vinheta), com régua tracejada no alto, rótulo "Mesa de votação · …" e o botão **Som**. No celular ocupa a largura da tela (sem margem lateral e sem rolagem lateral, `overflow-x: clip`); a partir de 640 px vira um tampo com borda; a partir de 900 px, papéis à esquerda e carimbos e crachá numa coluna à direita.
+- **Ofício** (`Oficio`): papel timbrado **do Extrapolar** ("Mesa de votação · documento de jogo com dados oficiais"), régua dupla, campos "Sessão" e "Em votação", a proposição como título, o assunto (resumo revisado ou ementa oficial) e o campo "Para deliberação do(a) parlamentar" com o espaço do carimbo. Etiqueta de pasta (marca-texto) e clipe. Não imita papel oficial da Câmara; não usamos "urgente" (é termo real do regimento: "regime de urgência").
+- **Carimbos** (`StampPad`): SIM e NÃO com cabo de madeira e face de borracha; botões comuns (toque, clique, teclado), o mesmo desenho, a mesma cor e o mesmo som para os dois.
+- **Marca de tinta** (`InkMark`): borda dupla em `accent-ink`, falhas de tinta por máscara de ruído, torta entre 2° e 8° e um pouco fora do centro — fixa para cada documento (`lib/games/tilt.ts`).
+- **Painel do plenário** (`PlenaryPanel`, Seja deputado): quadro escuro com 513 luzes do placar oficial: Sim cheia, Não hachurada, outros votos vazados, assentos restantes apagados ("sem voto registrado"). Legenda com os números escritos. Nunca verde × vermelho.
+- **Boletim** (Placar): papel pautado com margem vermelha, quadradinhos de marcar (✕ em tinta vermelha) e régua sob o controle deslizante. Na revelação, tabela "Seu boletim × resultado oficial" e a marca "Conferido".
+- **Pilha e bandeja** (Vote você também): folhas por baixo da de cima conforme o que falta; bandeja tracejada "Para depois" com os separados; relatório final em papel timbrado.
+- **Pasta e fichas** (Dle): pasta de arquivo cor de papel pardo (`--color-folder`) com as pistas já confirmadas; cada chute é uma ficha com linha vermelha e as pistas como abas de fichário (mesmas cores e símbolos de antes). A pasta abre com a foto em meio-tom.
+- **Crachá** (`Badge`): cartão com faixa vermelha e furo, "Parlamentar por um dia", estatísticas e sequência deste aparelho.
+
+### Tokens novos
+
+| Token                                   | Claro                 | Noturno   | Contraste                                                                         |
+| --------------------------------------- | --------------------- | --------- | --------------------------------------------------------------------------------- |
+| `--color-desk`                          | `#2B3A31`             | `#101712` | —                                                                                 |
+| `--color-on-desk`                       | `#ECE5D4`             | `#D9D1BF` | 9,5:1 / 12,0:1 na mesa                                                            |
+| `--color-on-desk-soft`                  | `#B9B2A0`             | `#A39B89` | 5,7:1 / 6,6:1 na mesa                                                             |
+| `--color-sheet`                         | `#FBF8EF`             | `#24221D` | tinta 16,4:1 / 12,9:1; `ink-soft` 7,3:1 / 7,1:1; `accent-ink` 5,8:1 / 5,7:1       |
+| `--color-sheet-edge`                    | `#C9C0AC`             | `#4A463D` | borda decorativa                                                                  |
+| `--color-folder`                        | `#E8D9B0`             | `#3A3426` | tinta 12,4:1 / 10,0:1; `ink-soft` 5,5:1 / 5,5:1. **Sem** vermelho pequeno (4,4:1) |
+| `--color-board` / `--color-board-light` | `#1B1A17` / `#F4EFE3` | iguais    | 15,2:1                                                                            |
+| `--color-wood` / `--color-wood-dark`    | `#6B4A32` / `#3F2A1C` | iguais    | só desenho (cabo do carimbo)                                                      |
+
+Foco sobre a mesa usa `on-desk` (o vermelho do foco não aparece no feltro); dentro dos papéis volta a `accent-ink`.
+
+### Movimento e som
+
+- Carimbo: a marca "bate" (escala 1,6 → 1, 260 ms). Papel novo chega por cima, vindo do alto e girado (420 ms). Luzes do painel acendem em ondas de 32 (45 ms cada). Carimbo oficial depois do painel. Tudo dentro de `prefers-reduced-motion: no-preference`; com redução, aparece pronto.
+- Depois do carimbo, o foco vai para o título do resultado e um `aria-live` anuncia o voto e o resultado oficial.
+- Som (`lib/games/sound.ts`, Web Audio, sem arquivos): baque do carimbo, papel deslizando, estalinhos do painel, carimbo oficial. **Desligado por padrão**; botão "Som" sempre visível na mesa; escolha em `localStorage` (`extrapolar:jogos:som`); nunca com a aba escondida.
