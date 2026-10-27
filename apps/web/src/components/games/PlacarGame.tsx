@@ -1,10 +1,13 @@
-// Jogo 2 — Placar (ilha React). Pergunta 1: como votou a maioria do estado do jogador.
-// Pergunta 2: a porcentagem de Sim. Regras de pontuação em @extrapolar/games.
-import { useEffect, useMemo, useState } from "react";
+// Jogo 2 — Placar (ilha React). Na mesa, o ofício da votação e um boletim de palpite.
+// Pergunta 1: como votou a maioria do estado do jogador. Pergunta 2: a porcentagem de Sim.
+// A revelação confere o boletim campo a campo com o resultado oficial. Regras de pontuação em
+// @extrapolar/games.
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DrawnDay, PlacarDay } from "@extrapolar/shared";
 import {
   EMPTY_STATS,
   STATE_QUESTION_POINTS,
+  currentStreak,
   decodeBallot,
   parseStats,
   placarScore,
@@ -25,13 +28,17 @@ import {
   PrivacyNote,
   ShareButton,
   StatePicker,
-  StatsLine,
   formatDay,
   formatInt,
   formatPct,
   useToday,
 } from "./common";
-import { ScoreBar, VoteCard, voteDataUrl } from "./VoteCard";
+import { ScoreBar, voteDataUrl } from "./VoteCard";
+import { playSound } from "../../lib/games/sound";
+import { Badge } from "./desk/Badge";
+import { Desk, DeskNote } from "./desk/Desk";
+import { InkMark } from "./desk/InkMark";
+import { Oficio } from "./desk/Oficio";
 
 interface Props {
   days: DrawnDay[];
@@ -109,6 +116,7 @@ function PlacarRound({
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [stats, setStats] = useState<GameStats>(EMPTY_STATS);
   const [loaded, setLoaded] = useState(false);
+  const [fresh, setFresh] = useState(false);
 
   useEffect(() => {
     setState(readStored(STATE_KEY, (raw) => parseState(raw, codes), null));
@@ -126,6 +134,8 @@ function PlacarRound({
   const submit = () => {
     if (!state) return;
     const result: Answer = { state, majority, guess };
+    playSound("paper");
+    setFresh(true);
     setAnswer(result);
     writeStored(storageKey, result);
     const real = stateMajority(stateBallots(state));
@@ -140,105 +150,137 @@ function PlacarRound({
   const stateName = (code: string | null) =>
     states.find((s) => s.code === code)?.name ?? code ?? "";
 
+  const badge = (
+    <Badge
+      items={[
+        ["jogos", stats.played],
+        ["sequência", currentStreak(stats, today)],
+        ["maior sequência", stats.maxStreak],
+        ["completos", stats.completed],
+      ]}
+    />
+  );
+
   return (
     <div>
-      <p className="kicker m-0">
-        Placar #{number} · {formatDay(today)}
-      </p>
-      <div className="mt-3">
-        <VoteCard vote={vote} />
-      </div>
+      <Desk label={`Mesa de votação · Placar #${number}`} aside={badge}>
+        <DeskNote className="font-sans text-sm font-bold">
+          Placar #{number} · {formatDay(today)} · uma votação por dia
+        </DeskNote>
+        <Oficio vote={vote} tab={`Placar #${number}`} className="sheet-tilt-l mt-5" />
 
-      {answer ? (
-        <Reveal
-          today={today}
-          number={number}
-          content={content}
-          answer={answer}
-          actual={actual}
-          stateBallots={stateBallots(answer.state)}
-          stateName={stateName(answer.state)}
-          stats={stats}
-        />
-      ) : (
-        <form
-          className="mt-6 space-y-6"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit();
-          }}
-        >
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="font-display text-xl font-[700]">
-              1. Como votou a maioria dos deputados{" "}
-              {state ? `de ${stateName(state)}` : "do seu estado"}?
-            </legend>
-            <div className="mt-2">
-              <StatePicker
-                id="placar-estado"
-                states={states}
-                value={state}
-                onChange={(code) => {
-                  setState(code);
-                  writeStored(STATE_KEY, code);
-                }}
-              />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Maioria do estado">
-              {(["yes", "no", "tie"] as const).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className="choice"
-                  aria-pressed={majority === option}
-                  onClick={() => setMajority(option)}
-                >
-                  {MAJORITY_LABEL[option]}
-                </button>
-              ))}
-            </div>
-            <p className="caption m-0 mt-1">
-              Contam só os votos Sim e Não dos deputados em exercício hoje.
-            </p>
-          </fieldset>
-
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="font-display text-xl font-[700]">
-              2. Dos votos Sim e Não do plenário, quantos foram Sim?
-            </legend>
-            <label htmlFor="placar-palpite" className="mt-2 block font-display text-4xl font-[800]">
-              {guess}% Sim
-            </label>
-            <input
-              id="placar-palpite"
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              value={guess}
-              onChange={(event) => setGuess(Number(event.target.value))}
-              className="slider"
-              aria-valuetext={`${guess}% de votos Sim`}
-            />
-            <div className="flex justify-between font-sans text-xs text-ink-soft">
-              <span>0% (todos Não)</span>
-              <span>100% (todos Sim)</span>
-            </div>
-          </fieldset>
-
-          <div>
-            <button type="submit" className="game-button" disabled={!state || majority === null}>
-              Ver o resultado
-            </button>
-            {!state || majority === null ? (
-              <p className="caption m-0 mt-1">
-                Escolha o estado e responda a pergunta 1 para continuar.
+        {answer ? (
+          <Reveal
+            today={today}
+            number={number}
+            content={content}
+            answer={answer}
+            actual={actual}
+            stateBallots={stateBallots(answer.state)}
+            stateName={stateName(answer.state)}
+            fresh={fresh}
+          />
+        ) : (
+          <form
+            className="sheet boletim sheet-tilt-r -mt-2 space-y-6 sm:mx-4"
+            aria-labelledby="placar-boletim"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit();
+            }}
+          >
+            <span className="paper-clip" aria-hidden="true" />
+            <header className="oficio-head">
+              <p id="placar-boletim" className="oficio-brand">
+                Boletim de palpite
               </p>
-            ) : null}
-          </div>
-          <PrivacyNote />
-        </form>
-      )}
+              <p className="oficio-sub">Preencha e entregue · nº {number}</p>
+            </header>
+            <fieldset className="m-0 border-0 p-0">
+              <legend className="font-display text-xl font-[700]">
+                1. Como votou a maioria dos deputados{" "}
+                {state ? `de ${stateName(state)}` : "do seu estado"}?
+              </legend>
+              <div className="mt-2">
+                <StatePicker
+                  id="placar-estado"
+                  states={states}
+                  value={state}
+                  onChange={(code) => {
+                    setState(code);
+                    writeStored(STATE_KEY, code);
+                  }}
+                />
+              </div>
+              <div
+                className="mt-3 flex flex-wrap gap-2"
+                role="group"
+                aria-label="Maioria do estado"
+              >
+                {(["yes", "no", "tie"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className="ballot-option"
+                    aria-pressed={majority === option}
+                    onClick={() => setMajority(option)}
+                  >
+                    <span className="ballot-box" aria-hidden="true">
+                      {majority === option ? "✕" : ""}
+                    </span>
+                    {MAJORITY_LABEL[option]}
+                  </button>
+                ))}
+              </div>
+              <p className="caption m-0 mt-1">
+                Contam só os votos Sim e Não dos deputados em exercício hoje.
+              </p>
+            </fieldset>
+
+            <fieldset className="m-0 border-0 p-0">
+              <legend className="font-display text-xl font-[700]">
+                2. Dos votos Sim e Não do plenário, quantos foram Sim?
+              </legend>
+              <label
+                htmlFor="placar-palpite"
+                className="mt-2 block font-display text-4xl font-[800]"
+              >
+                {guess}% Sim
+              </label>
+              <div className="ruler">
+                <input
+                  id="placar-palpite"
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={guess}
+                  onChange={(event) => setGuess(Number(event.target.value))}
+                  className="slider"
+                  aria-valuetext={`${guess}% de votos Sim`}
+                />
+                <div className="ruler-ticks" aria-hidden="true" />
+              </div>
+              <div className="flex justify-between font-sans text-xs text-ink-soft">
+                <span>0% (todos Não)</span>
+                <span>100% (todos Sim)</span>
+              </div>
+            </fieldset>
+
+            <div>
+              <button type="submit" className="game-button" disabled={!state || majority === null}>
+                Entregar o boletim
+              </button>
+              {!state || majority === null ? (
+                <p className="caption m-0 mt-1">
+                  Escolha o estado e responda a pergunta 1 para continuar.
+                </p>
+              ) : null}
+            </div>
+          </form>
+        )}
+      </Desk>
+      <PrivacyNote />
     </div>
   );
 }
@@ -251,7 +293,7 @@ function Reveal({
   actual,
   stateBallots,
   stateName,
-  stats,
+  fresh,
 }: {
   today: string;
   number: number;
@@ -260,7 +302,7 @@ function Reveal({
   actual: number;
   stateBallots: (BallotCode | null)[];
   stateName: string;
-  stats: GameStats;
+  fresh: boolean;
 }) {
   const { vote } = content;
   const real = stateMajority(stateBallots);
@@ -275,14 +317,37 @@ function Reveal({
   const max = 100 + (stateApplies ? STATE_QUESTION_POINTS : 0);
   const required = requiredYesVotes(vote.proposition.label);
   const quorumSurprise = !vote.approved && vote.official.yes > vote.official.no;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (!fresh) return;
+    headingRef.current?.focus();
+    const timer = setTimeout(() => playSound("seal"), 700);
+    return () => clearTimeout(timer);
+  }, [fresh]);
 
   return (
-    <section className="clipping mt-6" aria-live="polite" aria-labelledby="placar-revelacao">
-      <ExtraBanner>Edição extra</ExtraBanner>
+    <section
+      className={`sheet boletim sheet-tilt-r -mt-2 sm:mx-4${fresh ? " sheet-slide" : ""}`}
+      aria-live="polite"
+      aria-labelledby="placar-revelacao"
+    >
+      <span className="paper-clip" aria-hidden="true" />
+      <ExtraBanner>Edição extra · boletim conferido</ExtraBanner>
       <div className="mt-4 text-center">
-        <span className="stamp-big stamp-in">{vote.approved ? "Aprovada" : "Rejeitada"}</span>
+        <span
+          className="stamp-big stamp-in"
+          style={fresh ? { animationDelay: "600ms" } : undefined}
+        >
+          {vote.approved ? "Aprovada" : "Rejeitada"}
+        </span>
       </div>
-      <h2 id="placar-revelacao" className="m-0 mt-4 font-display text-2xl font-[750]">
+      <h2
+        id="placar-revelacao"
+        ref={headingRef}
+        tabIndex={-1}
+        className="m-0 mt-4 font-display text-2xl font-[750]"
+      >
         {vote.proposition.label}: {vote.approved ? "aprovada" : "rejeitada"} por{" "}
         {formatInt(vote.official.yes)} a {formatInt(vote.official.no)}
       </h2>
@@ -304,42 +369,58 @@ function Reveal({
         </p>
       ) : null}
 
-      <dl className="m-0 mt-5 grid gap-3 sm:grid-cols-2">
-        <div className="border-t border-rule pt-2">
-          <dt className="kicker">Maioria de {stateName}</dt>
-          <dd className="m-0">
-            {stateApplies ? (
-              <>
-                <strong>{MAJORITY_LABEL[real]}</strong> ({formatInt(stateYes)} Sim,{" "}
-                {formatInt(stateNo)} Não
-                {stateOther > 0 ? `, ${formatInt(stateOther)} outros` : ""}
-                {stateNone > 0 ? `, ${formatInt(stateNone)} sem voto registrado` : ""}). Você disse{" "}
-                {answer.majority ? MAJORITY_LABEL[answer.majority] : "—"}:{" "}
-                {stateCorrect ? `+${STATE_QUESTION_POINTS} pontos.` : "0 ponto."}
-              </>
-            ) : (
-              <>
-                Nenhum deputado de {stateName} em exercício hoje votou Sim ou Não; a pergunta não
-                vale pontos.
-              </>
-            )}
-          </dd>
-        </div>
-        <div className="border-t border-rule pt-2">
-          <dt className="kicker">Porcentagem de Sim</dt>
-          <dd className="m-0">
-            Foi <strong>{formatPct(actual, 1)}</strong>. Você chutou {answer.guess}%: +{scorePoints}{" "}
-            pontos.
-          </dd>
-        </div>
-      </dl>
-      <p className="m-0 mt-4 font-display text-3xl font-[800]">
-        {total} de {max} pontos
-      </p>
+      <table className="check-table mt-5">
+        <caption className="oficio-label text-left">Seu boletim × resultado oficial</caption>
+        <thead>
+          <tr>
+            <th scope="col">Campo</th>
+            <th scope="col">Seu palpite</th>
+            <th scope="col">Oficial</th>
+            <th scope="col">Pontos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Maioria de {stateName}</th>
+            <td>{answer.majority ? MAJORITY_LABEL[answer.majority] : "—"}</td>
+            <td>
+              {stateApplies ? (
+                <>
+                  <strong>{MAJORITY_LABEL[real]}</strong>
+                  <span className="check-detail">
+                    {formatInt(stateYes)} Sim, {formatInt(stateNo)} Não
+                    {stateOther > 0 ? `, ${formatInt(stateOther)} outros` : ""}
+                    {stateNone > 0 ? `, ${formatInt(stateNone)} sem voto registrado` : ""}
+                  </span>
+                </>
+              ) : (
+                <span className="check-detail">
+                  Nenhum deputado de {stateName} em exercício hoje votou Sim ou Não; não vale
+                  pontos.
+                </span>
+              )}
+            </td>
+            <td>{stateCorrect ? `+${STATE_QUESTION_POINTS}` : "0"}</td>
+          </tr>
+          <tr>
+            <th scope="row">Porcentagem de Sim</th>
+            <td>{answer.guess}%</td>
+            <td>
+              <strong>{formatPct(actual, 1)}</strong>
+            </td>
+            <td>+{scorePoints}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="m-0 font-display text-3xl font-[800]">
+          {total} de {max} pontos
+        </p>
+        <InkMark word="Conferido" seed={`placar-${today}`} fresh={fresh} />
+      </div>
       <p className="caption m-0">
         Confira na fonte: <a href={voteDataUrl(vote.id)}>dado bruto da votação na Câmara</a>.
       </p>
-      <StatsLine stats={stats} today={today} />
       <ShareButton
         text={placarShareText({
           number,

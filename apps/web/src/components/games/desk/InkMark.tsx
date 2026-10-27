@@ -6,11 +6,14 @@ import { inkTilt } from "../../../lib/games/tilt";
 
 export function InkMark({
   choice,
+  word: customWord,
   seed,
   caption,
   fresh = false,
 }: {
-  choice: PlayerChoice | "later";
+  choice?: PlayerChoice | "later";
+  /** Palavra do carimbo quando não é um voto ("Conferido"). */
+  word?: string;
   /** Id do documento: decide a inclinação. */
   seed: string;
   caption?: string;
@@ -23,13 +26,12 @@ export function InkMark({
     "--ink-dx": `${tilt.dx}%`,
     "--ink-dy": `${tilt.dy}%`,
   } as CSSProperties;
-  const word = choice === "yes" ? "Sim" : choice === "no" ? "Não" : "Para depois";
+  const word = customWord ?? (choice === "yes" ? "Sim" : choice === "no" ? "Não" : "Para depois");
+  const small = choice === "later" || (customWord !== undefined && customWord.length > 4);
   return (
     <span className={`ink-mark${fresh ? " ink-press" : ""}`} style={style}>
-      <span className="visually-hidden">Seu carimbo: </span>
-      <span className={`ink-mark-word${choice === "later" ? " ink-mark-word-small" : ""}`}>
-        {word}
-      </span>
+      {customWord ? null : <span className="visually-hidden">Seu carimbo: </span>}
+      <span className={`ink-mark-word${small ? " ink-mark-word-small" : ""}`}>{word}</span>
       {caption ? <span className="ink-mark-caption">{caption}</span> : null}
     </span>
   );
