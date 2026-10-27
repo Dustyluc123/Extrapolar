@@ -71,7 +71,7 @@ export const GAMES: GameInfo[] = [
   },
 ];
 
-export const PRIVACY_NOTE = "Suas respostas ficam só neste aparelho. Nada é enviado.";
+export const PRIVACY_NOTE = "Suas respostas ficam só neste aparelho e nunca são enviadas.";
 
 export const NEUTRALITY_NOTE =
   "Os jogos testam o que aconteceu, nunca opinião: nenhum voto é tratado como certo ou errado.";

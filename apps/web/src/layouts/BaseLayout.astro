@@ -1,6 +1,7 @@
 ---
 // Layout de todas as páginas: cabeçalho de jornal, conteúdo e rodapé.
 import "../styles/global.css";
+import Analytics from "@vercel/analytics/astro";
 import { PROJECT_NAME } from "@extrapolar/shared";
 import Footer from "../components/layout/Footer.astro";
 import Masthead from "../components/layout/Masthead.astro";
@@ -84,5 +85,11 @@ const imageUrl = absoluteUrl(ogImage.path);
       <slot />
     </main>
     <Footer updatedAt={meta.referenceDateTime} />
+    <script is:inline>
+      // Vercel Web Analytics (ADR 0024): só visualizações de página. Por garantia, o endereço
+      // vai sem query string nem âncora (o /ranking guarda os critérios na URL).
+      window.webAnalyticsBeforeSend = (event) => ({ ...event, url: event.url.split(/[?#]/)[0] });
+    </script>
+    <Analytics />
   </body>
 </html>

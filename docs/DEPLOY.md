@@ -16,6 +16,16 @@ cron diário (06:00 Brasília) → pnpm pipeline → testes + build → commit e
 6. Faça o primeiro deploy e confira a capa, uma ficha (`/deputados/204379`) e `/metodologia`.
 7. Confira a prévia de um link (ex.: cole o endereço de uma ficha no WhatsApp ou em https://www.opengraph.xyz). As imagens de prévia são geradas no build (ADR 0023): o build baixa as 513 fotos oficiais da Câmara (cache em `node_modules/.cache/extrapolar-og/`) e leva de 30 a 40 s a mais.
 
+## Web Analytics (uma vez) — TODO (Lucas)
+
+O site já manda as visualizações de página para o Vercel Web Analytics (`@vercel/analytics` no `BaseLayout.astro`, ADR 0024), mas a Vercel só começa a contar depois de ativado no painel:
+
+1. No projeto, abra a aba **Analytics** e clique em **Enable** (Web Analytics; o plano gratuito basta).
+2. Faça um novo deploy (ou espere o próximo commit do robô): o script `/_vercel/insights/script.js` só passa a existir depois da ativação.
+3. Abra o site, navegue por duas ou três páginas e confira, alguns minutos depois, as visitas na aba Analytics.
+
+Só contamos visualizações de página: sem eventos personalizados, sem cookies e nada dos jogos (votos, estado escolhido, palpites). Antes da ativação, e no preview local, o navegador mostra no console um aviso de que o script não foi achado; não afeta o site.
+
 ## Deploy hook (opcional) — TODO (Lucas)
 
 Serve para forçar um deploy sem mudança nos dados (pelo disparo manual do workflow, com "forcar_deploy").

@@ -563,7 +563,7 @@ Na primeira versão da regra, 1 votação de mérito ficou de fora (PEC 45/2019,
 
 - Os jogos testam **conhecimento sobre o que aconteceu**, nunca opinião: nenhum texto diz que um voto é bom ou ruim.
 - Não há jogo que compare deputados entre si ("quem gastou mais").
-- **O voto do jogador é dele:** escolhas, sequência e estatísticas ficam só no navegador (`localStorage`). Nada é enviado.
+- **O voto do jogador é dele:** escolhas, sequência e estatísticas ficam só no navegador (`localStorage`) e nunca são enviados (o site conta só as visitas às páginas, ADR 0024).
 
 <a id="jogo-dle"></a>
 
@@ -614,7 +614,7 @@ O jogador vota Sim ou Não em cada uma (ou pula). No fim:
 - Apresentado como "concordou em X de Y votações", nunca como "deputado ideal" ou recomendação. Primeiro os deputados do estado do jogador, depois a lista geral (ordenada pela própria conta do jogador; é a única lista do site ordenada por um número, e o número é do jogador).
 - **Base pequena:** menos de 5 votações comparadas; esses deputados (e partidos) aparecem com o aviso e no fim da lista, para "2 de 2" não ficar acima de "7 de 9".
 - **Partidos:** a mesma conta com a orientação de bancada, com a regra do alinhamento (ADR 0014): orientação do próprio partido; se não houver, da federação; orientação de bloco não entra. "Liberado", sem orientação, abstenção e obstrução não contam.
-- Nada é enviado: as escolhas ficam no navegador.
+- Nada dos jogos é enviado: as escolhas ficam no navegador.
 
 **Limitação:** 10 votações são uma fatia pequena de um mandato; duas pessoas podem concordar em todas e discordar em quase tudo o mais.
 
