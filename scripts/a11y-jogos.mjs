@@ -22,7 +22,7 @@ const PLAY = {
     return true;
   })()`,
   "/jogos/seja-deputado": `(async () => {
-    [...document.querySelectorAll("button.choice")].find((b) => b.textContent === "Sim")?.click();
+    document.querySelector("button.rubber-stamp")?.click();
     await new Promise((r) => setTimeout(r, 200));
     return true;
   })()`,

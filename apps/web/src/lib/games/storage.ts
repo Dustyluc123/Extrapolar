@@ -43,3 +43,19 @@ export async function copyText(text: string): Promise<boolean> {
     return false;
   }
 }
+
+/** Quantas chaves guardadas começam com o prefixo e passam no teste (ex.: votações já carimbadas). */
+export function countStored(prefix: string, accept: (raw: unknown) => boolean): number {
+  try {
+    let count = 0;
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key?.startsWith(PREFIX + prefix)) continue;
+      const raw = window.localStorage.getItem(key);
+      if (raw !== null && accept(JSON.parse(raw))) count++;
+    }
+    return count;
+  } catch {
+    return 0;
+  }
+}

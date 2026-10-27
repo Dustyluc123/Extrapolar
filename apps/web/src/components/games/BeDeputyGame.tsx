@@ -1,6 +1,7 @@
-// Jogo 4 — Seja deputado (ilha React): a votação elegível mais recente. O jogador vota e depois
-// vê o resultado, o placar e quem votou o quê, com filtros por estado e partido.
-import { useEffect, useMemo, useState } from "react";
+// Jogo 4 — Seja deputado (ilha React): a votação elegível mais recente. Um ofício na mesa; o
+// jogador carimba SIM ou NÃO e o resultado chega num papel novo, com o painel do plenário e o
+// carimbo oficial. Depois, quem votou o quê, com filtros por estado e partido.
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LatestVoteFile } from "@extrapolar/shared";
 import {
   beDeputyShareText,
@@ -9,10 +10,22 @@ import {
   type BallotCode,
   type PlayerChoice,
 } from "@extrapolar/games";
-import { STATE_KEY, parseState, readStored, writeStored } from "../../lib/games/storage";
+import {
+  STATE_KEY,
+  countStored,
+  parseState,
+  readStored,
+  writeStored,
+} from "../../lib/games/storage";
+import { playSound } from "../../lib/games/sound";
 import { ExtraBanner, PrivacyNote, ShareButton, formatDay, formatInt } from "./common";
-import { ScoreBar, VoteCard, voteDataUrl } from "./VoteCard";
-import { SummaryText } from "./SummaryText";
+import { ScoreBar, voteDataUrl } from "./VoteCard";
+import { Badge } from "./desk/Badge";
+import { Desk, DeskNote } from "./desk/Desk";
+import { InkMark } from "./desk/InkMark";
+import { EmptyStampArea, Oficio } from "./desk/Oficio";
+import { PlenaryPanel } from "./desk/PlenaryPanel";
+import { StampPad } from "./desk/StampPad";
 
 interface Props {
   latest: LatestVoteFile;
@@ -46,9 +59,12 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
   const storageKey = `seja-deputado:${vote.id}`;
   const codes = useMemo(() => states.map((s) => s.code), [states]);
   const [choice, setChoice] = useState<PlayerChoice | null>(null);
+  const [fresh, setFresh] = useState(false);
+  const [stamped, setStamped] = useState(0);
   const [state, setState] = useState<string>("");
   const [party, setParty] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
+  const revealRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     setChoice(
@@ -59,8 +75,21 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
       ),
     );
     setState(readStored(STATE_KEY, (raw) => parseState(raw, codes), null) ?? "");
+    setStamped(countStored("seja-deputado:", (raw) => raw === "yes" || raw === "no"));
     setLoaded(true);
   }, [codes, storageKey]);
+
+  // Logo depois do carimbo: o foco vai para o resultado e os sons seguem a revelação.
+  useEffect(() => {
+    if (!fresh) return;
+    revealRef.current?.focus();
+    const timers = [
+      setTimeout(() => playSound("paper"), 350),
+      setTimeout(() => playSound("panel"), 750),
+      setTimeout(() => playSound("seal"), 1500),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [fresh]);
 
   const rows = useMemo(
     () =>
@@ -74,9 +103,27 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
   const parties = useMemo(() => [...new Set(deputies.map((d) => d.party))].sort(), [deputies]);
 
   const datePanel = (
-    <p className="m-0 mt-2 inline-block rounded border-2 border-ink px-2 py-1 font-sans text-sm font-bold">
+    <DeskNote className="font-sans text-sm font-bold">
       Votação de {formatDay(vote.date, true)} · a mais recente até a edição de{" "}
       {formatDay(editionDate.slice(0, 10), true)}
+    </DeskNote>
+  );
+  const badge = (
+    <Badge
+      items={[
+        ["documentos carimbados", stamped],
+        ["carimbo de hoje", choice ? (choice === "yes" ? "Sim" : "Não") : "—"],
+      ]}
+    />
+  );
+  const announcement = choice
+    ? `Você carimbou ${choice === "yes" ? "Sim" : "Não"}. Resultado oficial: ${
+        vote.approved ? "aprovada" : "rejeitada"
+      }, ${vote.official.yes} a ${vote.official.no}.`
+    : "";
+  const live = (
+    <p className="visually-hidden" aria-live="polite">
+      {loaded && fresh ? announcement : ""}
     </p>
   );
 
@@ -85,28 +132,32 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
   if (!choice) {
     return (
       <div>
-        {datePanel}
-        <div className="mt-3">
-          <VoteCard vote={vote} />
-        </div>
-        <p className="mt-5 mb-2 font-display text-2xl font-[750]">
-          Hoje a cadeira é sua. Como você vota?
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {(["yes", "no"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              className="choice"
-              onClick={() => {
-                setChoice(option);
-                writeStored(storageKey, option);
-              }}
-            >
-              {option === "yes" ? "Sim" : "Não"}
-            </button>
-          ))}
-        </div>
+        {live}
+        <Desk
+          label="Mesa de votação · Seja deputado"
+          aside={
+            <>
+              <StampPad
+                prompt="Hoje a cadeira é sua. Como você vota?"
+                onStamp={(option) => {
+                  setChoice(option);
+                  setFresh(true);
+                  if (writeStored(storageKey, option)) setStamped((n) => n + 1);
+                }}
+              />
+              {badge}
+            </>
+          }
+        >
+          {datePanel}
+          <Oficio
+            vote={vote}
+            tab="Votação mais recente"
+            headingId="sd-oficio"
+            className="sheet-tilt-l mt-5"
+            stampArea={<EmptyStampArea />}
+          />
+        </Desk>
         <PrivacyNote />
       </div>
     );
@@ -125,55 +176,81 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
 
   return (
     <div>
-      {datePanel}
-      <section className="clipping mt-4" aria-labelledby="sd-resultado">
-        <ExtraBanner>Edição extra</ExtraBanner>
-        <div className="mt-4 text-center">
-          <span className="stamp-big stamp-in">{vote.approved ? "Aprovada" : "Rejeitada"}</span>
-        </div>
-        <h2 id="sd-resultado" className="m-0 mt-4 font-display text-2xl font-[750]">
-          {vote.proposition.label}: {vote.approved ? "aprovada" : "rejeitada"} por{" "}
-          {formatInt(vote.official.yes)} a {formatInt(vote.official.no)}
-        </h2>
-        <p className="m-0 mt-2">
-          {vote.plainSummary ? (
-            <SummaryText text={vote.plainSummary.text} />
-          ) : (
-            vote.proposition.summary
-          )}
-        </p>
-        <div className="mt-3">
-          <ScoreBar yes={vote.official.yes} no={vote.official.no} />
-          <p className="caption m-0 mt-1">
-            Placar oficial: Sim {formatInt(vote.official.yes)} · Não {formatInt(vote.official.no)} ·
-            outros {formatInt(vote.official.others)}. <a href={voteDataUrl(vote.id)}>Dado bruto</a>
-          </p>
-        </div>
-        {required !== null ? (
-          <p className="translate-note mt-3">
-            {!vote.approved && vote.official.yes > vote.official.no
-              ? "Por que perdeu com mais Sim? "
-              : ""}
-            {vote.proposition.label.startsWith("PEC")
-              ? `Uma PEC precisa de ${required} votos Sim (três quintos dos 513 deputados) em cada turno.`
-              : `Um projeto de lei complementar precisa de ${required} votos Sim (maioria absoluta dos 513 deputados).`}
-          </p>
-        ) : null}
-        <p className="m-0 mt-3">
-          Você votou <strong>{choice === "yes" ? "Sim" : "Não"}</strong>
-          {plenaryMajority
-            ? choice === plenaryMajority
-              ? ", como a maioria do plenário."
-              : ", como a minoria do plenário."
-            : "; o plenário empatou entre Sim e Não."}
-        </p>
-        <ShareButton
-          text={beDeputyShareText({
-            date: formatDay(vote.date, true),
-            url: `${window.location.origin}/jogos/seja-deputado`,
-          })}
+      {live}
+      <Desk label="Mesa de votação · Seja deputado" aside={badge}>
+        {datePanel}
+        <Oficio
+          vote={vote}
+          tab="Votação mais recente"
+          headingId="sd-oficio"
+          className="sheet-tilt-l mt-5"
+          stampArea={<InkMark choice={choice} seed={vote.id} caption="seu voto" fresh={fresh} />}
         />
-      </section>
+        <section
+          className={`sheet sheet-tilt-r -mt-3 sm:mx-4${fresh ? " sheet-slide" : ""}`}
+          style={fresh ? { animationDelay: "300ms" } : undefined}
+          aria-labelledby="sd-resultado"
+        >
+          <span className="paper-clip" aria-hidden="true" />
+          <ExtraBanner>Edição extra · resultado oficial</ExtraBanner>
+          <h2
+            id="sd-resultado"
+            ref={revealRef}
+            tabIndex={-1}
+            className="m-0 mt-4 font-display text-2xl font-[750]"
+          >
+            {vote.proposition.label}: {vote.approved ? "aprovada" : "rejeitada"} por{" "}
+            {formatInt(vote.official.yes)} a {formatInt(vote.official.no)}
+          </h2>
+          <div className="mt-3">
+            <PlenaryPanel
+              yes={vote.official.yes}
+              no={vote.official.no}
+              others={vote.official.others}
+            />
+          </div>
+          <div className="mt-4 text-center">
+            <span
+              className="stamp-big stamp-in"
+              style={fresh ? { animationDelay: "1400ms" } : undefined}
+            >
+              {vote.approved ? "Aprovada" : "Rejeitada"}
+            </span>
+          </div>
+          <div className="mt-4">
+            <ScoreBar yes={vote.official.yes} no={vote.official.no} />
+            <p className="caption m-0 mt-1">
+              Placar oficial: Sim {formatInt(vote.official.yes)} · Não {formatInt(vote.official.no)}{" "}
+              · outros {formatInt(vote.official.others)}.{" "}
+              <a href={voteDataUrl(vote.id)}>Dado bruto</a>
+            </p>
+          </div>
+          {required !== null ? (
+            <p className="translate-note mt-3">
+              {!vote.approved && vote.official.yes > vote.official.no
+                ? "Por que perdeu com mais Sim? "
+                : ""}
+              {vote.proposition.label.startsWith("PEC")
+                ? `Uma PEC precisa de ${required} votos Sim (três quintos dos 513 deputados) em cada turno.`
+                : `Um projeto de lei complementar precisa de ${required} votos Sim (maioria absoluta dos 513 deputados).`}
+            </p>
+          ) : null}
+          <p className="m-0 mt-3">
+            Você votou <strong>{choice === "yes" ? "Sim" : "Não"}</strong>
+            {plenaryMajority
+              ? choice === plenaryMajority
+                ? ", como a maioria do plenário."
+                : ", como a minoria do plenário."
+              : "; o plenário empatou entre Sim e Não."}
+          </p>
+          <ShareButton
+            text={beDeputyShareText({
+              date: formatDay(vote.date, true),
+              url: `${window.location.origin}/jogos/seja-deputado`,
+            })}
+          />
+        </section>
+      </Desk>
 
       <section className="mt-8" aria-labelledby="votos">
         <h2 id="votos" className="font-display text-2xl font-[750]">
@@ -277,6 +354,8 @@ export default function BeDeputyGame({ latest, deputies, states, editionDate }: 
           className="underline"
           onClick={() => {
             setChoice(null);
+            setFresh(false);
+            setStamped((n) => Math.max(0, n - 1));
             writeStored(storageKey, null);
           }}
         >

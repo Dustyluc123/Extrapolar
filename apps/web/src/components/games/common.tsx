@@ -21,7 +21,7 @@ export function useToday(): string | null {
 
 export function PrivacyNote() {
   return (
-    <p className="caption m-0 mt-2">
+    <p className="caption m-0 mt-3">
       Suas respostas ficam só neste aparelho e nunca são enviadas.{" "}
       <a href="/sobre#privacidade">Privacidade</a>
     </p>

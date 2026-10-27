@@ -29,7 +29,9 @@ export function SoundToggle() {
           />
         )}
       </svg>
-      Som<span aria-hidden="true">: {on ? "ligado" : "desligado"}</span>
+      <span>
+        Som<span aria-hidden="true">: {on ? "ligado" : "desligado"}</span>
+      </span>
     </button>
   );
 }

@@ -34,6 +34,9 @@
   /* Cabo de madeira dos carimbos (igual nos dois temas; só desenho, sem texto) */
   --color-wood: #6b4a32;
   --color-wood-dark: #3f2a1c;
+  /* Painel do plenário: quadro escuro com luzes claras (igual nos dois temas) */
+  --color-board: #1b1a17;
+  --color-board-light: #f4efe3;
 
   --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
   --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
