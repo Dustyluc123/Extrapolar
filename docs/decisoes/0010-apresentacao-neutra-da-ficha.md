@@ -29,3 +29,15 @@ A ficha mostra a participação de cada deputado. Vários detalhes de apresenta�
 - Critérios e filtros na URL, para compartilhar "o meu ranking".
 - A **ficha continua sem comparação**, média ou posição; a capa continua em ordem alfabética.
 - No jogo "Vote você também", a lista de deputados é ordenada pela concordância com os votos **do próprio jogador** — mesma lógica: o critério é de quem joga.
+
+## Atualização — 29/10/2026: vários partidos e comparação entre partidos
+
+Pedido depois de testes com usuários.
+
+- **Filtros com vários valores:** estado e partido aceitam várias escolhas ao mesmo tempo (caixas de seleção num `<details>`, não `<select multiple>`). Na URL, os valores vão separados por vírgula (`uf=RJ,SP&partido=PL,PT`); links antigos com um valor só continuam valendo. Os filtros continuam só escolhendo quem aparece; o percentil segue calculado na Câmara inteira.
+- **Comparação entre os partidos escolhidos:** com 2 ou mais partidos, um bloco mostra, para cada um, a **mediana da nota** com os critérios do leitor, a **menor e a maior nota**, quantos deputados **entraram na conta** e quantos ficaram **fora por "sem dado"**. Funções puras `median` e `summarizeGroups` em `@extrapolar/metrics`, com testes.
+- **Não é ranking de partidos:** os partidos aparecem **sempre em ordem alfabética**, nunca pela mediana, e todos com a mesma tinta. O texto é "com os seus critérios, a mediana do partido X ficou em…", nunca "o partido X é melhor". O aviso permanente do topo continua valendo.
+- **Mediana, não média:** um ou dois deputados com nota extrema não puxam o número do partido; a menor e a maior nota mostram a variação.
+- **Base pequena:** menos de **10 deputados** na conta (`GROUP_SMALL_BASE`). Escolha de apresentação, não estatística; 30 (o limite das porcentagens) deixaria 14 dos 21 partidos com aviso (em 29/10/2026), e 5 (o do "Vote você também") seria pouco para uma mediana. Pode ser ajustado.
+- **Sem dado não é zero:** partido sem nenhum deputado com dado aparece sem mediana, com a contagem de quem ficou de fora.
+- **Partido atual** de cada deputado (o da lista de deputados em exercício da Câmara na data de referência). Quem trocou de partido leva todos os números do mandato para o partido de hoje; isso está na metodologia.

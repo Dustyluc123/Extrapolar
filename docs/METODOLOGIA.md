@@ -645,9 +645,27 @@ A única página que ordena deputados, e quem define os critérios é o leitor (
 4. **Empate** na nota divide a posição (1º, 2º, 2º, 4º); a ordem dentro do empate é alfabética.
 5. **Sem dado não é zero:** quem não tem dado em alguma métrica escolhida fica **fora da classificação** e aparece numa lista à parte, com o motivo de cada "sem dado".
 6. **Base pequena:** porcentagens com menos de 30 casos no denominador aparecem com aviso, como no resto do site.
-7. **Filtros** de estado e partido (partido atual) só escolhem quem aparece; não mudam o percentil.
-8. **Link compartilhável:** métricas, pesos, direções e filtros vão na URL (`?m=participacao.3.mais,cota-total.2.menos&uf=SP&partido=PL`).
+7. **Filtros** de estado e partido só escolhem quem aparece; não mudam o percentil. Os dois aceitam **vários valores ao mesmo tempo** (deputados de SP **ou** RJ, do PL **ou** do PT); estado e partido se combinam com "e". O partido é o **atual** de cada deputado, o que a lista de deputados em exercício da Câmara informa na data de referência dos dados: quem trocou de partido na legislatura aparece só no partido de hoje, com todos os números do mandato (inclusive os do tempo no partido anterior).
+8. **Link compartilhável:** métricas, pesos, direções e filtros vão na URL (`?m=participacao.3.mais,cota-total.2.menos&uf=RJ,SP&partido=PL,PT`). Links antigos, com um só estado ou partido, continuam valendo.
+9. **Comparação entre os partidos escolhidos** (com 2 ou mais partidos no filtro): ver abaixo.
 
 Tudo é calculado no navegador, a partir de uma versão compacta de `metricas.json` gerada no build (`/ranking/dados.json`).
+
+<a id="comparacao-partidos"></a>
+
+### Comparação entre os partidos escolhidos
+
+Aparece quando o leitor escolhe **2 ou mais partidos** e é calculada **com os critérios dele** (as mesmas notas da lista). Para cada partido escolhido:
+
+- **Mediana da nota** dos deputados do partido que entraram na conta (os que passam pelos filtros e têm dado em todas as métricas escolhidas). Com quantidade par, é a média das duas notas do meio. A mediana foi escolhida no lugar da média para um ou dois deputados com nota muito alta ou muito baixa não puxarem o número do partido.
+- **Menor e maior nota** do partido, para mostrar a variação: dois partidos com a mesma mediana podem ter deputados muito parecidos entre si ou muito diferentes. A régua de 0 a 100 desenha o trecho da menor à maior nota e uma marca na mediana; todos os partidos usam a mesma tinta.
+- **Quantos deputados entraram na conta** e quantos ficaram **fora por "sem dado"**. Partido sem nenhum deputado com dado aparece sem mediana ("não há mediana"), nunca com 0.
+- **Base pequena:** menos de **10 deputados** na conta. Escolha de apresentação, não estatística: com menos de 10 notas, um deputado a mais ou a menos muda bastante a mediana. Em 29/10/2026, 9 dos 21 partidos com deputados em exercício tinham menos de 10 (contando todos, antes de qualquer "sem dado").
+- **Ordem alfabética**, sempre, inclusive quando duas medianas empatam. O site não ordena partidos pela mediana.
+- Partido **atual** de cada deputado (ver o item 7). Com filtro de estado, só os deputados desses estados entram.
+
+O texto é sempre "com os seus critérios, a mediana do partido X ficou em…", e o aviso do topo da página continua valendo: o resultado reflete os critérios de quem montou o ranking.
+
+**Limitações da comparação:** a nota é feita de percentis da Câmara inteira, então a mediana de um partido diz onde estão os deputados dele **em relação a todos os outros**, segundo os critérios escolhidos, e nada mais. Partidos grandes e pequenos têm medianas com estabilidade muito diferente (daí o aviso de base pequena). Trocas de partido durante a legislatura não são separadas: os números de um deputado vão inteiros para o partido atual.
 
 **Limitações:** métricas de total (cota gasta, projetos, discursos, emendas) dependem do tempo em exercício na legislatura: quem passou meses licenciado (por exemplo, como ministro) tem totais menores, e isso aparece no ranking. O percentil mostra posição relativa, não distância (o 1º e o 2º podem estar muito perto ou muito longe); métricas diferentes medem coisas diferentes e somá-las é uma escolha de quem monta o ranking — por isso o aviso no topo da página.

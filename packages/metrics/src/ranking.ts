@@ -129,3 +129,87 @@ export function serializeCriteria(criteria: readonly RankingCriterion[]): string
     .map((c) => `${c.key}.${c.weight}.${c.direction === "more" ? "mais" : "menos"}`)
     .join(",");
 }
+
+/** Filtros com vários valores na URL: "SP,RJ". Desconhecidos e repetidos são ignorados. */
+export function parseFilterList(text: string, known: ReadonlySet<string>): string[] {
+  const seen = new Set<string>();
+  for (const part of text.split(",")) {
+    const value = part.trim();
+    if (value && known.has(value)) seen.add(value);
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+export function serializeFilterList(values: readonly string[]): string {
+  return [...new Set(values)].sort((a, b) => a.localeCompare(b, "pt-BR")).join(",");
+}
+
+/** Mediana; com quantidade par, a média dos dois do meio. Lista vazia = null (nunca 0). */
+export function median(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
+/**
+ * Abaixo disso, a comparação entre partidos avisa "base pequena": com menos de 10 deputados na
+ * conta, um deputado a mais ou a menos mexe muito na mediana. Escolha de apresentação, não
+ * estatística (docs/METODOLOGIA.md).
+ */
+export const GROUP_SMALL_BASE = 10;
+
+export interface GroupSummary {
+  group: string;
+  /** Deputados do grupo que entraram na conta (têm dado em todas as métricas escolhidas). */
+  included: number;
+  /** Deputados do grupo que ficaram fora por "sem dado". */
+  excluded: number;
+  /** Mediana, menor e maior nota do grupo; null quando ninguém do grupo entrou na conta. */
+  median: number | null;
+  min: number | null;
+  max: number | null;
+  /** Menos de GROUP_SMALL_BASE deputados na conta (e ao menos um). */
+  smallBase: boolean;
+}
+
+/**
+ * Resumo da nota por grupo (ex.: partido), com os critérios de quem montou o ranking.
+ * Os grupos saem em ordem alfabética, nunca pela mediana: o site não ordena partidos.
+ * Grupo sem ninguém com dado aparece com mediana null, e não 0.
+ */
+export function summarizeGroups(input: {
+  result: RankingResult;
+  groups: readonly string[];
+  groupOf: (id: number) => string | undefined;
+  smallBase?: number;
+}): GroupSummary[] {
+  const limit = input.smallBase ?? GROUP_SMALL_BASE;
+  const scores = new Map<string, number[]>();
+  const excluded = new Map<string, number>();
+  const wanted = new Set(input.groups);
+  for (const row of input.result.ranked) {
+    const group = input.groupOf(row.id);
+    if (group === undefined || !wanted.has(group)) continue;
+    scores.set(group, [...(scores.get(group) ?? []), row.score]);
+  }
+  for (const row of input.result.excluded) {
+    const group = input.groupOf(row.id);
+    if (group === undefined || !wanted.has(group)) continue;
+    excluded.set(group, (excluded.get(group) ?? 0) + 1);
+  }
+  return [...wanted]
+    .sort((a, b) => a.localeCompare(b, "pt-BR"))
+    .map((group) => {
+      const list = scores.get(group) ?? [];
+      return {
+        group,
+        included: list.length,
+        excluded: excluded.get(group) ?? 0,
+        median: median(list),
+        min: list.length > 0 ? Math.min(...list) : null,
+        max: list.length > 0 ? Math.max(...list) : null,
+        smallBase: list.length > 0 && list.length < limit,
+      };
+    });
+}

@@ -5,12 +5,16 @@ import {
   MAX_WEIGHT,
   buildRanking,
   parseCriteria,
+  parseFilterList,
   serializeCriteria,
+  serializeFilterList,
   type RankingCriterion,
   type RankingDirection,
 } from "@extrapolar/metrics";
 import type { RankingData, RankingMetric } from "../../lib/ranking";
 import { copyText } from "../../lib/games/storage";
+import { MultiFilter } from "./MultiFilter";
+import { PartyComparison } from "./PartyComparison";
 
 interface Props {
   states: { code: string; name: string }[];
@@ -46,18 +50,29 @@ function formatValue(metric: RankingMetric, value: number): string {
   return integer.format(value);
 }
 
-function readUrl(known: Set<string>): { drafts: Draft[]; state: string; party: string } {
+/** Critérios e filtros da URL. Estado e partido aceitam vários valores ("SP,RJ") ou um só. */
+function readUrl(
+  known: Set<string>,
+  data: RankingData,
+): { drafts: Draft[]; states: string[]; parties: string[] } {
   const params = new URLSearchParams(window.location.search);
   const drafts = parseCriteria(params.get("m") ?? "", known).map((c) => ({ ...c }));
-  return { drafts, state: params.get("uf") ?? "", party: params.get("partido") ?? "" };
+  return {
+    drafts,
+    states: parseFilterList(params.get("uf") ?? "", new Set(data.deputies.map((d) => d.state))),
+    parties: parseFilterList(
+      params.get("partido") ?? "",
+      new Set(data.deputies.map((d) => d.party)),
+    ),
+  };
 }
 
 export default function RankingBuilder({ states, cadernoLabels }: Props) {
   const [data, setData] = useState<RankingData | null>(null);
   const [error, setError] = useState(false);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [state, setState] = useState("");
-  const [party, setParty] = useState("");
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [selectedParties, setSelectedParties] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState<"" | "ok" | "falhou">("");
 
@@ -67,10 +82,10 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
         r.ok ? (r.json() as Promise<RankingData>) : Promise.reject(new Error(String(r.status))),
       )
       .then((d) => {
-        const initial = readUrl(new Set(d.metrics.map((m) => m.key)));
+        const initial = readUrl(new Set(d.metrics.map((m) => m.key)), d);
         setDrafts(initial.drafts);
-        setState(d.deputies.some((x) => x.state === initial.state) ? initial.state : "");
-        setParty(d.deputies.some((x) => x.party === initial.party) ? initial.party : "");
+        setSelectedStates(initial.states);
+        setSelectedParties(initial.parties);
         setData(d);
       })
       .catch(() => setError(true));
@@ -85,12 +100,13 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
     if (!data) return;
     const params = new URLSearchParams();
     if (complete.length > 0) params.set("m", serializeCriteria(complete));
-    if (state) params.set("uf", state);
-    if (party) params.set("partido", party);
-    const query = params.toString();
+    if (selectedStates.length > 0) params.set("uf", serializeFilterList(selectedStates));
+    if (selectedParties.length > 0) params.set("partido", serializeFilterList(selectedParties));
+    // Vírgula legível na URL ("PL,PT" em vez de "PL%2CPT"); continua válida.
+    const query = params.toString().replace(/%2C/g, ",");
     window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
     setCopied("");
-  }, [data, drafts, state, party]);
+  }, [data, drafts, selectedStates, selectedParties]);
 
   const result = useMemo(() => {
     if (!data) return null;
@@ -102,8 +118,14 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
       });
       values[metric.key] = map;
     }
+    const stateSet = new Set(selectedStates);
+    const partySet = new Set(selectedParties);
     const ids = data.deputies
-      .filter((d) => (!state || d.state === state) && (!party || d.party === party))
+      .filter(
+        (d) =>
+          (stateSet.size === 0 || stateSet.has(d.state)) &&
+          (partySet.size === 0 || partySet.has(d.party)),
+      )
       .map((d) => d.id);
     const collator = new Intl.Collator("pt-BR", { sensitivity: "base" });
     const names = new Map(data.deputies.map((d) => [d.id, d.name]));
@@ -113,7 +135,7 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
       ids,
       tieBreak: (a, b) => collator.compare(names.get(a) ?? "", names.get(b) ?? ""),
     });
-  }, [data, drafts, state, party]);
+  }, [data, drafts, selectedStates, selectedParties]);
 
   if (error) return <p role="alert">Não deu para carregar os dados. Recarregue a página.</p>;
   if (!data || !result) return <p className="caption">Carregando as métricas…</p>;
@@ -121,7 +143,9 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
   const metricByKey = new Map(data.metrics.map((m) => [m.key, m]));
   const indexOf = new Map(data.deputies.map((d, i) => [d.id, i]));
   const deputyById = new Map(data.deputies.map((d) => [d.id, d]));
-  const parties = [...new Set(data.deputies.map((d) => d.party))].sort();
+  const parties = [...new Set(data.deputies.map((d) => d.party))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"),
+  );
   const activeOrder = result.activeKeys;
   const update = (key: string, change: Partial<Draft>) =>
     setDrafts(drafts.map((d) => (d.key === key ? { ...d, ...change } : d)));
@@ -233,38 +257,26 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
         <h2 id="rk-resultado" className="font-display text-2xl font-[750]">
           2. O seu ranking
         </h2>
-        <div className="mt-2 flex flex-wrap gap-3">
-          <label className="flex items-center gap-2">
-            <span className="kicker">Estado</span>
-            <select
-              className="min-h-11 rounded border border-ink bg-paper px-2 font-sans text-ink"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-            >
-              <option value="">Todos</option>
-              {states.map((s) => (
-                <option key={s.code} value={s.code}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2">
-            <span className="kicker">Partido</span>
-            <select
-              className="min-h-11 rounded border border-ink bg-paper px-2 font-sans text-ink"
-              value={party}
-              onChange={(e) => setParty(e.target.value)}
-            >
-              <option value="">Todos</option>
-              {parties.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="mt-2 flex flex-wrap items-start gap-3">
+          <MultiFilter
+            id="rk-uf"
+            label="Estado"
+            options={states.map((st) => ({ value: st.code, label: st.name }))}
+            selected={selectedStates}
+            onChange={setSelectedStates}
+          />
+          <MultiFilter
+            id="rk-partido"
+            label="Partido"
+            options={parties.map((p) => ({ value: p, label: p }))}
+            selected={selectedParties}
+            onChange={setSelectedParties}
+          />
         </div>
+        <p className="caption m-0 mt-1">
+          Dá para escolher mais de um estado e mais de um partido. Partido é o atual de cada
+          deputado.
+        </p>
 
         {activeOrder.length === 0 ? (
           <div className="clipping mt-4">
@@ -312,6 +324,14 @@ export default function RankingBuilder({ states, cadernoLabels }: Props) {
                     : ""}
               </span>
             </div>
+            {selectedParties.length >= 2 ? (
+              <PartyComparison
+                result={result}
+                parties={selectedParties}
+                partyOf={(id) => deputyById.get(id)?.party}
+                statesFiltered={selectedStates.length > 0}
+              />
+            ) : null}
             <ol className="m-0 mt-4 list-none p-0">
               {shown.map((row) => {
                 const d = deputyById.get(row.id)!;

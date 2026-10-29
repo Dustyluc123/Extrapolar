@@ -64,6 +64,8 @@ const SETUP = {
   "/jogos/vote-voce-tambem?bandeja": "true",
   "/jogos/seja-deputado": `(() => { localStorage.setItem("extrapolar:jogos:estado", JSON.stringify("AP")); return true; })()`,
   "/ranking?m=participacao.3.mais,cota-total.2.menos,alinhamento-partido.1.mais&uf=SP": "true",
+  // Vários partidos e estados: filtros abertos e o bloco "Comparação entre os partidos escolhidos".
+  "/ranking?m=participacao.3.mais,cota-total.2.menos&uf=RJ,SP&partido=MISSÃO,PL,PT": "true",
 };
 
 let violations = 0;
