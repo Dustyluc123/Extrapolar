@@ -1,6 +1,6 @@
 // Peças comuns das ilhas dos jogos: dia de Brasília, estatísticas, compartilhar, aviso de privacidade.
 import { useEffect, useState, type ReactNode } from "react";
-import { brasiliaDateKey, msUntilNextDay } from "@extrapolar/games";
+import { brasiliaDateKey, isMobileDevice, msUntilNextDay, shareLinks } from "@extrapolar/games";
 import { copyText } from "../../lib/games/storage";
 
 /** Data de hoje em Brasília; atualiza sozinha à meia-noite. Null até montar no navegador. */
@@ -32,18 +32,50 @@ export function ExtraBanner({ children }: { children: ReactNode }) {
   return <p className="extra-banner m-0">{children}</p>;
 }
 
-/** Botão de compartilhar: usa o menu do celular ou copia; se nada der certo, mostra o texto. */
+/** No navegador: é celular ou tablet? Começa como celular (wa.me funciona nos dois). */
+function useIsMobile(): boolean {
+  const [mobile, setMobile] = useState(true);
+  useEffect(() => {
+    try {
+      setMobile(isMobileDevice(navigator.userAgent, navigator.maxTouchPoints ?? 0));
+    } catch {
+      // Sem acesso ao navegador: fica o wa.me, que também abre no computador.
+    }
+  }, []);
+  return mobile;
+}
+
+/**
+ * Compartilhar: usa o menu do celular ou copia; se nada der certo, mostra o texto.
+ * Também tem links diretos para WhatsApp (app no celular, WhatsApp Web no computador) e e-mail.
+ * Os links levam só o texto, sem nenhum parâmetro de rastreamento.
+ */
 export function ShareButton({ text }: { text: string }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const mobile = useIsMobile();
+  const links = shareLinks(text);
   return (
     <div className="mt-4">
-      <button
-        type="button"
-        className="game-button"
-        onClick={async () => setStatus((await copyText(text)) ? "copied" : "failed")}
-      >
-        Compartilhar resultado
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className="game-button"
+          onClick={async () => setStatus((await copyText(text)) ? "copied" : "failed")}
+        >
+          Compartilhar resultado
+        </button>
+        <a
+          className="game-button game-button-ghost no-underline"
+          href={mobile ? links.whatsappApp : links.whatsappWeb}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp<span className="sr-only"> (abre em outra aba)</span>
+        </a>
+        <a className="game-button game-button-ghost no-underline" href={links.email}>
+          E-mail
+        </a>
+      </div>
       <p className="caption m-0 mt-1" aria-live="polite">
         {status === "copied" ? "Pronto! Resultado copiado (sem a resposta)." : ""}
       </p>

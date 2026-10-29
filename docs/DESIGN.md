@@ -135,6 +135,7 @@ Estilos em `apps/web/src/styles/games.css`, importado só nessas páginas.
 - **Placar:** barra Sim (tinta) × Não (hachurado), com os números escritos; controle deslizante grande para o polegar.
 - **Ranking:** aviso permanente em caixa com borda no topo; barra empilhada da nota em tons de tinta e hachura (só distinguem as métricas, não avaliam); "maior sobe" / "menor sobe" em vez de "mais é melhor".
 - **Quadradinhos de compartilhar** sem a resposta (🟩🟨🟥 no Dle, barra ▰▱ no Placar).
+- **Compartilhar** (`ShareButton` em `components/games/common.tsx`, igual nos quatro jogos): botão principal "Compartilhar resultado" (menu do celular ou copiar) e dois links em pílula vazada, **WhatsApp** e **E-mail**, com o mesmo texto sem spoiler e o link do jogo. WhatsApp: `wa.me/?text=` no celular (abre o app) e `web.whatsapp.com/send?text=` no computador (abre o WhatsApp Web); a escolha usa o user agent (o iPad que se diz Mac é reconhecido pela tela de toque) e começa em `wa.me`, que funciona nos dois. E-mail: `mailto:` com a primeira linha do texto no assunto e o texto inteiro no corpo. Os links não levam parâmetro de rastreamento e o clique não é contado (`shareLinks` em `@extrapolar/games`, com teste).
 - Botões: `.game-button` (pílula vermelha) e `.choice` (escolha marcada com tinta cheia, `aria-pressed` ou `aria-checked`).
 
 ## Mesa de votação (jogos)

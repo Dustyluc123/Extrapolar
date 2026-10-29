@@ -79,3 +79,35 @@ export function beDeputyShareText(input: { date: string; url: string }): string 
     input.url,
   ].join("\n");
 }
+
+/** Links prontos para mandar o texto do resultado. Sem parâmetro de rastreamento. */
+export interface ShareLinks {
+  /** wa.me: no celular abre o app do WhatsApp. */
+  whatsappApp: string;
+  /** WhatsApp Web, usado no computador. */
+  whatsappWeb: string;
+  /** mailto com assunto (a primeira linha do texto) e corpo (o texto inteiro). */
+  email: string;
+}
+
+export function shareLinks(text: string): ShareLinks {
+  const encoded = encodeURIComponent(text);
+  const subject = text.split("\n", 1)[0] ?? "";
+  // Quebras de linha do e-mail em CRLF, como pede a RFC 6068.
+  const body = text.replace(/\r?\n/g, "\r\n");
+  return {
+    whatsappApp: `https://wa.me/?text=${encoded}`,
+    whatsappWeb: `https://web.whatsapp.com/send?text=${encoded}`,
+    email: `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+  };
+}
+
+/**
+ * Celular ou tablet? Decide entre abrir o app (wa.me) e o WhatsApp Web.
+ * Recebe o user agent e o número de pontos de toque para continuar puro.
+ */
+export function isMobileDevice(userAgent: string, maxTouchPoints = 0): boolean {
+  if (/Android|iPhone|iPad|iPod|Mobi|Opera Mini|IEMobile/i.test(userAgent)) return true;
+  // iPadOS se apresenta como Mac, mas tem tela de toque.
+  return /Macintosh/.test(userAgent) && maxTouchPoints > 1;
+}
